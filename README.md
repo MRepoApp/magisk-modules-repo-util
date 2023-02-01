@@ -52,7 +52,7 @@
 ```json
 {
   "id": "zygisk_lsposed",
-  "update_to": "https://github.com/LSPosed/LSPosed/releases/download/v1.8.5/LSPosed-v1.8.5-6649-zygisk-release.zip",
+  "update_to": "https://github.com/LSPosed/LSPosed/releases/download/v1.8.6/LSPosed-v1.8.6-6712-zygisk-release.zip",
   "license": "GPL-3.0-only",
   "changelog": "https://lsposed.github.io/LSPosed/release/changelog.md"
 }
@@ -64,7 +64,7 @@
 ```json
 {
   "id": "zygisk_lsposed",
-  "update_to": "LSPosed-v1.8.5-6649-zygisk-release.zip",
+  "update_to": "LSPosed-v1.8.6-6712-zygisk-release.zip",
   "license": "GPL-3.0-only",
   "changelog": "changelog.md"
 }
@@ -75,20 +75,19 @@
 ```json
 {
   "name": "{repo_name}",
-  "timestamp": "2023-01-15 18:47:58.707099",
+  "timestamp": 1675253784.868081,
   "modules": [
     {
       "id": "zygisk_lsposed",
       "license": "GPL-3.0-only",
       "name": "Zygisk - LSPosed",
-      "version": "v1.8.5 (6649)",
-      "versionCode": 6649,
+      "version": "v1.8.6 (6712)",
+      "versionCode": 6712,
       "author": "LSPosed Developers",
       "description": "Another enhanced implementation of Xposed Framework. Supports Android 8.1 ~ 13. Requires Magisk 24.0+ and Zygisk enabled.",
-      "updateJson": "{repo_url}modules/zygisk_lsposed/update.json",
       "states": {
-        "zipUrl": "{repo_url}modules/zygisk_lsposed/v1.8.5_(6649)_6649.zip",
-        "changelog": "{repo_url}modules/zygisk_lsposed/v1.8.5_(6649)_6649.md"
+        "zipUrl": "https://raw.githubusercontent.com/ya0211/magisk-modules-repo/main/modules/zygisk_lsposed/v1.8.6_(6712)_6712.zip",
+        "changelog": "https://raw.githubusercontent.com/ya0211/magisk-modules-repo/main/modules/zygisk_lsposed/v1.8.6_(6712)_6712.md"
       }
     }
   ]
@@ -98,15 +97,14 @@
 ### update.json
 ```json
 {
-  "id": "zygisk_lsposed",
-  "lastUpdate": "2023-01-15 18:47:58.707099",
+  "timestamp": 1675253784.868081,
   "versions": [
     {
-      "timestamp": "2023-01-15 18:47:58.707099",
-      "version": "v1.8.5 (6649)",
-      "versionCode": 6649,
-      "zipUrl": "{repo_url}modules/zygisk_lsposed/v1.8.5_(6649)_6649.zip",
-      "changelog": "{repo_url}modules/zygisk_lsposed/v1.8.5_(6649)_6649.md"
+      "timestamp": 1675253784.868081,
+      "version": "v1.8.6 (6712)",
+      "versionCode": 6712,
+      "zipUrl": "https://raw.githubusercontent.com/ya0211/magisk-modules-repo/main/modules/zygisk_lsposed/v1.8.6_(6712)_6712.zip",
+      "changelog": "https://raw.githubusercontent.com/ya0211/magisk-modules-repo/main/modules/zygisk_lsposed/v1.8.6_(6712)_6712.md"
     }
   ]
 }
