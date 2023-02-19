@@ -49,7 +49,7 @@ class Config:
     def default_config(self):
         self._config.repo_name = self._config.repo_name or "Someone's Magisk Repo"
         self._config.max_num_module = self._config.max_num_module or 3
-        self._config.show_log = self._config.show_log or "true"
+        self._config.show_log = self._config.show_log or True
         self._config.log_dir = self._config.log_dir or None
 
     @property
@@ -74,7 +74,11 @@ class Config:
 
     @property
     def show_log(self) -> bool:
-        return self._config.show_log.lower() == "true"
+        show_log = self._config.show_log
+        if isinstance(show_log, bool):
+            return show_log
+        else:
+            return self._config.show_log.lower() == "true"
 
     @property
     def log_dir(self) -> Optional[Path]:

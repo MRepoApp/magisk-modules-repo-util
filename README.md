@@ -17,11 +17,11 @@
 ```
 - `repo_name`: the name of your magisk module repository
 - `repo_url`: this field need to end with `/`, it will be used to generate the url for the [modules.json](#modules-json) and [update.json](#update-json)
-- `repo_branch`: this field defines which branch all files will be committed to
+- `repo_branch`: this field is defined for the git command
 - `sync_mode`: `git` or `rsync`
 - `max_num_module`: the maximum number of keeping old version modules, the default value is `3`
-- `show_log`: the default value is `true`. If this field is `false`, the log will never be stored
-- `log_dir`: the default value is `None`. If this field is defined, the log file will be stored in this directory
+- `show_log`: the default value is `true`. If this field is `false`, the log will never be stored.
+- `log_dir`: the default value is `None`. If this field is defined, the log file will be stored in this directory.
 
 ## [hosts.json](template/hosts.json)
 ```json
