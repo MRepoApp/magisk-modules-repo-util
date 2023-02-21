@@ -9,14 +9,6 @@ from ..file import *
 from ..log import Log
 
 
-def isNotNone(text: str) -> bool:
-    return text != "" and text is not None
-
-
-def isWith(text: str, start: str, end: str) -> bool:
-    return text.startswith(start) and text.endswith(end)
-
-
 class Repo:
     def __init__(
             self, root_folder: Path,
@@ -30,6 +22,7 @@ class Repo:
         self._modules_folder = root_folder.joinpath("modules")
         self._local_folder = root_folder.joinpath("local")
         self.json_file = root_folder.joinpath("json", "modules.json")
+        os.makedirs(self.json_file.parent, exist_ok=True)
 
         self._timestamp = datetime.now().timestamp()
         self._repo_url = repo_url
@@ -44,6 +37,14 @@ class Repo:
         self.modules_list = []
         self.id_list = []
 
+    @staticmethod
+    def isNotNone(text: str) -> bool:
+        return text != "" and text is not None
+
+    @staticmethod
+    def isWith(text: str, start: str, end: str) -> bool:
+        return text.startswith(start) and text.endswith(end)
+
     def _tmp_file(self, item: dict_) -> Path:
         item_dir = self._modules_folder.joinpath(item.id)
         file_name = f"{item.id}.zip"
@@ -51,7 +52,7 @@ class Repo:
 
         return item_dir.joinpath(file_name)
 
-    def _cloud_file(self, item: dict_) -> Path:
+    def _zip_file(self, item: dict_) -> Path:
         item_dir = self._modules_folder.joinpath(item.id)
         file_name = "{0}_{1}.zip".format(item.version.replace(" ", "_"), item.versionCode)
 
@@ -66,49 +67,63 @@ class Repo:
         item.author = prop.author
         item.description = prop.description
 
-    def _get_common_version_item(self, item: dict_, cf: Path) -> dict_:
+    def _get_common_version_item(self, item: dict_, zip_file: Path) -> dict_:
         versions_item = dict_(timestamp=self._timestamp)
         versions_item.version = item.version
         versions_item.versionCode = item.versionCode
-        versions_item.zipUrl = f"{self._repo_url}modules/{item.id}/{cf.name}"
+        versions_item.zipUrl = f"{self._repo_url}modules/{item.id}/{zip_file.name}"
         versions_item.changelog = ""
 
         return versions_item
 
-    def _upload_changelog_url(self, cf: Path, url: str) -> str:
-        changelog_file = cf.parent.joinpath(cf.name.replace("zip", "md"))
-        _id = changelog_file.parent.as_posix().split("/")[-1]
-        download_by_requests(url, changelog_file)
-        return f"{self._repo_url}modules/{_id}/{changelog_file.name}"
+    def _upload_file_from_url(self, _file: Path, url: str) -> str:
+        _id = _file.parent.as_posix().split("/")[-1]
+        download_by_requests(url, _file)
+        return f"{self._repo_url}modules/{_id}/{_file.name}"
 
-    def _upload_from_json(self, item: dict_, url: str) -> dict_:
-        tf = self._tmp_file(item)
-        update_json = dict_(load_json_url(url))
-        download_by_requests(update_json.zipUrl, tf)
-        self._update_info(item, tf)
+    def _upload_changelog_url(self, zip_file: Path, changelog: str) -> str:
+        if self.isNotNone(changelog) and self.isWith(changelog, "http", "md"):
+            changelog_file = zip_file.parent.joinpath(zip_file.name.replace("zip", "md"))
+            return self._upload_file_from_url(changelog_file, changelog)
+        else:
+            return ""
 
-        cf = self._cloud_file(item)
-        shutil.move(tf, cf)
+    def _upload_from_json(self, item: dict_, host: dict_) -> dict_:
+        tmp_file = self._tmp_file(item)
+        update_json = dict_(load_json_url(host.update_to))
+        download_by_requests(update_json.zipUrl, tmp_file)
+        self._update_info(item, tmp_file)
 
-        # item.updateJson = f"{self._repo_url}modules/{item.id}/update.json"
-        versions_item = self._get_common_version_item(item, cf)
-        versions_item.changelog = self._upload_changelog_url(cf, update_json.changelog)
+        zip_file = self._zip_file(item)
+        shutil.move(tmp_file, zip_file)
+
+        versions_item = self._get_common_version_item(item, zip_file)
+        versions_item.changelog = self._upload_changelog_url(zip_file, update_json.changelog)
 
         return versions_item
 
     def _upload_from_url(self, item: dict_, host: dict_) -> dict_:
-        tf = self._tmp_file(item)
-        download_by_requests(host.update_to, tf)
-        self._update_info(item, tf)
+        tmp_file = self._tmp_file(item)
+        download_by_requests(host.update_to, tmp_file)
+        self._update_info(item, tmp_file)
 
-        cf = self._cloud_file(item)
-        shutil.move(tf, cf)
+        zip_file = self._zip_file(item)
+        shutil.move(tmp_file, zip_file)
 
-        # item.updateJson = f"{self._repo_url}modules/{item.id}/update.json"
-        versions_item = self._get_common_version_item(item, cf)
+        versions_item = self._get_common_version_item(item, zip_file)
+        versions_item.changelog = self._upload_changelog_url(zip_file, host.changelog)
 
-        if isNotNone(host.changelog) and isWith(host.changelog, "http", "md"):
-            versions_item.changelog = self._upload_changelog_url(cf, host.changelog)
+        return versions_item
+
+    def _upload_from_git(self, item: dict_, host: dict_):
+        tmp_file = self._tmp_file(item)
+        git_clone(host.update_to, tmp_file)
+        self._update_info(item, tmp_file)
+
+        zip_file = self._zip_file(item)
+        shutil.move(tmp_file, zip_file)
+
+        versions_item = self._get_common_version_item(item, zip_file)
 
         return versions_item
 
@@ -116,37 +131,36 @@ class Repo:
         item_dir = self._modules_folder.joinpath(item.id)
         os.makedirs(item_dir, exist_ok=True)
 
-        tf = self._local_folder.joinpath(host.update_to)
-        if not tf.exists():
-            raise FileNotFoundError(f"No such file: '{tf}'")
+        tmp_file = self._local_folder.joinpath(host.update_to)
+        if not tmp_file.exists():
+            raise FileNotFoundError(f"No such file: '{tmp_file}'")
 
-        self._update_info(item, tf)
-        cf = self._cloud_file(item)
-        shutil.copy(tf, cf)
+        self._update_info(item, tmp_file)
+        zip_file = self._zip_file(item)
+        shutil.copy(tmp_file, zip_file)
 
-        # item.updateJson = f"{self._repo_url}modules/{item.id}/update.json"
-        versions_item = self._get_common_version_item(item, cf)
+        versions_item = self._get_common_version_item(item, zip_file)
 
-        if isNotNone(host.changelog) and host.changelog.endswith("md"):
-            changelog_tf = tf.parent.joinpath(host.changelog)
-            if not changelog_tf.exists():
-                self._log.e(f"{item.id}: {changelog_tf}: does not exist")
+        if self.isNotNone(host.changelog) and host.changelog.endswith("md"):
+            changelog_tmp = tmp_file.parent.joinpath(host.changelog)
+            if not changelog_tmp.exists():
+                self._log.e(f"{item.id}: {changelog_tmp}: does not exist")
                 return versions_item
 
-            changelog_cf = cf.parent.joinpath(cf.name.replace("zip", "md"))
-            shutil.copy(changelog_tf, changelog_cf)
-            versions_item.changelog = f"{self._repo_url}modules/{item.id}/{changelog_cf.name}"
+            changelog_file = zip_file.parent.joinpath(zip_file.name.replace("zip", "md"))
+            shutil.copy(changelog_tmp, changelog_file)
+            versions_item.changelog = f"{self._repo_url}modules/{item.id}/{changelog_file.name}"
 
         return versions_item
 
-    def _clear_old_version(self, _id: str, versions: list, local_update_json: Path):
+    def _clear_old_version(self, _id: str, versions: list):
         for old_item in versions[self._max_num_module - 1:]:
             old_item = dict_(old_item)
             file_name = "{0}_{1}.zip".format(
                 old_item.version.replace(" ", "_"),
                 old_item.versionCode
             )
-            f = local_update_json.parent.joinpath(file_name)
+            f = self._modules_folder.joinpath(_id, file_name)
             if f.exists():
                 os.remove(f)
 
@@ -154,14 +168,22 @@ class Repo:
 
             self._log.i(f"{_id}: remove old version: {file_name}")
 
-    def upload_module(self, item: dict_, host: dict_) -> Optional[dict_]:
-        if isWith(host.update_to, "http", "json"):
-            self._log.i(f"{item.id}: upload module from json: {host.update_to}")
-            return self._upload_from_json(item, host.update_to)
+    def _limit_file_size(self, item: dict_, maxsize: float) -> bool:
+        zip_file = self._zip_file(item)
+        return os.stat(zip_file).st_size > maxsize * 1024.0 * 1024.0
 
-        elif isWith(host.update_to, "http", "zip"):
+    def upload_module(self, item: dict_, host: dict_) -> Optional[dict_]:
+        if self.isWith(host.update_to, "http", "json"):
+            self._log.i(f"{item.id}: upload module from json: {host.update_to}")
+            return self._upload_from_json(item, host)
+
+        elif self.isWith(host.update_to, "http", "zip"):
             self._log.i(f"{item.id}: upload module from url: {host.update_to}")
             return self._upload_from_url(item, host)
+
+        elif self.isWith(host.update_to, "http", "git"):
+            self._log.i(f"{item.id}: upload module from git: {host.update_to}")
+            return self._upload_from_git(item, host)
 
         elif host.update_to.endswith("zip"):
             self._log.i(f"{item.id}: upload module from local: {host.update_to}")
@@ -171,7 +193,7 @@ class Repo:
             self._log.i(f"{item.id}: upload module failed: unsupported type({host.update_to})")
             return None
 
-    def pull(self):
+    def pull(self, maxsize: float = 50, debug: bool = False):
         for host in self.hosts_list:
             host = dict_(host)
             item = dict_(id=host.id, license=host.license or "")
@@ -180,7 +202,16 @@ class Repo:
 
             try:
                 versions_item = self.upload_module(item, host)
+
+                if self._limit_file_size(item, maxsize):
+                    self._log.w(f"{host.id}: zip file size exceeds limit ({maxsize}MB)")
+                    shutil.rmtree(self._modules_folder.joinpath(host.id))
+                    continue
+
             except BaseException as err:
+                if debug:
+                    raise err
+
                 msg = "{} " * len(err.args)
                 msg = msg.format(*err.args).rstrip()
                 self._log.e(f"{host.id}: upload module failed: {type(err).__name__}({msg})")
@@ -196,8 +227,8 @@ class Repo:
 
             local_update_json = self._modules_folder.joinpath(host.id, "update.json")
             if local_update_json.exists():
-                local_update_info = dict_(load_json(local_update_json))
-                versions: list = local_update_info.versions
+                update_info = dict_(load_json(local_update_json))
+                versions: list = update_info.versions
                 versions.sort(key=lambda v: v["timestamp"], reverse=True)
 
                 last_version = dict_(versions[0])
@@ -206,21 +237,21 @@ class Repo:
                     self.modules_list.append(item)
                     self._log.i(f"{host.id}: already the latest version")
                     continue
-                else:
-                    if len(versions) >= self._max_num_module:
-                        self._clear_old_version(host.id, versions, local_update_json)
+
+                if len(versions) >= self._max_num_module:
+                    self._clear_old_version(host.id, versions)
 
             else:
-                local_update_info = dict_(timestamp="", versions=[])
-                versions: list = local_update_info.versions
+                update_info = dict_(timestamp="", versions=[])
+                versions: list = update_info.versions
 
             versions.insert(0, versions_item.dict)
-            local_update_info.update(
+            update_info.update(
                 timestamp=self._timestamp,
                 versions=versions
             )
 
-            write_json(local_update_info.dict, local_update_json)
+            write_json(update_info.dict, local_update_json)
             self.modules_list.append(item)
             self._log.i(f"{host.id}: latest version: {versions_item.version}-{versions_item.versionCode}")
 
@@ -236,7 +267,7 @@ class Repo:
         for f in self._modules_folder.glob("*"):
             if f.name not in self.id_list:
                 self._log.w(f"clear removed modules: {f.name}")
-                shutil.rmtree(f)
+                shutil.rmtree(f, ignore_errors=True)
 
     def push_git(self, repo_branch: str):
         cwd_folder = self._modules_folder.parent
@@ -245,6 +276,3 @@ class Repo:
         subprocess.run(['git', 'add', '.'], cwd=cwd_folder.as_posix())
         subprocess.run(['git', 'commit', '-m', msg], cwd=cwd_folder.as_posix())
         subprocess.run(['git', 'push', '-u', 'origin', repo_branch], cwd=cwd_folder.as_posix())
-
-    def push_rsync(self):
-        pass

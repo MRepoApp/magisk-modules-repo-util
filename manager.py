@@ -11,6 +11,11 @@ from Sync.file import write_json
 def parse_parameters():
     root_folder = Path(__file__).resolve().parent.parent
 
+    try:
+        api_token = os.environ["GIT_TOKEN"]
+    except KeyError:
+        api_token = None
+
     parser = argparse.ArgumentParser()
     parser.add_argument("-r",
                         dest="root_folder",
@@ -18,14 +23,38 @@ def parse_parameters():
                         type=str,
                         default=root_folder.as_posix(),
                         help="default: {0}".format('%(default)s'))
-    parser.add_argument("-i",
-                        "--init",
+    parser.add_argument("-k",
+                        dest="api_token",
+                        metavar="api token",
+                        type=str,
+                        default=api_token,
+                        help="default: {0}".format('%(default)s'))
+    parser.add_argument("-m",
+                        dest="file_maxsize",
+                        metavar="max file size",
+                        type=float,
+                        default=50.0,
+                        help="default: {0}".format('%(default)s'))
+    parser.add_argument("-n",
+                        dest="user_name",
+                        metavar="username",
+                        type=str,
+                        default=None,
+                        help="github username or organization name")
+    parser.add_argument("-s",
+                        "--sync",
                         action="store_true",
-                        help="initialize a new config.json")
-    parser.add_argument("-p",
-                        "--push",
+                        help="sync update")
+    parser.add_argument("--new-config",
                         action="store_true",
-                        help="push to repository")
+                        help="create a new config.json")
+    parser.add_argument("--no-push",
+                        action="store_true",
+                        help="no push to repository")
+    parser.add_argument("-d",
+                        "--debug",
+                        action="store_true",
+                        help="debug mode")
     return parser
 
 
@@ -101,7 +130,7 @@ def input_bool(tag, msg) -> bool:
         return False
 
 
-def init_new_config(root_folder: Path):
+def create_new_config(root_folder: Path):
     config = dict_(
         repo_name="",
         repo_url="",
@@ -112,7 +141,7 @@ def init_new_config(root_folder: Path):
         log_dir=""
     )
 
-    print_header("Initialize a new config.json")
+    print_header("Create a new config.json")
 
     config.repo_name = input_f("repo_name", "[str]: ")
     config.repo_url = input_f("repo_url", "[str]: ")
@@ -139,21 +168,32 @@ def main():
     args = parser.parse_args()
 
     root_folder = Path(args.root_folder)
-    if args.init:
-        init_new_config(root_folder)
+
+    if not args.new_config and not args.sync:
+        parser.print_help()
         sys.exit(0)
 
+    if args.new_config:
+        create_new_config(root_folder)
+        sys.exit(0)
+
+    if args.user_name is not None and args.api_token is None:
+        raise KeyError("'api token' is undefined")
+
     config = Config(root_folder)
-    hosts = Hosts(root_folder, log_folder=config.log_dir, show_log=config.show_log)
+    hosts = Hosts(root_folder, user_name=args.user_name, api_token=args.api_token,
+                  log_folder=config.log_dir, show_log=config.show_log)
     repo = Repo(root_folder,
                 name=config.repo_name, modules=hosts.modules, repo_url=config.repo_url,
                 max_num_module=config.max_num_module,
                 log_folder=config.log_dir, show_log=config.show_log)
-    repo.pull()
-    repo.write_modules_json()
-    repo.clear_removed_modules()
 
-    if args.push:
+    if args.sync:
+        repo.pull(maxsize=args.file_maxsize, debug=args.debug)
+        repo.write_modules_json()
+        repo.clear_removed_modules()
+
+    if not args.no_push:
         if config.sync_mode == "git":
             repo.push_git(config.repo_branch)
 

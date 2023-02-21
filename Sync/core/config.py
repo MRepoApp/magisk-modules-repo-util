@@ -9,10 +9,6 @@ class ConfigError(IOError):
     """A Config error occurred."""
 
 
-def isNone(text: str) -> bool:
-    return text == "" or text is None
-
-
 class Config:
     def __init__(self, root_folder: Path):
 
@@ -35,15 +31,19 @@ class Config:
         for key in self._config.keys():
             self._log.i(f"{key}: {self.__getattribute__(key)}")
 
+    @staticmethod
+    def isNone(text: str) -> bool:
+        return text == "" or text is None
+
     def check_config(self):
-        if isNone(self.repo_url):
+        if self.isNone(self.repo_url):
             raise ConfigError("the repo_url field is undefined")
         if not self.repo_url.endswith("/"):
             raise ConfigError("the repo_url need to end with '/'")
 
-        if isNone(self.sync_mode):
+        if self.isNone(self.sync_mode):
             raise ConfigError("the sync_mode field is undefined")
-        if self.sync_mode.lower() == "git" and isNone(self.repo_branch):
+        if self.sync_mode.lower() == "git" and self.isNone(self.repo_branch):
             raise ConfigError("sync_mode is 'git', but the repo_branch field is undefined")
 
     def default_config(self):
