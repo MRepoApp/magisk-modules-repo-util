@@ -191,7 +191,7 @@ def main():
     if args.sync:
         repo.pull(maxsize=args.file_maxsize, debug=args.debug)
         repo.write_modules_json()
-        repo.clear_removed_modules()
+        repo.clear_modules()
 
     if not args.no_push:
         if config.sync_mode == "git":

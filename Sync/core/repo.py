@@ -198,8 +198,6 @@ class Repo:
             host = dict_(host)
             item = dict_(id=host.id, license=host.license or "")
 
-            self.id_list.append(host.id)
-
             try:
                 versions_item = self.upload_module(item, host)
 
@@ -234,6 +232,7 @@ class Repo:
                 last_version = dict_(versions[0])
 
                 if versions_item.versionCode <= last_version.versionCode:
+                    self.id_list.append(host.id)
                     self.modules_list.append(item)
                     self._log.i(f"{host.id}: already the latest version")
                     continue
@@ -252,6 +251,7 @@ class Repo:
             )
 
             write_json(update_info.dict, local_update_json)
+            self.id_list.append(host.id)
             self.modules_list.append(item)
             self._log.i(f"{host.id}: latest version: {versions_item.version}-{versions_item.versionCode}")
 
@@ -259,7 +259,7 @@ class Repo:
         self.modules_json.modules = self.modules_list
         write_json(self.modules_json, self.json_file)
 
-    def clear_removed_modules(self):
+    def clear_modules(self):
         if len(self.id_list) == 0:
             for host in self.hosts_list:
                 self.id_list.append(host["id"])
