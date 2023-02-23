@@ -31,6 +31,8 @@ class Hosts:
     def _get_license(self, repo: Repository) -> str:
         try:
             _license = repo.get_license().license.spdx_id
+            if _license == "NOASSERTION":
+                _license = "UNKNOWN"
         except UnknownObjectException:
             self._log.w(f"{repo.name}: does not include a license")
             _license = ""
