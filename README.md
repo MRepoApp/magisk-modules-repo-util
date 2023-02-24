@@ -1,7 +1,24 @@
 # Magisk Modules Repo Util
 
-- This is util for [ya0211/magisk-modules-repo](https://github.com/ya0211/magisk-modules-repo)
+- This util is to build module repository for [MRepo](https://github.com/ya0211/MRepo)
 - `Sync` is a python package
+
+## manager.py
+``` 
+usage: manager.py [-h] [-r root folder] [-k api token] [-m max file size]
+                  [-n username] [-s] [--new-config] [--no-push] [-d]
+
+options:
+  -h, --help        show this help message and exit
+  -r root folder    default: ../magisk-modules-repo
+  -k api token      default: None
+  -m max file size  default: 50.0
+  -n username       github username or organization name
+  -s, --sync        sync update
+  --new-config      create a new config.json
+  --no-push         no push to repository
+  -d, --debug       debug mode
+```
 
 ## [config.json](template/config.json)
 ```json
@@ -16,7 +33,7 @@
 }
 ```
 - `repo_name`: the name of your magisk module repository
-- `repo_url`: this field need to end with `/`, it will be used to generate the url for the [modules.json](#modules-json) and [update.json](#update-json)
+- `repo_url`: this field need to end with `/`
 - `repo_branch`: this field is defined for the git command
 - `sync_mode`: `git` or `rsync`
 - `max_num_module`: the maximum number of keeping old version modules, the default value is `3`
@@ -35,7 +52,7 @@
 ]
 ```
 - `id`: the id of the module itself
-- `update_to`: the url of [updateJson](https://topjohnwu.github.io/Magisk/guides.html) or zipFile, or the name of zipFile
+- `update_to`: the url of [updateJson](https://topjohnwu.github.io/Magisk/guides.html) or zipFile, or the name of zipFile, or the clone url of a specified git repository (end with `.git`)
 - `license`: the license is this module under
 - `changelog`: this field has no effect on `updateJson`
 
@@ -55,6 +72,16 @@
   "update_to": "https://github.com/LSPosed/LSPosed/releases/download/v1.8.6/LSPosed-v1.8.6-6712-zygisk-release.zip",
   "license": "GPL-3.0-only",
   "changelog": "https://lsposed.github.io/LSPosed/release/changelog.md"
+}
+```
+
+### Upload from git
+```json
+{
+  "id": "busybox-ndk",
+  "update_to": "https://github.com/Magisk-Modules-Repo/busybox-ndk.git",
+  "license": "",
+  "changelog": ""
 }
 ```
 
