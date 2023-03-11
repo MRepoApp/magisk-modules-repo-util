@@ -6,6 +6,7 @@ from pathlib import Path
 from Sync import *
 from Sync.dict import dict_
 from Sync.file import write_json
+from Sync.utils import *
 
 
 def parse_parameters():
@@ -56,78 +57,6 @@ def parse_parameters():
                         action="store_true",
                         help="debug mode")
     return parser
-
-
-def print_header(string):
-    print("\033[01;36m")
-    for x in range(0, len(string) + 6):
-        print("=", end="")
-    print("\n== %s ==" % string)
-    for x in range(0, len(string) + 6):
-        print("=", end="")
-    print("\n\033[0m", end="")
-
-
-def print_info(tag, msg, *, end: str = "\n"):
-    print("\033[01;34m== {0}\033[0m".format(tag), end="")
-    print("\033[01;32m -> \033[0m", end="")
-    print("\033[01;31m{0}\033[0m".format(msg), end=end)
-
-
-def input_n(tag, msg):
-    print_info(tag, msg, end="")
-    return input()
-
-
-def input_f(tag, msg) -> str:
-    while True:
-        value = input_n(tag, msg)
-
-        if value == "q":
-            sys.exit(0)
-
-        if value != "":
-            return value
-
-
-def input_v(tag, msg, values: list) -> str:
-    while True:
-        value = input_n(tag, msg)
-
-        if value == "q":
-            sys.exit(0)
-
-        if value in values:
-            return value
-
-        try:
-            index = int(value) - 1
-            if index in range(len(values)):
-                return values[index]
-        except ValueError:
-            continue
-
-
-def input_int(tag, msg) -> int:
-    while True:
-        value = input_n(tag, msg)
-
-        if value == "q":
-            sys.exit(0)
-
-        try:
-            value = int(value)
-            return value
-        except ValueError:
-            continue
-
-
-def input_bool(tag, msg) -> bool:
-    value = input_v(tag, msg, ["y", "n"])
-    if value == "y":
-        return True
-    else:
-        return False
 
 
 def create_new_config(root_folder: Path):

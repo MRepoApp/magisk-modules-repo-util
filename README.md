@@ -34,7 +34,7 @@ options:
 ```
 - `repo_name`: the name of your magisk module repository
 - `repo_url`: this field need to end with `/`
-- `repo_branch`: this field is defined for the git command
+- `repo_branch`: this field is defined for the git
 - `sync_mode`: `git` or `rsync`
 - `max_num_module`: the maximum number of keeping old version modules, the default value is `3`
 - `show_log`: the default value is `true`. If this field is `false`, the log will never be stored.
@@ -52,9 +52,9 @@ options:
 ]
 ```
 - `id`: the id of the module itself
-- `update_to`: the url of [updateJson](https://topjohnwu.github.io/Magisk/guides.html) or zipFile, or the name of zipFile, or the clone url of a specified git repository (end with `.git`)
+- `update_to`: the url of [updateJson](https://topjohnwu.github.io/Magisk/guides.html) or zipFile, or the name of zipFile, or the url of a git repository (end with `.git`)
 - `license`: the license is this module under
-- `changelog`: this field has no effect on `updateJson`
+- `changelog`: this field will no be uesed on `updateJson`
 
 ### Upload from updateJson
 ```json
@@ -75,16 +75,6 @@ options:
 }
 ```
 
-### Upload from git
-```json
-{
-  "id": "busybox-ndk",
-  "update_to": "https://github.com/Magisk-Modules-Repo/busybox-ndk.git",
-  "license": "",
-  "changelog": ""
-}
-```
-
 ### Upload from local
 1. Create a new folder named `local` in `your-repo`
 2. Put the zip file (and changelog.md) into `local` 
@@ -94,6 +84,16 @@ options:
   "update_to": "LSPosed-v1.8.6-6712-zygisk-release.zip",
   "license": "GPL-3.0-only",
   "changelog": "changelog.md"
+}
+```
+
+### Upload from git
+```json
+{
+  "id": "busybox-ndk",
+  "update_to": "https://github.com/Magisk-Modules-Repo/busybox-ndk.git",
+  "license": "",
+  "changelog": ""
 }
 ```
 

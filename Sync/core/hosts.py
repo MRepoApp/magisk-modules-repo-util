@@ -28,34 +28,6 @@ class Hosts:
 
         self._log.i(f"number of modules: {self.size}")
 
-    def _get_license(self, repo: Repository) -> str:
-        try:
-            _license = repo.get_license().license.spdx_id
-            if _license == "NOASSERTION":
-                _license = "UNKNOWN"
-        except UnknownObjectException:
-            self._log.w(f"{repo.name}: does not include a license")
-            _license = ""
-
-        return _license
-
-    def _get_changelog(self, repo: Repository) -> str:
-        try:
-            changelog = repo.get_contents("changelog.md").download_url
-            self._log.i(f"{repo.name}: include a changelog.md")
-        except UnknownObjectException:
-            changelog = ""
-
-        return changelog
-
-    @staticmethod
-    def _is_magisk_module(repo: Repository):
-        try:
-            repo.get_contents("module.prop")
-            return True
-        except UnknownObjectException:
-            return False
-
     def _init_repo(self, user_name: str, api_token: str):
         self._log.i(f"load hosts: {user_name}")
 
@@ -64,7 +36,7 @@ class Hosts:
         user = github.get_user(user_name)
         for repo in user.get_repos():
             try:
-                if not self._is_magisk_module(repo):
+                if not self.is_module(repo):
                     continue
 
                 self._log.i(f"get host: {repo.name}")
@@ -79,11 +51,11 @@ class Hosts:
                 item = {
                     "id": repo.name,
                     "update_to": update_to,
-                    "license": self._get_license(repo)
+                    "license": self.get_license(repo)
                 }
 
                 if not is_update_json:
-                    item["changelog"] = self._get_changelog(repo)
+                    item["changelog"] = self.get_changelog(repo)
 
                 self._hosts.append(item)
             except BaseException as err:
@@ -92,6 +64,34 @@ class Hosts:
                 self._log.e(f"get host failed: {type(err).__name__}({msg})")
 
         self._log.i(f"number of modules: {self.size}")
+
+    def get_license(self, repo: Repository) -> str:
+        try:
+            _license = repo.get_license().license.spdx_id
+            if _license == "NOASSERTION":
+                _license = "UNKNOWN"
+        except UnknownObjectException:
+            self._log.w(f"{repo.name}: does not include a license")
+            _license = ""
+
+        return _license
+
+    def get_changelog(self, repo: Repository) -> str:
+        try:
+            changelog = repo.get_contents("changelog.md").download_url
+            self._log.i(f"{repo.name}: include a changelog.md")
+        except UnknownObjectException:
+            changelog = ""
+
+        return changelog
+
+    @staticmethod
+    def is_module(repo: Repository):
+        try:
+            repo.get_contents("module.prop")
+            return True
+        except UnknownObjectException:
+            return False
 
     @property
     def size(self) -> int:
