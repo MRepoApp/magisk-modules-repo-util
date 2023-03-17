@@ -19,7 +19,10 @@ class AttrDict(dict):
             self.__setattr__(key, self.get(key))
 
     def update(self, __m: Mapping[_KT, _VT] = None, **kwargs: _VT):
-        super().update(__m, **kwargs)
+        if __m is None:
+            super().update(**kwargs)
+        else:
+            super().update(__m, **kwargs)
         self._update()
 
     def __setattr__(self, key, value):
