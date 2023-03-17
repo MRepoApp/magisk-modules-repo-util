@@ -1,6 +1,5 @@
 import os
 import shutil
-import subprocess
 from pathlib import Path
 from datetime import datetime
 from typing import Optional
@@ -24,14 +23,14 @@ class Repo:
         self.json_file = root_folder.joinpath("json", "modules.json")
         os.makedirs(self.json_file.parent, exist_ok=True)
 
-        self._timestamp = datetime.now().timestamp()
+        self.timestamp = datetime.now().timestamp()
         self._repo_url = repo_url
         self.hosts_list = modules
         self._max_num_module = max_num_module
 
         self.modules_json = dict_(
             name=name,
-            timestamp=self._timestamp,
+            timestamp=self.timestamp,
             modules=[]
         )
         self.modules_list = []
@@ -68,7 +67,7 @@ class Repo:
         item.description = prop.description
 
     def _get_common_version_item(self, item: dict_, zip_file: Path) -> dict_:
-        versions_item = dict_(timestamp=self._timestamp)
+        versions_item = dict_(timestamp=self.timestamp)
         versions_item.version = item.version
         versions_item.versionCode = item.versionCode
         versions_item.zipUrl = f"{self._repo_url}modules/{item.id}/{zip_file.name}"
@@ -227,10 +226,9 @@ class Repo:
             if local_update_json.exists():
                 update_info = dict_(load_json(local_update_json))
                 versions: list = update_info.versions
+
                 versions.sort(key=lambda v: v["timestamp"], reverse=True)
-
                 last_version = dict_(versions[0])
-
                 if versions_item.versionCode <= last_version.versionCode:
                     self.id_list.append(host.id)
                     self.modules_list.append(item)
@@ -241,16 +239,24 @@ class Repo:
                     self._clear_old_version(host.id, versions)
 
             else:
-                update_info = dict_(timestamp="", versions=[])
+                update_info = dict_(id=host.id, timestamp="", versions=[])
                 versions: list = update_info.versions
 
             versions.insert(0, versions_item.dict)
-            update_info.update(
-                timestamp=self._timestamp,
-                versions=versions
-            )
-
+            update_info.update(timestamp=self.timestamp, versions=versions)
             write_json(update_info.dict, local_update_json)
+
+            local_track_json = self._modules_folder.joinpath(host.id, "track.json")
+            if local_track_json.exists():
+                track_info = dict_(load_json(local_track_json))
+            else:
+                track_info = host.copy()
+                track_info.added = self.timestamp
+
+            track_info.last_update = self.timestamp
+            track_info.versions = len(versions)
+            write_json(track_info.dict, local_track_json)
+
             self.id_list.append(host.id)
             self.modules_list.append(item)
             self._log.i(f"{host.id}: latest version: {versions_item.version}-{versions_item.versionCode}")
@@ -268,11 +274,3 @@ class Repo:
             if f.name not in self.id_list:
                 self._log.w(f"clear removed modules: {f.name}")
                 shutil.rmtree(f, ignore_errors=True)
-
-    def push_git(self, repo_branch: str):
-        cwd_folder = self._modules_folder.parent
-
-        msg = f"timestamp: {datetime.fromtimestamp(self._timestamp)}"
-        subprocess.run(['git', 'add', '.'], cwd=cwd_folder.as_posix())
-        subprocess.run(['git', 'commit', '-m', msg], cwd=cwd_folder.as_posix())
-        subprocess.run(['git', 'push', '-u', 'origin', repo_branch], cwd=cwd_folder.as_posix())

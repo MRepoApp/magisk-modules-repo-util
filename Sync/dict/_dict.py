@@ -37,11 +37,14 @@ class _Dict(dict):
 
     @property
     def dict(self) -> dict:
-        return self.copy()
+        return dict.copy(self)
 
     @property
     def size(self) -> int:
         return self.__len__()
+
+    def copy(self):
+        return _Dict(self.dict)
 
 
 dict_ = _Dict

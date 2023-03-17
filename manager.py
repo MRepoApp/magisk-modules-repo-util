@@ -2,7 +2,9 @@
 import os
 import sys
 import argparse
+import subprocess
 from pathlib import Path
+from datetime import datetime
 from Sync import *
 from Sync.dict import dict_
 from Sync.file import write_json
@@ -92,6 +94,13 @@ def create_new_config(root_folder: Path):
         write_json(config.dict, config_json)
 
 
+def push_git(cwd_folder: Path, timestamp: float, branch: str):
+    msg = f"Update by CLI ({datetime.fromtimestamp(timestamp)})"
+    subprocess.run(["git", "add", "."], cwd=cwd_folder.as_posix())
+    subprocess.run(["git", "commit", "-m", msg], cwd=cwd_folder.as_posix())
+    subprocess.run(["git", "push", "-u", "origin", branch], cwd=cwd_folder.as_posix())
+
+
 def main():
     parser = parse_parameters()
     args = parser.parse_args()
@@ -122,9 +131,10 @@ def main():
         repo.write_modules_json()
         repo.clear_modules()
 
-    if not args.no_push:
-        if config.sync_mode == "git":
-            repo.push_git(config.repo_branch)
+    if not args.no_push and config.sync_mode == "git":
+        push_git(root_folder,
+                 timestamp=repo.timestamp,
+                 branch=config.repo_branch)
 
 
 if __name__ == "__main__":

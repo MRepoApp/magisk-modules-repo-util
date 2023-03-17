@@ -43,7 +43,6 @@ class Hosts:
                 is_update_json = False
                 try:
                     update_to = repo.get_contents("update.json").download_url
-                    self._log.i(f"{repo.name}: include a update.json")
                     is_update_json = True
                 except UnknownObjectException:
                     update_to = repo.clone_url
@@ -65,21 +64,21 @@ class Hosts:
 
         self._log.i(f"number of modules: {self.size}")
 
-    def get_license(self, repo: Repository) -> str:
+    @staticmethod
+    def get_license(repo: Repository) -> str:
         try:
             _license = repo.get_license().license.spdx_id
             if _license == "NOASSERTION":
                 _license = "UNKNOWN"
         except UnknownObjectException:
-            self._log.w(f"{repo.name}: does not include a license")
             _license = ""
 
         return _license
 
-    def get_changelog(self, repo: Repository) -> str:
+    @staticmethod
+    def get_changelog(repo: Repository) -> str:
         try:
             changelog = repo.get_contents("changelog.md").download_url
-            self._log.i(f"{repo.name}: include a changelog.md")
         except UnknownObjectException:
             changelog = ""
 
