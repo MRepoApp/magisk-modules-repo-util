@@ -1,11 +1,11 @@
 # Magisk Modules Repo Util
 
 - This util is to build module repository for [MRepo](https://github.com/ya0211/MRepo)
-- `Sync` is a python package
+- `sync` is a python package
 
-## manager.py
+## cli.py
 ``` 
-usage: manager.py [-h] [-r root folder] [-k api token] [-m max file size]
+usage: cli.py [-h] [-r root folder] [-k api token] [-m max file size]
                   [-n username] [-s] [--new-config] [--no-push] [-d]
 
 options:
@@ -113,8 +113,8 @@ options:
       "author": "LSPosed Developers",
       "description": "Another enhanced implementation of Xposed Framework. Supports Android 8.1 ~ 13. Requires Magisk 24.0+ and Zygisk enabled.",
       "states": {
-        "zipUrl": "https://raw.githubusercontent.com/ya0211/magisk-modules-repo/main/modules/zygisk_lsposed/v1.8.6_(6712)_6712.zip",
-        "changelog": "https://raw.githubusercontent.com/ya0211/magisk-modules-repo/main/modules/zygisk_lsposed/v1.8.6_(6712)_6712.md"
+        "zipUrl": "{repo_url}modules/zygisk_lsposed/v1.8.6_(6712)_6712.zip",
+        "changelog": "{repo_url}modules/zygisk_lsposed/v1.8.6_(6712)_6712.md"
       }
     }
   ]
@@ -130,8 +130,8 @@ options:
       "timestamp": 1675253784.868081,
       "version": "v1.8.6 (6712)",
       "versionCode": 6712,
-      "zipUrl": "https://raw.githubusercontent.com/ya0211/magisk-modules-repo/main/modules/zygisk_lsposed/v1.8.6_(6712)_6712.zip",
-      "changelog": "https://raw.githubusercontent.com/ya0211/magisk-modules-repo/main/modules/zygisk_lsposed/v1.8.6_(6712)_6712.md"
+      "zipUrl": "{repo_url}modules/zygisk_lsposed/v1.8.6_(6712)_6712.zip",
+      "changelog": "{repo_url}modules/zygisk_lsposed/v1.8.6_(6712)_6712.md"
     }
   ]
 }

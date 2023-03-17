@@ -8,7 +8,7 @@ def print_header(string):
     print("\n\033[0m", end="")
 
 
-def print_info(tag, msg, *, end: str = "\n"):
+def print_value(tag, msg, *, end: str = "\n"):
     print("\033[01;34m== {0}\033[0m".format(tag), end="")
     print("\033[01;32m -> \033[0m", end="")
     print("\033[01;31m{0}\033[0m".format(msg), end=end)
@@ -16,5 +16,5 @@ def print_info(tag, msg, *, end: str = "\n"):
 
 __all__ = [
     "print_header",
-    "print_info"
+    "print_value"
 ]

@@ -5,10 +5,11 @@ import argparse
 import subprocess
 from pathlib import Path
 from datetime import datetime
-from Sync import *
-from Sync.dict import dict_
-from Sync.file import write_json
-from Sync.utils import *
+from sync import Sync
+from sync.AttrDict import AttrDict
+from sync.Print import print_header
+from sync.Input import *
+from sync.File import write_json
 
 
 def parse_parameters():
@@ -62,7 +63,7 @@ def parse_parameters():
 
 
 def create_new_config(root_folder: Path):
-    config = dict_(
+    config = AttrDict(
         repo_name="",
         repo_url="",
         repo_branch="",
@@ -74,18 +75,18 @@ def create_new_config(root_folder: Path):
 
     print_header("Create a new config.json")
 
-    config.repo_name = input_f("repo_name", "[str]: ")
-    config.repo_url = input_f("repo_url", "[str]: ")
+    config.repo_name = input_force("repo_name", "[str]: ")
+    config.repo_url = input_force("repo_url", "[str]: ")
 
-    config.sync_mode = input_v("sync_mode", "[git/rsync]: ", ["git", "rsync"])
+    config.sync_mode = input_optional("sync_mode", "[git/rsync]: ", ["git", "rsync"])
     if config.sync_mode == "git":
-        config.repo_branch = input_f("repo_branch", "[str]: ")
+        config.repo_branch = input_force("repo_branch", "[str]: ")
 
     config.max_num_module = input_int("max_num_module", "[int]: ")
 
     config.show_log = input_bool("show_log", "[y/n]: ")
     if config.show_log:
-        config.log_dir = input_n("log_dir", "[str]: ")
+        config.log_dir = input_common("log_dir", "[str]: ")
 
     save = input_bool(f"save to config.json", "[y/n/q]: ")
     if save:
@@ -118,13 +119,15 @@ def main():
     if args.user_name is not None and args.api_token is None:
         raise KeyError("'api token' is undefined")
 
-    config = Config(root_folder)
-    hosts = Hosts(root_folder, user_name=args.user_name, api_token=args.api_token,
-                  log_folder=config.log_dir, show_log=config.show_log)
-    repo = Repo(root_folder,
-                name=config.repo_name, modules=hosts.modules, repo_url=config.repo_url,
-                max_num_module=config.max_num_module,
-                log_folder=config.log_dir, show_log=config.show_log)
+    sync = Sync(root_folder)
+    config = sync.get_config()
+
+    if args.user_name is not None:
+        sync.get_hosts_from_github(user_name=args.user_name, api_token=args.api_token)
+    else:
+        sync.get_hosts_form_local()
+
+    repo = sync.get_repo()
 
     if args.sync:
         repo.pull(maxsize=args.file_maxsize, debug=args.debug)
@@ -132,9 +135,11 @@ def main():
         repo.clear_modules()
 
     if not args.no_push and config.sync_mode == "git":
-        push_git(root_folder,
-                 timestamp=repo.timestamp,
-                 branch=config.repo_branch)
+        push_git(
+            cwd_folder=root_folder,
+            timestamp=repo.timestamp,
+            branch=config.repo_branch
+        )
 
 
 if __name__ == "__main__":

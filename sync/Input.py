@@ -1,15 +1,15 @@
 import sys
-from .print import print_info
+from .Print import print_value
 
 
-def input_n(tag, msg):
-    print_info(tag, msg, end="")
+def input_common(tag, msg):
+    print_value(tag, msg, end="")
     return input()
 
 
-def input_f(tag, msg) -> str:
+def input_force(tag, msg) -> str:
     while True:
-        value = input_n(tag, msg)
+        value = input_common(tag, msg)
 
         if value == "q":
             sys.exit(0)
@@ -18,9 +18,9 @@ def input_f(tag, msg) -> str:
             return value
 
 
-def input_v(tag, msg, values: list) -> str:
+def input_optional(tag, msg, values: list) -> str:
     while True:
-        value = input_n(tag, msg)
+        value = input_common(tag, msg)
 
         if value == "q":
             sys.exit(0)
@@ -38,7 +38,7 @@ def input_v(tag, msg, values: list) -> str:
 
 def input_int(tag, msg) -> int:
     while True:
-        value = input_n(tag, msg)
+        value = input_common(tag, msg)
 
         if value == "q":
             sys.exit(0)
@@ -51,7 +51,7 @@ def input_int(tag, msg) -> int:
 
 
 def input_bool(tag, msg) -> bool:
-    value = input_v(tag, msg, ["y", "n"])
+    value = input_optional(tag, msg, ["y", "n"])
     if value == "y":
         return True
     else:
@@ -59,9 +59,9 @@ def input_bool(tag, msg) -> bool:
 
 
 __all__ = [
-    "input_n",
-    "input_f",
-    "input_v",
+    "input_common",
+    "input_force",
+    "input_optional",
     "input_int",
     "input_bool"
 ]

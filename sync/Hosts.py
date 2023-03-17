@@ -2,8 +2,8 @@ from typing import Optional
 from pathlib import Path
 from github import Github, UnknownObjectException
 from github.Repository import Repository
-from ..file import load_json
-from ..log import Log
+from .File import load_json
+from .Log import Log
 
 
 class Hosts:

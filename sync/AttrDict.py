@@ -4,7 +4,7 @@ _KT = TypeVar("_KT")
 _VT = TypeVar("_VT")
 
 
-class _Dict(dict):
+class AttrDict(dict):
     def __init__(self, seq=None, **kwargs):
         if seq is None:
             seq = kwargs
@@ -44,7 +44,4 @@ class _Dict(dict):
         return self.__len__()
 
     def copy(self):
-        return _Dict(self.dict)
-
-
-dict_ = _Dict
+        return AttrDict(self.dict)

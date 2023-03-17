@@ -1,12 +1,9 @@
 from typing import Optional
 from pathlib import Path
-from ..dict import dict_
-from ..file import load_json
-from ..log import Log
-
-
-class ConfigError(IOError):
-    """A Config error occurred."""
+from .AttrDict import AttrDict
+from .File import load_json
+from .ConfigError import ConfigError
+from .Log import Log
 
 
 class Config:
@@ -16,7 +13,7 @@ class Config:
         if not config_json.exists():
             raise FileNotFoundError("config.json: You can find template in [util/template]")
 
-        self._config = dict_(load_json(config_json))
+        self._config = AttrDict(load_json(config_json))
         self.check_config()
         self.default_config()
 

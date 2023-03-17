@@ -51,7 +51,7 @@ def write_json(json_dict: dict, json_file: Path):
         json.dump(json_dict, f, indent=2)
 
 
-def download_by_requests(url: str, out: Path):
+def downloader(url: str, out: Path):
     response = requests.get(url, stream=True)
     if response.ok:
         block_size = 1024
@@ -95,6 +95,6 @@ __all__ = [
     "load_json_url",
     "get_props",
     "write_json",
-    "download_by_requests",
+    "downloader",
     "git_clone"
 ]
