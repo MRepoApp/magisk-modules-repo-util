@@ -61,7 +61,7 @@ class Repo:
         return f"{self._repo_url}{self._modules_folder.name}/{_id}/{_file}"
 
     @staticmethod
-    def _update_info(item: AttrDict, module_file: Path):
+    def _update_module_info(item: AttrDict, module_file: Path):
         prop = AttrDict(get_props(module_file))
         item.name = prop.name
         item.version = prop.version
@@ -94,7 +94,7 @@ class Repo:
         tmp_file = self._tmp_file(item)
         update_json = AttrDict(load_json_url(host.update_to))
         downloader(update_json.zipUrl, tmp_file)
-        self._update_info(item, tmp_file)
+        self._update_module_info(item, tmp_file)
 
         zip_file = self._zip_file(item)
         shutil.move(tmp_file, zip_file)
@@ -107,7 +107,7 @@ class Repo:
     def _get_module_from_url(self, item: AttrDict, host: AttrDict) -> AttrDict:
         tmp_file = self._tmp_file(item)
         downloader(host.update_to, tmp_file)
-        self._update_info(item, tmp_file)
+        self._update_module_info(item, tmp_file)
 
         zip_file = self._zip_file(item)
         shutil.move(tmp_file, zip_file)
@@ -120,7 +120,7 @@ class Repo:
     def _get_module_from_git(self, item: AttrDict, host: AttrDict):
         tmp_file = self._tmp_file(item)
         git_clone(host.update_to, tmp_file)
-        self._update_info(item, tmp_file)
+        self._update_module_info(item, tmp_file)
 
         zip_file = self._zip_file(item)
         shutil.move(tmp_file, zip_file)
@@ -137,7 +137,7 @@ class Repo:
         if not tmp_file.exists():
             raise FileNotFoundError(f"No such file: '{tmp_file}'")
 
-        self._update_info(item, tmp_file)
+        self._update_module_info(item, tmp_file)
         zip_file = self._zip_file(item)
         shutil.copy(tmp_file, zip_file)
 
@@ -174,7 +174,7 @@ class Repo:
         zip_file = self._zip_file(item)
         return os.stat(zip_file).st_size > maxsize * 1024.0 * 1024.0
 
-    def upload_module(self, item: AttrDict, host: AttrDict) -> Optional[AttrDict]:
+    def _update_module(self, item: AttrDict, host: AttrDict) -> Optional[AttrDict]:
         if self.isWith(host.update_to, "http", "json"):
             self._log.i(f"{item.id}: upload module from json: {host.update_to}")
             return self._get_module_from_json(item, host)
@@ -195,13 +195,25 @@ class Repo:
             self._log.i(f"{item.id}: upload module failed: unsupported type({host.update_to})")
             return None
 
+    def _update_track(self, host: AttrDict, version_size: int, added: int = None, last_update: int = None):
+        local_track_json = self._modules_folder.joinpath(host.id, "track.json")
+        if local_track_json.exists():
+            track_info = AttrDict(load_json(local_track_json))
+        else:
+            track_info = host.new()
+            track_info.added = added or self.timestamp
+
+        track_info.last_update = last_update or self.timestamp
+        track_info.versions = version_size
+        write_json(track_info.dict, local_track_json)
+
     def pull(self, maxsize: float = 50, debug: bool = False):
         for host in self.hosts_list:
             host = AttrDict(host)
             item = AttrDict(id=host.id, license=host.license or "")
 
             try:
-                versions_item = self.upload_module(item, host)
+                versions_item = self._update_module(item, host)
 
                 if self._limit_file_size(item, maxsize):
                     self._log.w(f"{host.id}: zip file size exceeds limit ({maxsize}MB)")
@@ -225,14 +237,24 @@ class Repo:
                 "changelog": versions_item.changelog
             }
 
+            local_track_json = self._modules_folder.joinpath(host.id, "track.json")
             local_update_json = self._modules_folder.joinpath(host.id, "update.json")
             if local_update_json.exists():
                 update_info = AttrDict(load_json(local_update_json))
                 versions: list = update_info.versions
 
                 versions.sort(key=lambda v: v["timestamp"], reverse=True)
-                last_version = AttrDict(versions[0])
-                if versions_item.versionCode <= last_version.versionCode:
+                latest_version = AttrDict(versions[0])
+                oldest_version = AttrDict(versions[-1])
+                if versions_item.versionCode <= latest_version.versionCode:
+                    if not local_track_json.exists():
+                        self._update_track(
+                            host=host,
+                            version_size=len(versions),
+                            added=oldest_version.timestamp,
+                            last_update=latest_version.timestamp
+                        )
+
                     self.id_list.append(host.id)
                     self.modules_list.append(item)
                     self._log.i(f"{host.id}: already the latest version")
@@ -249,16 +271,7 @@ class Repo:
             update_info.update(timestamp=self.timestamp, versions=versions)
             write_json(update_info.dict, local_update_json)
 
-            local_track_json = self._modules_folder.joinpath(host.id, "track.json")
-            if local_track_json.exists():
-                track_info = AttrDict(load_json(local_track_json))
-            else:
-                track_info = host.copy()
-                track_info.added = self.timestamp
-
-            track_info.last_update = self.timestamp
-            track_info.versions = len(versions)
-            write_json(track_info.dict, local_track_json)
+            self._update_track(host=host, version_size=len(versions))
 
             self.id_list.append(host.id)
             self.modules_list.append(item)

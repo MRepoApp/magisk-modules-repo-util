@@ -19,10 +19,7 @@ class AttrDict(dict):
             self.__setattr__(key, self.get(key))
 
     def update(self, __m: Mapping[_KT, _VT] = None, **kwargs: _VT):
-        if __m is None:
-            dict.update(self, **kwargs)
-        else:
-            dict.update(self, __m, **kwargs)
+        super().update(__m, **kwargs)
         self._update()
 
     def __setattr__(self, key, value):
@@ -37,11 +34,11 @@ class AttrDict(dict):
 
     @property
     def dict(self) -> dict:
-        return dict.copy(self)
+        return super().copy()
 
     @property
     def size(self) -> int:
         return self.__len__()
 
-    def copy(self):
+    def new(self):
         return AttrDict(self.dict)
