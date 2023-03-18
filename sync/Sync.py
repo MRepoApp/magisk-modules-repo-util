@@ -46,7 +46,7 @@ class Sync:
             name=self._config.repo_name,
             modules=self._hosts.modules,
             repo_url=self._config.repo_url,
-            max_num_module=self._config.max_num_module,
+            max_num=self._config.max_num,
             log_folder=self._config.log_dir,
             show_log=self._config.show_log)
 

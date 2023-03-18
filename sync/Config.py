@@ -38,14 +38,9 @@ class Config:
         if not self.repo_url.endswith("/"):
             raise ConfigError("the repo_url need to end with '/'")
 
-        if self.isNone(self.sync_mode):
-            raise ConfigError("the sync_mode field is undefined")
-        if self.sync_mode.lower() == "git" and self.isNone(self.repo_branch):
-            raise ConfigError("sync_mode is 'git', but the repo_branch field is undefined")
-
     def default_config(self):
         self._config.repo_name = self._config.repo_name or "Someone's Magisk Repo"
-        self._config.max_num_module = self._config.max_num_module or 3
+        self._config.max_num = self._config.max_num_module or 3
         self._config.show_log = self._config.show_log or True
         self._config.log_dir = self._config.log_dir or None
 
@@ -58,16 +53,8 @@ class Config:
         return self._config.repo_url
 
     @property
-    def repo_branch(self):
-        return self._config.repo_branch
-
-    @property
-    def sync_mode(self) -> str:
-        return self._config.sync_mode.lower()
-
-    @property
-    def max_num_module(self) -> int:
-        return int(self._config.max_num_module)
+    def max_num(self) -> int:
+        return int(self._config.max_num)
 
     @property
     def show_log(self) -> bool:

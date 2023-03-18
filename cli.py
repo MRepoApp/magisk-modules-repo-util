@@ -39,22 +39,25 @@ def parse_parameters():
                         type=float,
                         default=50.0,
                         help="default: {0}".format('%(default)s'))
-    parser.add_argument("-n",
+    parser.add_argument("-u",
                         dest="user_name",
                         metavar="username",
                         type=str,
                         default=None,
                         help="github username or organization name")
-    parser.add_argument("-s",
-                        "--sync",
+    parser.add_argument("-p",
+                        "--push",
                         action="store_true",
-                        help="sync update")
+                        help="push to repository"),
+    parser.add_argument("-b",
+                        dest="branch",
+                        metavar="branch",
+                        type=str,
+                        default=get_branch(root_folder),
+                        help="branch for 'git push', default: {0}".format('%(default)s'))
     parser.add_argument("--new-config",
                         action="store_true",
                         help="create a new config.json")
-    parser.add_argument("--no-push",
-                        action="store_true",
-                        help="no push to repository")
     parser.add_argument("-d",
                         "--debug",
                         action="store_true",
@@ -78,11 +81,7 @@ def create_new_config(root_folder: Path):
     config.repo_name = input_force("repo_name", "[str]: ")
     config.repo_url = input_force("repo_url", "[str]: ")
 
-    config.sync_mode = input_optional("sync_mode", "[git/rsync]: ", ["git", "rsync"])
-    if config.sync_mode == "git":
-        config.repo_branch = input_force("repo_branch", "[str]: ")
-
-    config.max_num_module = input_int("max_num_module", "[int]: ")
+    config.max_num_module = input_int("max_num", "[int]: ")
 
     config.show_log = input_bool("show_log", "[y/n]: ")
     if config.show_log:
@@ -93,6 +92,20 @@ def create_new_config(root_folder: Path):
         config_json = root_folder.joinpath("config", "config.json")
         os.makedirs(config_json.parent, exist_ok=True)
         write_json(config.dict, config_json)
+
+
+def get_branch(cwd_folder: Path):
+    result = subprocess.run(
+        ["git", "branch", "--all"],
+        stdout=subprocess.PIPE,
+        cwd=cwd_folder.as_posix()
+    )
+    for out in result.stdout.decode("utf-8").splitlines():
+        if out.startswith("*"):
+            out = out.strip().split(maxsplit=1)
+            return out[-1]
+
+    return None
 
 
 def push_git(cwd_folder: Path, timestamp: float, branch: str):
@@ -108,10 +121,6 @@ def main():
 
     root_folder = Path(args.root_folder)
 
-    if not args.new_config and not args.sync:
-        parser.print_help()
-        sys.exit(0)
-
     if args.new_config:
         create_new_config(root_folder)
         sys.exit(0)
@@ -120,7 +129,7 @@ def main():
         raise KeyError("'api token' is undefined")
 
     sync = Sync(root_folder)
-    config = sync.get_config()
+    sync.get_config()
 
     if args.user_name is not None:
         sync.get_hosts_from_github(user_name=args.user_name, api_token=args.api_token)
@@ -128,18 +137,12 @@ def main():
         sync.get_hosts_form_local()
 
     repo = sync.get_repo()
+    repo.pull(maxsize=args.file_maxsize, debug=args.debug)
+    repo.write_modules_json()
+    repo.clear_modules()
 
-    if args.sync:
-        repo.pull(maxsize=args.file_maxsize, debug=args.debug)
-        repo.write_modules_json()
-        repo.clear_modules()
-
-    if not args.no_push and config.sync_mode == "git":
-        push_git(
-            cwd_folder=root_folder,
-            timestamp=repo.timestamp,
-            branch=config.repo_branch
-        )
+    if args.push:
+        push_git(cwd_folder=root_folder, timestamp=repo.timestamp, branch=args.branch)
 
 
 if __name__ == "__main__":

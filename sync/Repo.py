@@ -12,7 +12,7 @@ class Repo:
     def __init__(
             self, root_folder: Path,
             name: str, modules: list, repo_url: str,
-            max_num_module: int,
+            max_num: int,
             *, log_folder: Optional[Path] = None, show_log: bool = True
     ):
 
@@ -26,7 +26,7 @@ class Repo:
         self.timestamp = datetime.now().timestamp()
         self._repo_url = repo_url
         self.hosts_list = modules
-        self._max_num_module = max_num_module
+        self._max_num = max_num
 
         self.modules_json = AttrDict(
             name=name,
@@ -156,7 +156,7 @@ class Repo:
         return versions_item
 
     def _clear_old_version(self, _id: str, versions: list):
-        for old_item in versions[self._max_num_module - 1:]:
+        for old_item in versions[self._max_num - 1:]:
             old_item = AttrDict(old_item)
             file_name = "{0}_{1}.zip".format(
                 old_item.version.replace(" ", "_"),
@@ -260,7 +260,7 @@ class Repo:
                     self._log.i(f"{host.id}: already the latest version")
                     continue
 
-                if len(versions) >= self._max_num_module:
+                if len(versions) >= self._max_num:
                     self._clear_old_version(host.id, versions)
 
             else:

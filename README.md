@@ -3,44 +3,47 @@
 - This util is to build module repository for [MRepo](https://github.com/ya0211/MRepo)
 - `sync` is a python package
 
+## Setup
+1. Create a folder (or a git repository and clone it), clone this repository into the folder (or add it as a submodule of the git repository)
+2. Refer to the following [example](#config-json) to create a `config.json` (or use `cli.py --new-config`)
+3. Refer to the following [example](#hosts-json) to create a `hosts.json`
+4. Run `cli.py` to sync (`cli.py -p` to sync and push)
+
 ## cli.py
 ``` 
-usage: cli.py [-h] [-r root folder] [-k api token] [-m max file size]
-                  [-n username] [-s] [--new-config] [--no-push] [-d]
+usage: cli.py [-h] [-r root folder] [-k api token] [-m max file size] [-u username] [-p] [-b branch] [--new-config] [-d]
 
 options:
   -h, --help        show this help message and exit
   -r root folder    default: ../magisk-modules-repo
   -k api token      default: None
   -m max file size  default: 50.0
-  -n username       github username or organization name
-  -s, --sync        sync update
+  -u username       github username or organization name
+  -p, --push        push to repository
+  -b branch         branch for 'git push', default: main
   --new-config      create a new config.json
-  --no-push         no push to repository
   -d, --debug       debug mode
 ```
 
-## [config.json](template/config.json)
+## config.json
 ```json
 {
   "repo_name": "required",
   "repo_url": "required",
-  "repo_branch": "required for git",
-  "sync_mode": "required",
-  "max_num_module": "optional",
+  "max_num": "optional",
   "show_log": "optional",
   "log_dir": "optional"
 }
 ```
-- `repo_name`: the name of your magisk module repository
-- `repo_url`: this field need to end with `/`
-- `repo_branch`: this field is defined for the git
-- `sync_mode`: `git` or `rsync`
-- `max_num_module`: the maximum number of keeping old version modules, the default value is `3`
-- `show_log`: the default value is `true`. If this field is `false`, the log will never be stored.
-- `log_dir`: the default value is `None`. If this field is defined, the log file will be stored in this directory.
+| Key | Attribute | Description |
+|:-:|:-:|:-:|
+| repo_name | required | Name of your module repository |
+| repo_url | required | Need to end with `/` |
+| max_num | optional | Max number of keeping old version modules, default value is 3 |
+| show_log | optional | If false, the log will never be showed and stored,  default value is true |
+| log_dir | optional | If defined, the log file will be stored in this directory |
 
-## [hosts.json](template/hosts.json)
+## hosts.json
 ```json
 [
   {
@@ -51,17 +54,19 @@ options:
   }
 ]
 ```
-- `id`: the id of the module itself
-- `update_to`: the url of [updateJson](https://topjohnwu.github.io/Magisk/guides.html) or zipFile, or the name of zipFile, or the url of a git repository (end with `.git`)
-- `license`: the license is this module under
-- `changelog`: this field will no be uesed on `updateJson`
+| Key | Attribute | Description |
+|:-:|:-:|:-:|
+| id | required | Id of the module itself |
+| update_to | required | Url of updateJson or zipFile, or the name of zipFile, or the url of a git repository (end with `.git`) |
+| license | optional | SPDX ID |
+| changelog | optional | No be uesed on updateJson |
 
 ### Upload from updateJson
 ```json
 {
   "id": "zygisk_lsposed",
   "update_to": "https://lsposed.github.io/LSPosed/release/zygisk.json",
-  "license": "GPL-3.0-only"
+  "license": "GPL-3.0"
 }
 ```
 
@@ -70,7 +75,7 @@ options:
 {
   "id": "zygisk_lsposed",
   "update_to": "https://github.com/LSPosed/LSPosed/releases/download/v1.8.6/LSPosed-v1.8.6-6712-zygisk-release.zip",
-  "license": "GPL-3.0-only",
+  "license": "GPL-3.0",
   "changelog": "https://lsposed.github.io/LSPosed/release/changelog.md"
 }
 ```
@@ -82,7 +87,7 @@ options:
 {
   "id": "zygisk_lsposed",
   "update_to": "LSPosed-v1.8.6-6712-zygisk-release.zip",
-  "license": "GPL-3.0-only",
+  "license": "GPL-3.0",
   "changelog": "changelog.md"
 }
 ```
@@ -97,16 +102,32 @@ options:
 }
 ```
 
-## Example
+## Structure of repository
+```
+├── config
+│   └── config.json
+├── json
+│   ├── hosts.json
+│   └── modules.json
+├── log
+│   └── sync_2023-03-18_16:59:45.038227.log
+├── modules
+│   └── zygisk_lsposed
+│       ├── track.json
+│       ├── update.json
+│       ├── v1.8.6_(6712)_6712.md
+│       └── v1.8.6_(6712)_6712.zip
+└── util
+```
 ### modules.json
 ```json
 {
   "name": "{repo_name}",
-  "timestamp": 1675253784.868081,
+  "timestamp": 1679036889.233794,
   "modules": [
     {
       "id": "zygisk_lsposed",
-      "license": "GPL-3.0-only",
+      "license": "GPL-3.0",
       "name": "Zygisk - LSPosed",
       "version": "v1.8.6 (6712)",
       "versionCode": 6712,
@@ -124,15 +145,28 @@ options:
 ### update.json
 ```json
 {
-  "timestamp": 1675253784.868081,
+  "id": "zygisk_lsposed",
+  "timestamp": 1679025505.129431,
   "versions": [
     {
-      "timestamp": 1675253784.868081,
+      "timestamp": 1679025505.129431,
       "version": "v1.8.6 (6712)",
       "versionCode": 6712,
       "zipUrl": "{repo_url}modules/zygisk_lsposed/v1.8.6_(6712)_6712.zip",
       "changelog": "{repo_url}modules/zygisk_lsposed/v1.8.6_(6712)_6712.md"
     }
   ]
+}
+```
+
+### track.json
+```json
+{
+  "id": "zygisk_lsposed",
+  "update_to": "https://lsposed.github.io/LSPosed/release/zygisk.json",
+  "license": "GPL-3.0",
+  "added": 1679025505.129431,
+  "last_update": 1679025505.129431,
+  "versions": 1
 }
 ```
