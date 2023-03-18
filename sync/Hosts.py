@@ -1,7 +1,5 @@
 from typing import Optional
 from pathlib import Path
-from github import Github, UnknownObjectException
-from github.Repository import Repository
 from .File import load_json
 from .Log import Log
 
@@ -29,8 +27,9 @@ class Hosts:
         self._log.i(f"number of modules: {self.size}")
 
     def _init_repo(self, user_name: str, api_token: str):
-        self._log.i(f"load hosts: {user_name}")
+        from github import Github, UnknownObjectException
 
+        self._log.i(f"load hosts: {user_name}")
         self._hosts = list()
         github = Github(login_or_token=api_token)
         user = github.get_user(user_name)
@@ -65,7 +64,9 @@ class Hosts:
         self._log.i(f"number of modules: {self.size}")
 
     @staticmethod
-    def get_license(repo: Repository) -> str:
+    def get_license(repo) -> str:
+        from github import UnknownObjectException
+
         try:
             _license = repo.get_license().license.spdx_id
             if _license == "NOASSERTION":
@@ -76,7 +77,9 @@ class Hosts:
         return _license
 
     @staticmethod
-    def get_changelog(repo: Repository) -> str:
+    def get_changelog(repo) -> str:
+        from github import UnknownObjectException
+
         try:
             changelog = repo.get_contents("changelog.md").download_url
         except UnknownObjectException:
@@ -85,7 +88,9 @@ class Hosts:
         return changelog
 
     @staticmethod
-    def is_module(repo: Repository):
+    def is_module(repo):
+        from github import UnknownObjectException
+
         try:
             repo.get_contents("module.prop")
             return True

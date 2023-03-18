@@ -1,4 +1,3 @@
-from typing import Optional
 from pathlib import Path
 from .Config import Config
 from .Hosts import Hosts
