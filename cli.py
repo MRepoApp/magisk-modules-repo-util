@@ -172,6 +172,9 @@ def main():
     if args.user_name is not None and args.api_token is None:
         raise KeyError("'api token' is undefined")
 
+    if args.push and args.branch is None:
+        raise KeyError("'branch' is undefined")
+
     sync = Sync(root_folder)
     sync.get_config()
 
