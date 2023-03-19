@@ -95,7 +95,7 @@ def create_new_config(root_folder: Path):
 
     save = input_bool(f"save to config.json", "[y/n/q]: ")
     if save:
-        write_json(config.dict, config_json)
+        write_json(config, config_json)
 
 
 def add_new_module(root_folder: Path):
@@ -122,7 +122,7 @@ def add_new_module(root_folder: Path):
         module.license = input_common("license", "[str]: ")
         module.changelog = input_common("changelog", "[str]: ")
 
-        hosts.append(module.dict)
+        hosts.append(module)
         _continue = input_bool(f"continue", "[y/n]: ")
         if not _continue:
             break

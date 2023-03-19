@@ -36,12 +36,8 @@ class AttrDict(dict):
             return self.__dict__[item]
 
     @property
-    def dict(self) -> dict:
-        return super().copy()
-
-    @property
     def size(self) -> int:
         return self.__len__()
 
-    def new(self):
-        return AttrDict(self.dict)
+    def copy(self):
+        return AttrDict(super().copy())

@@ -35,6 +35,8 @@ class Repo:
         self.modules_list = []
         self.id_list = []
 
+        self.old_modules_list = load_json(self.json_file)["modules"]
+
     @staticmethod
     def isNotNone(text: str) -> bool:
         return text != "" and text is not None
@@ -175,23 +177,23 @@ class Repo:
 
     def _update_module(self, item: AttrDict, host: AttrDict) -> Optional[AttrDict]:
         if self.isWith(host.update_to, "http", "json"):
-            self._log.i(f"{item.id}: upload module from json: {host.update_to}")
+            self._log.i(f"{item.id}: update module from json: {host.update_to}")
             return self._get_module_from_json(item, host)
 
         elif self.isWith(host.update_to, "http", "zip"):
-            self._log.i(f"{item.id}: upload module from url: {host.update_to}")
+            self._log.i(f"{item.id}: update module from url: {host.update_to}")
             return self._get_module_from_url(item, host)
 
         elif self.isWith(host.update_to, "http", "git"):
-            self._log.i(f"{item.id}: upload module from git: {host.update_to}")
+            self._log.i(f"{item.id}: update module from git: {host.update_to}")
             return self._get_module_from_git(item, host)
 
         elif host.update_to.endswith("zip"):
-            self._log.i(f"{item.id}: upload module from local: {host.update_to}")
+            self._log.i(f"{item.id}: update module from local: {host.update_to}")
             return self._get_module_from_local(item, host)
 
         else:
-            self._log.i(f"{item.id}: upload module failed: unsupported type({host.update_to})")
+            self._log.i(f"{item.id}: update module failed: unsupported type({host.update_to})")
             return None
 
     def _update_track(self, host: AttrDict, version_size: int, added: int = None, last_update: int = None):
@@ -199,17 +201,27 @@ class Repo:
         if local_track_json.exists():
             track_info = AttrDict(load_json(local_track_json))
         else:
-            track_info = host.new()
+            track_info = host.copy()
             track_info.added = added or self.timestamp
 
         track_info.last_update = last_update or self.timestamp
         track_info.versions = version_size
-        write_json(track_info.dict, local_track_json)
+        write_json(track_info, local_track_json)
+
+    def _find_old_module(self, _id: str):
+        for module in self.old_modules_list:
+            if module["id"] == _id:
+                return module
+
+        return None
 
     def pull(self, maxsize: float = 50, debug: bool = False):
         for host in self.hosts_list:
             host = AttrDict(host)
             item = AttrDict(id=host.id, license=host.license or "")
+
+            local_track_json = self._modules_folder.joinpath(host.id, "track.json")
+            local_update_json = self._modules_folder.joinpath(host.id, "update.json")
 
             try:
                 versions_item = self._update_module(item, host)
@@ -225,7 +237,14 @@ class Repo:
 
                 msg = "{} " * len(err.args)
                 msg = msg.format(*err.args).rstrip()
-                self._log.e(f"{host.id}: upload module failed: {type(err).__name__}({msg})")
+                self._log.e(f"{host.id}: update module failed: {type(err).__name__}({msg})")
+
+                old_module = self._find_old_module(host.id)
+                if local_update_json.exists() and old_module is not None:
+                    self._log.i(f"{host.id} will be keep because available versions exists")
+                    self.id_list.append(host.id)
+                    self.modules_list.append(old_module)
+
                 continue
 
             if versions_item is None:
@@ -236,8 +255,6 @@ class Repo:
                 "changelog": versions_item.changelog
             }
 
-            local_track_json = self._modules_folder.joinpath(host.id, "track.json")
-            local_update_json = self._modules_folder.joinpath(host.id, "update.json")
             if local_update_json.exists():
                 update_info = AttrDict(load_json(local_update_json))
                 versions: list = update_info.versions
@@ -266,9 +283,9 @@ class Repo:
                 update_info = AttrDict(id=host.id, timestamp="", versions=[])
                 versions: list = update_info.versions
 
-            versions.insert(0, versions_item.dict)
+            versions.insert(0, versions_item)
             update_info.update(timestamp=self.timestamp, versions=versions)
-            write_json(update_info.dict, local_update_json)
+            write_json(update_info, local_update_json)
 
             self._update_track(host=host, version_size=len(versions))
 
