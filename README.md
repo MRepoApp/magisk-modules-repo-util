@@ -6,13 +6,13 @@
 ## Setup
 **Please check out the examples below before you start.**
  
-1. Create a folder (or a git repository and clone it), for example `your-repo`, clone this repository into `your-repo` (or add it as a submodule of the git repository).
-2. Create a `config.json` in `your-repo/config` (or use `cli.py --new-config`)
-3. Create a `hosts.json` in `your-repo/config` (or use `cli.py --add-module`)
+1. Create a folder (or a git repository and clone it), for example *your-repo*, clone this repository into *your-repo* (or add it as a submodule of the git repository).
+2. Create a **config.json** in *your-repo/config* (or use `cli.py --new-config`)
+3. Create a **hosts.json** in *your-repo/config* (or use `cli.py --add-module`)
 4. Run `cli.py` to sync (`cli.py -p` to sync and push)
 
 ## cli.py
- If you use `hosts.json` to manage modules, you don't need to install any additional python packages and define `GIT_TOKEN`. For other cases, please create an [issue](https://github.com/ya0211/magisk-modules-repo-util/issues/new).
+ If you use **hosts.json** to manage modules, you don't need to install any additional python packages and define `GIT_TOKEN`. For other cases, please create an [issue](https://github.com/ya0211/magisk-modules-repo-util/issues/new).
 ``` 
 usage: cli.py [-h] [-r root folder] [-k api token] [-m max file size] [-u username] [-p] [-b branch] [--new-config] [--add-module] [-d]
 
@@ -85,8 +85,8 @@ options:
 ```
 
 ### Upload from local
-1. Create a new folder named `local` in `your-repo`
-2. Put the zip file (and changelog.md) into `local` 
+1. Create a new folder named *local* in *your-repo*
+2. Put the zip file (and changelog.md) into *local*
 ```json
 {
   "id": "zygisk_lsposed",
