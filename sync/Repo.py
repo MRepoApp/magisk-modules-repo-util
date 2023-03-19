@@ -15,7 +15,6 @@ class Repo:
             max_num: int,
             *, log_folder: Optional[Path] = None, show_log: bool = True
     ):
-
         self._log = Log("Sync", log_folder, show_log)
 
         self._modules_folder = root_folder.joinpath("modules")

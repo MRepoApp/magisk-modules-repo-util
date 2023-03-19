@@ -8,10 +8,9 @@ from .Log import Log
 
 class Config:
     def __init__(self, root_folder: Path):
-
         config_json = root_folder.joinpath("config", "config.json")
         if not config_json.exists():
-            raise FileNotFoundError("config.json: You can find template in [util/template]")
+            raise FileNotFoundError(config_json.as_posix())
 
         self._config = AttrDict(load_json(config_json))
         self.check_config()

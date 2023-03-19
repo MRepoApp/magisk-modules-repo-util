@@ -7,7 +7,6 @@ from .Log import Log
 class Hosts:
     def __init__(self, root_folder: Path, user_name: Optional[str] = None, api_token: Optional[str] = None,
                  *, log_folder: Optional[Path] = None, show_log: bool = True):
-
         self._log = Log("Sync", log_folder, show_log)
         if user_name is None:
             self._init_local(root_folder)
@@ -15,10 +14,10 @@ class Hosts:
             self._init_repo(user_name, api_token)
 
     def _init_local(self, root_folder: Path):
-        hosts_json = root_folder.joinpath("json", "hosts.json")
+        hosts_json = root_folder.joinpath("config", "hosts.json")
         if not hosts_json.exists():
             self._log.e(f"no such file: {hosts_json.as_posix()}")
-            raise FileNotFoundError("hosts.json: You can find template in [util/template]")
+            raise FileNotFoundError(hosts_json.as_posix())
         else:
             self._log.i(f"load hosts: {hosts_json.as_posix()}")
 

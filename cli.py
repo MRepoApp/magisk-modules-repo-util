@@ -9,7 +9,7 @@ from sync import Sync
 from sync.AttrDict import AttrDict
 from sync.Print import print_header
 from sync.Input import *
-from sync.File import write_json
+from sync.File import write_json, load_json
 
 
 def parse_parameters():
@@ -32,7 +32,7 @@ def parse_parameters():
                         metavar="api token",
                         type=str,
                         default=api_token,
-                        help="default: {0}".format('%(default)s'))
+                        help="defined in env as 'GIT_TOKEN', default: {0}".format('%(default)s'))
     parser.add_argument("-m",
                         dest="file_maxsize",
                         metavar="max file size",
@@ -58,6 +58,9 @@ def parse_parameters():
     parser.add_argument("--new-config",
                         action="store_true",
                         help="create a new config.json")
+    parser.add_argument("--add-module",
+                        action="store_true",
+                        help="add a new module to hosts.json")
     parser.add_argument("-d",
                         "--debug",
                         action="store_true",
@@ -66,6 +69,14 @@ def parse_parameters():
 
 
 def create_new_config(root_folder: Path):
+    config_json = root_folder.joinpath("config", "config.json")
+    os.makedirs(config_json.parent, exist_ok=True)
+
+    if config_json.exists():
+        print_header("Rewrite config.json")
+    else:
+        print_header("Create a new config.json")
+
     config = AttrDict(
         repo_name="",
         repo_url="",
@@ -74,21 +85,53 @@ def create_new_config(root_folder: Path):
         log_dir=""
     )
 
-    print_header("Create a new config.json")
-
     config.repo_name = input_force("repo_name", "[str]: ")
     config.repo_url = input_force("repo_url", "[str]: ")
     config.max_num = input_int("max_num", "[int]: ")
-
     config.show_log = input_bool("show_log", "[y/n]: ")
+
     if config.show_log:
         config.log_dir = input_common("log_dir", "[str]: ")
 
     save = input_bool(f"save to config.json", "[y/n/q]: ")
     if save:
-        config_json = root_folder.joinpath("config", "config.json")
-        os.makedirs(config_json.parent, exist_ok=True)
         write_json(config.dict, config_json)
+
+
+def add_new_module(root_folder: Path):
+    hosts_json = root_folder.joinpath("config", "hosts.json")
+    os.makedirs(hosts_json.parent, exist_ok=True)
+
+    if hosts_json.exists():
+        print_header("Add new modules")
+        hosts = load_json(hosts_json)
+    else:
+        print_header("Create a new hosts.json")
+        hosts = []
+
+    module = AttrDict(
+        id="",
+        update_to="",
+        license="",
+        changelog=""
+    )
+
+    while True:
+        module.id = input_force("id", "[str]: ")
+        module.update_to = input_force("update_to", "[str]: ")
+        module.license = input_common("license", "[str]: ")
+        module.changelog = input_common("changelog", "[str]: ")
+
+        hosts.append(module.dict)
+        _continue = input_bool(f"continue", "[y/n]: ")
+        if not _continue:
+            break
+        else:
+            print()
+
+    save = input_bool(f"save to hosts.json", "[y/n/q]: ")
+    if save:
+        write_json(hosts, hosts_json)
 
 
 def get_branch(cwd_folder: Path):
@@ -120,6 +163,10 @@ def main():
 
     if args.new_config:
         create_new_config(root_folder)
+        sys.exit(0)
+
+    if args.add_module:
+        add_new_module(root_folder)
         sys.exit(0)
 
     if args.user_name is not None and args.api_token is None:
