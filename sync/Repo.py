@@ -87,7 +87,14 @@ class Repo:
     def _get_changelog_url(self, zip_file: Path, changelog: str) -> str:
         if self.isNotNone(changelog) and self.isWith(changelog, "http", "md"):
             changelog_file = zip_file.parent.joinpath(zip_file.name.replace("zip", "md"))
-            return self._get_file_from_url(changelog_file, changelog)
+            url = self._get_file_from_url(changelog_file, changelog)
+
+            text = changelog_file.read_text().strip()
+            if text.startswith("<!DOCTYPE html>"):
+                os.remove(changelog_file)
+                return ""
+
+            return url
         else:
             return ""
 
@@ -270,6 +277,12 @@ class Repo:
                             added=oldest_version.timestamp,
                             last_update=latest_version.timestamp
                         )
+
+                    latest_version.zipUrl = versions_item.zipUrl
+                    latest_version.changelog = versions_item.changelog
+                    versions[0] = latest_version
+                    update_info.versions = versions
+                    write_json(update_info, local_update_json)
 
                     self.id_list.append(host.id)
                     self.modules_list.append(item)
