@@ -4,24 +4,28 @@
 - `sync` is a python package
 
 ## Setup
-1. Create a folder (or a git repository and clone it), clone this repository into the folder (or add it as a submodule of the git repository)
-2. Refer to the following [example](#config-json) to create a `config.json` (or use `cli.py --new-config`)
-3. Refer to the following [example](#hosts-json) to create a `hosts.json`
+**Please check out the examples below before you start.**
+ 
+1. Create a folder (or a git repository and clone it), for example `your-repo`, clone this repository into `your-repo` (or add it as a submodule of the git repository).
+2. Create a `config.json` in `your-repo/config` (or use `cli.py --new-config`)
+3. Create a `hosts.json` in `your-repo/config` (or use `cli.py --add-module`)
 4. Run `cli.py` to sync (`cli.py -p` to sync and push)
 
 ## cli.py
+ If you use `hosts.json` to manage modules, you don't need to install any additional python packages and define `GIT_TOKEN`. For other cases, please create an [issue](https://github.com/ya0211/magisk-modules-repo-util/issues/new).
 ``` 
-usage: cli.py [-h] [-r root folder] [-k api token] [-m max file size] [-u username] [-p] [-b branch] [--new-config] [-d]
+usage: cli.py [-h] [-r root folder] [-k api token] [-m max file size] [-u username] [-p] [-b branch] [--new-config] [--add-module] [-d]
 
 options:
   -h, --help        show this help message and exit
-  -r root folder    default: ../magisk-modules-repo
-  -k api token      default: None
+  -r root folder    default: ../your-repo
+  -k api token      defined in env as 'GIT_TOKEN', default: None
   -m max file size  default: 50.0
   -u username       github username or organization name
-  -p, --push        push to repository
+  -p, --push        push to git repository
   -b branch         branch for 'git push', default: main
   --new-config      create a new config.json
+  --add-module      add a new module to hosts.json
   -d, --debug       debug mode
 ```
 
@@ -102,12 +106,12 @@ options:
 }
 ```
 
-## Structure of repository
+## For developer
 ```
 ├── config
+│   ├── hosts.json
 │   └── config.json
 ├── json
-│   ├── hosts.json
 │   └── modules.json
 ├── log
 │   └── sync_2023-03-18_16:59:45.038227.log

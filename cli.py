@@ -48,7 +48,7 @@ def parse_parameters():
     parser.add_argument("-p",
                         "--push",
                         action="store_true",
-                        help="push to repository"),
+                        help="push to git repository"),
     parser.add_argument("-b",
                         dest="branch",
                         metavar="branch",
