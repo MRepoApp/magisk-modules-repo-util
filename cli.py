@@ -69,9 +69,7 @@ def create_new_config(root_folder: Path):
     config = AttrDict(
         repo_name="",
         repo_url="",
-        repo_branch="",
-        sync_mode="",
-        max_num_module="",
+        max_num="",
         show_log="",
         log_dir=""
     )
@@ -80,8 +78,7 @@ def create_new_config(root_folder: Path):
 
     config.repo_name = input_force("repo_name", "[str]: ")
     config.repo_url = input_force("repo_url", "[str]: ")
-
-    config.max_num_module = input_int("max_num", "[int]: ")
+    config.max_num = input_int("max_num", "[int]: ")
 
     config.show_log = input_bool("show_log", "[y/n]: ")
     if config.show_log:
