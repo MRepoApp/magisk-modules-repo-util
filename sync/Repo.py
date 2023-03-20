@@ -22,11 +22,11 @@ class Repo:
         self.json_file = root_folder.joinpath("json", "modules.json")
         os.makedirs(self.json_file.parent, exist_ok=True)
 
-        self.timestamp = datetime.now().timestamp()
         self._repo_url = repo_url
-        self.hosts_list = modules
+        self._hosts_list = modules
         self._max_num = max_num
 
+        self.timestamp = datetime.now().timestamp()
         self.modules_json = AttrDict(
             name=name,
             timestamp=self.timestamp,
@@ -100,7 +100,7 @@ class Repo:
 
     def _get_module_from_json(self, item: AttrDict, host: AttrDict) -> AttrDict:
         tmp_file = self._tmp_file(item)
-        update_json = AttrDict(load_json_url(host.update_to))
+        update_json: AttrDict = load_json_url(host.update_to)
         downloader(update_json.zipUrl, tmp_file)
         self._update_module_info(item, tmp_file)
 
@@ -206,7 +206,7 @@ class Repo:
     def _update_track(self, host: AttrDict, version_size: int, added: int = None, last_update: int = None):
         local_track_json = self._modules_folder.joinpath(host.id, "track.json")
         if local_track_json.exists():
-            track_info = AttrDict(load_json(local_track_json))
+            track_info: AttrDict = load_json(local_track_json)
         else:
             track_info = host.copy()
             track_info.added = added or self.timestamp
@@ -223,7 +223,7 @@ class Repo:
         return None
 
     def pull(self, maxsize: float = 50, debug: bool = False):
-        for host in self.hosts_list:
+        for host in self._hosts_list:
             host = AttrDict(host)
             item = AttrDict(id=host.id, license=host.license or "")
 
@@ -263,7 +263,7 @@ class Repo:
             }
 
             if local_update_json.exists():
-                update_info = AttrDict(load_json(local_update_json))
+                update_info: AttrDict = load_json(local_update_json)
                 versions: list = update_info.versions
 
                 versions.sort(key=lambda v: v["timestamp"], reverse=True)
@@ -312,7 +312,7 @@ class Repo:
 
     def clear_modules(self):
         if len(self.id_list) == 0:
-            for host in self.hosts_list:
+            for host in self._hosts_list:
                 self.id_list.append(host["id"])
 
         for f in self._modules_folder.glob("*"):

@@ -1,6 +1,6 @@
 from typing import Optional
 from pathlib import Path
-from .File import load_json
+from .File import load_json, write_json
 from .Log import Log
 
 
@@ -8,21 +8,21 @@ class Hosts:
     def __init__(self, root_folder: Path, user_name: Optional[str] = None, api_token: Optional[str] = None,
                  *, log_folder: Optional[Path] = None, show_log: bool = True):
         self._log = Log("Sync", log_folder, show_log)
+        self.hosts_json = root_folder.joinpath("config", "hosts.json")
+
         if user_name is None:
-            self._init_local(root_folder)
+            self._init_local()
         else:
             self._init_repo(user_name, api_token)
 
-    def _init_local(self, root_folder: Path):
-        hosts_json = root_folder.joinpath("config", "hosts.json")
-        if not hosts_json.exists():
-            self._log.e(f"no such file: {hosts_json.as_posix()}")
-            raise FileNotFoundError(hosts_json.as_posix())
+    def _init_local(self):
+        if not self.hosts_json.exists():
+            self._log.e(f"no such file: {self.hosts_json.as_posix()}")
+            raise FileNotFoundError(self.hosts_json.as_posix())
         else:
-            self._log.i(f"load hosts: {hosts_json.as_posix()}")
+            self._log.i(f"load hosts: {self.hosts_json.as_posix()}")
 
-        self._hosts: list = load_json(hosts_json)
-
+        self._hosts: list = load_json(self.hosts_json)
         self._log.i(f"number of modules: {self.size}")
 
     def _init_repo(self, user_name: str, api_token: str):
@@ -60,6 +60,7 @@ class Hosts:
                 msg = msg.format(*err.args).rstrip()
                 self._log.e(f"get host failed: {type(err).__name__}({msg})")
 
+        write_json(self._hosts, self.hosts_json)
         self._log.i(f"number of modules: {self.size}")
 
     @staticmethod

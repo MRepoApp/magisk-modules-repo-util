@@ -3,22 +3,32 @@ import json
 import shutil
 import requests
 import subprocess
+from typing import Union
 from pathlib import Path
 from zipfile import ZipFile, ZIP_DEFLATED
 from requests import HTTPError
 from subprocess import CalledProcessError
+from .AttrDict import AttrDict
 
 
-def load_json(json_file: Path):
-    return json.load(open(json_file, encoding="utf-8"))
+def load_json(json_file: Path) -> Union[list, AttrDict]:
+    obj = json.load(open(json_file, encoding="utf-8"))
+    if isinstance(obj, dict):
+        return AttrDict(obj)
+
+    return obj
 
 
-def load_json_url(url: str):
+def load_json_url(url: str) -> Union[list, AttrDict]:
     response = requests.get(url, stream=True)
-    if response.ok:
-        return response.json()
-    else:
+    if not response.ok:
         raise HTTPError(response.text)
+    else:
+        obj = response.json()
+        if isinstance(obj, dict):
+            return AttrDict(obj)
+
+        return obj
 
 
 def get_props(file: Path) -> dict:
@@ -46,9 +56,9 @@ def get_props(file: Path) -> dict:
     return _dict
 
 
-def write_json(json_dict: dict, json_file: Path):
+def write_json(obj: Union[list, dict], json_file: Path):
     with open(json_file, 'w') as f:
-        json.dump(json_dict, f, indent=2)
+        json.dump(obj, f, indent=2)
 
 
 def downloader(url: str, out: Path):

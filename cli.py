@@ -61,6 +61,9 @@ def parse_parameters():
     parser.add_argument("--add-module",
                         action="store_true",
                         help="add a new module to hosts.json")
+    parser.add_argument("--no-sync",
+                        action="store_true",
+                        help="no sync modules")
     parser.add_argument("-d",
                         "--debug",
                         action="store_true",
@@ -184,11 +187,12 @@ def main():
         sync.get_hosts_form_local()
 
     repo = sync.get_repo()
-    repo.pull(maxsize=args.file_maxsize, debug=args.debug)
-    repo.write_modules_json()
-    repo.clear_modules()
+    if not args.no_sync:
+        repo.pull(maxsize=args.file_maxsize, debug=args.debug)
+        repo.write_modules_json()
+        repo.clear_modules()
 
-    if args.push:
+    if args.push and not args.no_sync:
         push_git(cwd_folder=root_folder, timestamp=repo.timestamp, branch=args.branch)
 
 

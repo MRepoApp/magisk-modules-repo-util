@@ -7,12 +7,20 @@
 **Please check out the examples below before you start.**
  
 1. Create a folder (or a git repository and clone it), for example *your-repo*, clone this repository into *your-repo* (or add it as a submodule of the git repository).
-2. Create a **config.json** in *your-repo/config* (or use `cli.py --new-config`)
-3. Create a **hosts.json** in *your-repo/config* (or use `cli.py --add-module`)
-4. Run `cli.py` to sync (`cli.py -p` to sync and push)
+
+2. Create a **config.json** in *your-repo/config* : 
+    - Write it by yourself
+    - Run `cli.py --new-config`
+
+3. Create a **hosts.json** in *your-repo/config* : 
+    - Write it by yourself
+    - Run `cli.py --add-module`
+    - Run `cli.py -u {username} --no-sync`
+
+4. Run `cli.py` to sync (or `cli.py -p` to sync and push)
 
 ## cli.py
- If you use **hosts.json** to manage modules, you don't need to install any additional python packages and define `GIT_TOKEN`. For other cases, please create an [issue](https://github.com/ya0211/magisk-modules-repo-util/issues/new).
+ If you want to generate **hosts.json** from github username or organization name, you need to install [pygithub](https://github.com/PyGithub/PyGithub) and define [GIT_TOKEN](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token), otherwise you don't need them.
 ``` 
 usage: cli.py [-h] [-r root folder] [-k api token] [-m max file size] [-u username] [-p] [-b branch] [--new-config] [--add-module] [-d]
 
@@ -26,6 +34,7 @@ options:
   -b branch         branch for 'git push', default: main
   --new-config      create a new config.json
   --add-module      add a new module to hosts.json
+  --no-sync         no sync modules
   -d, --debug       debug mode
 ```
 

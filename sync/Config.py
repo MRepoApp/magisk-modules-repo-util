@@ -12,7 +12,7 @@ class Config:
         if not config_json.exists():
             raise FileNotFoundError(config_json.as_posix())
 
-        self._config = AttrDict(load_json(config_json))
+        self._config: AttrDict = load_json(config_json)
         self.check_config()
         self.default_config()
 
