@@ -7,22 +7,19 @@
 **Please check out the examples below before you start.**
  
 1. Create a folder (or a git repository and clone it), for example *your-repo*, clone this repository into *your-repo* (or add it as a submodule of the git repository).
-
 2. Create a **config.json** in *your-repo/config* : 
     - Write it by yourself
     - Run `cli.py --new-config`
-
 3. Create a **hosts.json** in *your-repo/config* : 
     - Write it by yourself
     - Run `cli.py --add-module`
     - Run `cli.py -u {username} --no-sync`
-
 4. Run `cli.py` to sync (or `cli.py -p` to sync and push)
 
 ## cli.py
  If you want to generate **hosts.json** from github username or organization name, you need to install [pygithub](https://github.com/PyGithub/PyGithub) and define [GIT_TOKEN](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token), otherwise you don't need them.
 ``` 
-usage: cli.py [-h] [-r root folder] [-k api token] [-m max file size] [-u username] [-p] [-b branch] [--new-config] [--add-module] [-d]
+usage: cli.py [-h] [-r root folder] [-k api token] [-m max file size] [-u username] [-p] [-b branch] [--new-config] [--add-module] [--no-sync] [-d]
 
 options:
   -h, --help        show this help message and exit
