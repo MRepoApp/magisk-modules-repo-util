@@ -35,7 +35,10 @@ class Repo:
         self.modules_list = []
         self.id_list = []
 
-        self.old_modules_list = load_json(self.json_file)["modules"]
+        if self.json_file.exists():
+            self.old_modules_list = load_json(self.json_file).modules
+        else:
+            self.old_modules_list = []
 
     @staticmethod
     def isNotNone(text: str) -> bool:
