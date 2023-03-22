@@ -310,6 +310,7 @@ def main():
 
     if args.user_name:
         sync.get_hosts_from_github(user_name=args.user_name, api_token=args.api_token)
+        return
 
     """
     cli.py sync
