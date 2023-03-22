@@ -7,14 +7,17 @@
 **Please check out the examples below before you start.**
  
 1. Create a folder (or a git repository and clone it), for example *your-repo*, clone [util](https://github.com/ya0211/magisk-modules-repo-util.git) into *your-repo* (or add it as a submodule of the git repository).
-2. Create a **config.json** in *your-repo/config* by the following two ways : 
-    a. Write it by yourself
-    b. Run `cli.py config --new-config`
-3. Create **track.json** in *your-repo/modules/{id}* by the following four ways : 
-    a. Write it by yourself
-    b. Run `cli.py config --add-module <id update_to license changelog>`
-    c. Run `cli.py config --module-manager`
-    d. Run `cli.py github -u <username>`
+
+2. Create a **config.json** in *your-repo/config* by the following two ways: 
+    - Write it by yourself
+    - Run `cli.py config --new-config`
+
+3. Create **track.json** in *your-repo/modules/{id}* by the following four ways: 
+    - Write it by yourself
+    - Run `cli.py config --add-module <id update_to license changelog>`
+    - Run `cli.py config --module-manager`
+    - Run `cli.py github -u <username>`
+
 4. Run `cli.py sync` to sync (or `cli.py sync -p` to sync and push)
 
 ## cli.py
