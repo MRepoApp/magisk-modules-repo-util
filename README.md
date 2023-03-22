@@ -6,33 +6,76 @@
 ## Setup
 **Please check out the examples below before you start.**
  
-1. Create a folder (or a git repository and clone it), for example *your-repo*, clone this repository into *your-repo* (or add it as a submodule of the git repository).
-2. Create a **config.json** in *your-repo/config* : 
-    - Write it by yourself
-    - Run `cli.py --new-config`
-3. Create a **hosts.json** in *your-repo/config* : 
-    - Write it by yourself
-    - Run `cli.py --add-module`
-    - Run `cli.py -u {username} --no-sync`
-4. Run `cli.py` to sync (or `cli.py -p` to sync and push)
+1. Create a folder (or a git repository and clone it), for example *your-repo*, clone [util](https://github.com/ya0211/magisk-modules-repo-util.git) into *your-repo* (or add it as a submodule of the git repository).
+2. Create a **config.json** in *your-repo/config* by the following two ways : 
+    a. Write it by yourself
+    b. Run `cli.py config --new-config`
+3. Create **track.json** in *your-repo/modules/{id}* by the following four ways : 
+    a. Write it by yourself
+    b. Run `cli.py config --add-module <id update_to license changelog>`
+    c. Run `cli.py config --module-manager`
+    d. Run `cli.py github -u <username>`
+4. Run `cli.py sync` to sync (or `cli.py sync -p` to sync and push)
 
 ## cli.py
- If you want to generate **hosts.json** from github username or organization name, you need to install [pygithub](https://github.com/PyGithub/PyGithub) and define [GIT_TOKEN](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token), otherwise you don't need them.
 ``` 
-usage: cli.py [-h] [-r root folder] [-k api token] [-m max file size] [-u username] [-p] [-b branch] [--new-config] [--add-module] [--no-sync] [-d]
+usage: cli.py [-h] [-d] [-r root folder] {sync,config,github} ...
+
+Magisk Modules Repo Util
+
+options:
+  -h, --help            show this help message and exit
+  -d, --debug           debug mode, all errors will be thrown
+  -r root folder        default: ../magisk-modules-repo
+
+sub-command:
+  {sync,config,github}  sub-command help
+    sync                sync modules and push to repository
+    config              manage modules and repository metadata
+    github              generate track.json(s) from github
+```
+
+### cli.py sync
+- Sync modules and push to repository
+```
+usage: cli.py sync [-h] [-r] [-p] [-b branch] [-m max file size]
+
+options:
+  -h, --help           show this help message and exit
+  -r, --remove-unused  remove unused modules
+
+git:
+  -p, --push           push to git repository
+  -b branch            branch for 'git push', default: main
+  -m max file size     default: 50.0
+```
+
+### cli.py config
+- Manage modules and repository metadata
+```
+usage: cli.py config [-h] [-c] [-m] [-a id update_to license changelog] [-r id [id ...]]
+
+options:
+  -h, --help            show this help message and exit
+  -c, --new-config      create a new config.json
+  -m, --module-manager  interactive module manager
+  -a id update_to license changelog, --add-module id update_to license changelog
+  -r id [id ...], --remove-module id [id ...]
+```
+
+### cli.py github
+- Generate track.json(s) from github
+- Dependencies
+    - [PyGithub](https://github.com/PyGithub/PyGithub) 
+    - [GIT_TOKEN](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token)
+```
+usage: cli.py github [-h] [-k api token] [-m max file size] -u username
 
 options:
   -h, --help        show this help message and exit
-  -r root folder    default: ../your-repo
   -k api token      defined in env as 'GIT_TOKEN', default: None
   -m max file size  default: 50.0
-  -u username       github username or organization name
-  -p, --push        push to git repository
-  -b branch         branch for 'git push', default: main
-  --new-config      create a new config.json
-  --add-module      add a new module to hosts.json
-  --no-sync         no sync modules
-  -d, --debug       debug mode
+  -u username       username or organization name
 ```
 
 ## config.json
@@ -53,16 +96,14 @@ options:
 | show_log | optional | If false, the log will never be showed and stored,  default value is true |
 | log_dir | optional | If defined, the log file will be stored in this directory |
 
-## hosts.json
+## track.json
 ```json
-[
-  {
-    "id": "required",
-    "update_to": "required",
-    "license": "optional",
-    "changelog": "optional"
-  }
-]
+{
+  "id": "required",
+  "update_to": "required",
+  "license": "optional",
+  "changelog": "optional"
+}
 ```
 | Key | Attribute | Description |
 |:-:|:-:|:-:|
@@ -115,7 +156,6 @@ options:
 ## For developer
 ```
 ├── config
-│   ├── hosts.json
 │   └── config.json
 ├── json
 │   └── modules.json
