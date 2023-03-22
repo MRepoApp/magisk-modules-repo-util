@@ -75,7 +75,7 @@ def parse_parameters():
                              help="default: {0}".format('%(default)s'))
 
     sync = sub_parser.add_parser("sync", help="sync modules and push to repository")
-    sync.add_argument("-r"
+    sync.add_argument("-r",
                       "--remove-unused",
                       action="store_true",
                       help="remove unused modules")
