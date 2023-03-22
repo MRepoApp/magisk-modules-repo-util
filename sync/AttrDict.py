@@ -12,9 +12,9 @@ class AttrDict(dict):
             seq.update(kwargs)
 
         super().__init__(seq)
-        self._update()
+        self.__update_attr__()
 
-    def _update(self):
+    def __update_attr__(self):
         for key in self.keys():
             self.__setattr__(key, self.get(key))
 
@@ -23,21 +23,21 @@ class AttrDict(dict):
             super().update(**kwargs)
         else:
             super().update(__m, **kwargs)
-        self._update()
+        self.__update_attr__()
 
-    def __setattr__(self, key, value):
-        self.__dict__[key] = value
-        self.__setitem__(key, value)
+    def __setitem__(self, key, value):
+        self.__setattr__(key, value)
+        super().__setitem__(key, value)
 
     def __getattr__(self, item):
         if item not in self.__dict__:
             return None
-        else:
-            return self.__dict__[item]
+
+        return self.__dict__[item]
 
     @property
     def size(self) -> int:
         return self.__len__()
 
     def copy(self):
-        return AttrDict(super().copy())
+        return AttrDict(self.__dict__)
