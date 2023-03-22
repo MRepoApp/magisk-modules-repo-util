@@ -1,5 +1,7 @@
+import os
 from typing import Optional
 from pathlib import Path
+from .AttrDict import AttrDict
 from .File import load_json, write_json
 from .Log import Log
 
@@ -8,21 +10,26 @@ class Hosts:
     def __init__(self, root_folder: Path, user_name: Optional[str] = None, api_token: Optional[str] = None,
                  *, log_folder: Optional[Path] = None, show_log: bool = True):
         self._log = Log("Sync", log_folder, show_log)
-        self.hosts_json = root_folder.joinpath("config", "hosts.json")
+        self.modules_folder = root_folder.joinpath("modules")
 
         if user_name is None:
             self._init_local()
         else:
             self._init_repo(user_name, api_token)
 
-    def _init_local(self):
-        if not self.hosts_json.exists():
-            self._log.e(f"no such file: {self.hosts_json.as_posix()}")
-            raise FileNotFoundError(self.hosts_json.as_posix())
-        else:
-            self._log.i(f"load hosts: {self.hosts_json.as_posix()}")
+    def _add_new_module(self, track: AttrDict):
+        module_folder = self.modules_folder.joinpath(track.id)
+        os.makedirs(module_folder, exist_ok=True)
+        track_json = module_folder.joinpath("track.json")
+        write_json(track, track_json)
 
-        self._hosts: list = load_json(self.hosts_json)
+    def _init_local(self):
+        self._hosts = list()
+        for _dir in sorted(self.modules_folder.glob("*/")):
+            track_json = _dir.joinpath("track.json")
+            if track_json.exists():
+                self._hosts.append(load_json(track_json))
+
         self._log.i(f"number of modules: {self.size}")
 
     def _init_repo(self, user_name: str, api_token: str):
@@ -45,22 +52,27 @@ class Hosts:
                 except UnknownObjectException:
                     update_to = repo.clone_url
 
-                item = {
-                    "id": repo.name,
-                    "update_to": update_to,
-                    "license": self.get_license(repo)
-                }
+                track_json = self.modules_folder.joinpath(repo.name, "track.json")
+                if track_json.exists():
+                    item = load_json(track_json)
+                else:
+                    item = AttrDict(
+                        id=repo.name,
+                        update_to=update_to,
+                        license=self.get_license(repo),
+                        changelog=""
+                    )
 
                 if not is_update_json:
-                    item["changelog"] = self.get_changelog(repo)
+                    item.changelog = self.get_changelog(repo)
 
                 self._hosts.append(item)
+                self._add_new_module(item)
             except BaseException as err:
                 msg = "{} " * len(err.args)
                 msg = msg.format(*err.args).rstrip()
                 self._log.e(f"get host failed: {type(err).__name__}({msg})")
 
-        write_json(self._hosts, self.hosts_json)
         self._log.i(f"number of modules: {self.size}")
 
     @staticmethod

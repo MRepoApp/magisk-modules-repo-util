@@ -1,15 +1,55 @@
 #!/usr/bin/env python3
 import os
-import sys
 import argparse
+import shutil
 import subprocess
+from argparse import Namespace
 from pathlib import Path
 from datetime import datetime
 from sync import Sync
 from sync.AttrDict import AttrDict
-from sync.Print import print_header
+from sync.Print import print_header, print_value
 from sync.Input import *
-from sync.File import write_json, load_json
+from sync.File import write_json
+
+
+class JsonAction(argparse.Action):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        _dict = self._to_dict(values)
+        setattr(namespace, self.dest, _dict)
+
+    def _to_dict(self, values) -> AttrDict:
+        values = [value.split("=", maxsplit=1) for value in values]
+        _keys = [v[0] for v in values]
+        _values = [v[-1] for v in values]
+
+        _dict = AttrDict()
+        if _keys == _values:
+            for i in range(self.nargs):
+                _dict[self.metavar[i]] = _values[i]
+
+            return _dict
+
+        for i in range(self.nargs):
+            k = _keys[i]
+            if k in self.metavar:
+                _dict[k] = _values[i]
+
+        return _dict
+
+
+class SafeArgs(Namespace):
+    def __init__(self, args: Namespace):
+        super().__init__(**args.__dict__)
+
+    def __getattr__(self, item):
+        if item not in self.__dict__:
+            return None
+
+        return self.__dict__[item]
 
 
 def parse_parameters():
@@ -20,55 +60,88 @@ def parse_parameters():
     except KeyError:
         api_token = None
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-r",
-                        dest="root_folder",
-                        metavar="root folder",
-                        type=str,
-                        default=root_folder.as_posix(),
-                        help="default: {0}".format('%(default)s'))
-    parser.add_argument("-k",
+    main_parser = argparse.ArgumentParser(description="Magisk Modules Repo Util")
+    sub_parser = main_parser.add_subparsers(title="sub-command", help="sub-command help")
+
+    main_parser.add_argument("-d",
+                             "--debug",
+                             action="store_true",
+                             help="debug mode, all errors will be thrown")
+    main_parser.add_argument("-r",
+                             dest="root_folder",
+                             metavar="root folder",
+                             type=str,
+                             default=root_folder.as_posix(),
+                             help="default: {0}".format('%(default)s'))
+
+    sync = sub_parser.add_parser("sync", help="sync modules and push to repository")
+    sync.add_argument("-r"
+                      "--remove-unused",
+                      action="store_true",
+                      help="remove unused modules")
+
+    git = sync.add_argument_group("git")
+    git.add_argument("-p",
+                     "--push",
+                     action="store_true",
+                     help="push to git repository")
+    git.add_argument("-b",
+                     dest="branch",
+                     metavar="branch",
+                     type=str,
+                     default=get_branch(root_folder),
+                     help="branch for 'git push', default: {0}".format('%(default)s'))
+    git.add_argument("-m",
+                     dest="file_maxsize",
+                     metavar="max file size",
+                     type=float,
+                     default=50.0,
+                     help="default: {0}".format('%(default)s'))
+
+    config = sub_parser.add_parser("config", help="manage modules and repository metadata")
+    config.add_argument("-c",
+                        "--new-config",
+                        action="store_true",
+                        help="create a new config.json")
+    config.add_argument("-m",
+                        "--module-manager",
+                        action="store_true",
+                        help="interactive module manager")
+    config.add_argument("-a",
+                        "--add-module",
+                        dest="track_json",
+                        metavar=("id", "update_to", "license", "changelog"),
+                        action=JsonAction,
+                        nargs=4)
+    config.add_argument("-r",
+                        "--remove-module",
+                        dest="id_list",
+                        metavar="id",
+                        nargs="+",
+                        default=[])
+
+    github = sub_parser.add_parser("github", help="generate track.json(s) from github")
+    github.add_argument("-k",
                         dest="api_token",
                         metavar="api token",
                         type=str,
                         default=api_token,
                         help="defined in env as 'GIT_TOKEN', default: {0}".format('%(default)s'))
-    parser.add_argument("-m",
+    github.add_argument("-m",
                         dest="file_maxsize",
                         metavar="max file size",
                         type=float,
                         default=50.0,
                         help="default: {0}".format('%(default)s'))
-    parser.add_argument("-u",
+    github.add_argument("-u",
                         dest="user_name",
                         metavar="username",
                         type=str,
                         default=None,
-                        help="github username or organization name")
-    parser.add_argument("-p",
-                        "--push",
-                        action="store_true",
-                        help="push to git repository"),
-    parser.add_argument("-b",
-                        dest="branch",
-                        metavar="branch",
-                        type=str,
-                        default=get_branch(root_folder),
-                        help="branch for 'git push', default: {0}".format('%(default)s'))
-    parser.add_argument("--new-config",
-                        action="store_true",
-                        help="create a new config.json")
-    parser.add_argument("--add-module",
-                        action="store_true",
-                        help="add a new module to hosts.json")
-    parser.add_argument("--no-sync",
-                        action="store_true",
-                        help="no sync modules")
-    parser.add_argument("-d",
-                        "--debug",
-                        action="store_true",
-                        help="debug mode")
-    return parser
+                        required=True,
+                        help="username or organization name")
+
+    return main_parser
 
 
 def create_new_config(root_folder: Path):
@@ -78,7 +151,7 @@ def create_new_config(root_folder: Path):
     if config_json.exists():
         print_header("Rewrite config.json")
     else:
-        print_header("Create a new config.json")
+        print_header("Create config.json")
 
     config = AttrDict(
         repo_name="",
@@ -88,53 +161,93 @@ def create_new_config(root_folder: Path):
         log_dir=""
     )
 
-    config.repo_name = input_force("repo_name", "[str]: ")
-    config.repo_url = input_force("repo_url", "[str]: ")
-    config.max_num = input_int("max_num", "[int]: ")
-    config.show_log = input_bool("show_log", "[y/n]: ")
+    config.repo_name = input_force("Name of Repository", "[str]: ")
+
+    while True:
+        repo_url = input_force("Url of Repository", "[str]: ")
+        if not repo_url.endswith("/"):
+            config.repo_url = repo_url
+            break
+
+    config.max_num = input_int("Maximum Number of Old Modules", "[int]: ")
+    config.show_log = input_bool("Show Log", "[y/n]: ")
 
     if config.show_log:
-        config.log_dir = input_common("log_dir", "[str]: ")
+        config.log_dir = input_common("Log Directory", "[str]: ")
 
-    save = input_bool(f"save to config.json", "[y/n/q]: ")
+    save = input_bool(f"Save", "[y/n]: ")
     if save:
         write_json(config, config_json)
 
 
-def add_new_module(root_folder: Path):
-    hosts_json = root_folder.joinpath("config", "hosts.json")
-    os.makedirs(hosts_json.parent, exist_ok=True)
+def add_new_module(root_folder: Path, track: AttrDict):
+    module_folder = root_folder.joinpath("modules", track.id)
+    os.makedirs(module_folder, exist_ok=True)
+    track_json = module_folder.joinpath("track.json")
+    write_json(track, track_json)
 
-    if hosts_json.exists():
-        print_header("Add new modules")
-        hosts = load_json(hosts_json)
-    else:
-        print_header("Create a new hosts.json")
-        hosts = []
 
-    module = AttrDict(
-        id="",
-        update_to="",
-        license="",
-        changelog=""
-    )
+def remove_modules(root_folder: Path, id_list: list):
+    module_folder = root_folder.joinpath("modules")
+    for _id in id_list:
+        shutil.rmtree(module_folder.joinpath(_id))
 
-    while True:
-        module.id = input_force("id", "[str]: ")
-        module.update_to = input_force("update_to", "[str]: ")
-        module.license = input_common("license", "[str]: ")
-        module.changelog = input_common("changelog", "[str]: ")
 
-        hosts.append(module)
-        _continue = input_bool(f"continue", "[y/n]: ")
+def module_manager(root_folder: Path):
+    modules_folder = root_folder.joinpath("modules")
+    os.makedirs(modules_folder, exist_ok=True)
+
+    def add_module() -> int:
+        track = AttrDict(
+            id="",
+            update_to="",
+            license="",
+            changelog=""
+        )
+
+        track.id = input_force("id", "[str]: ")
+        track.update_to = input_force("update_to", "[str]: ")
+        track.license = input_common("license", "[str]: ")
+        track.changelog = input_common("changelog", "[str]: ")
+
+        _add = input_bool(f"Save", "[y/n]: ")
+        if _add:
+            add_new_module(root_folder, track)
+
+        _continue = input_bool(f"Add Another", "[y/n]: ")
         if not _continue:
-            break
+            return 0
         else:
-            print()
+            return 1
 
-    save = input_bool(f"save to hosts.json", "[y/n/q]: ")
-    if save:
-        write_json(hosts, hosts_json)
+    def remove_module() -> int:
+        id_list = [_dir for _dir in sorted(modules_folder.glob("*/"))]
+        for i in range(len(id_list)):
+            print_value(i, id_list[i].name)
+        index_list = input_common("Index", "[int ...]: ").split()
+        for i in index_list:
+            try:
+                shutil.rmtree(id_list[int(i)])
+            except BaseException as err:
+                print_value("Error", err)
+
+        return 0
+
+    option = 0
+    while True:
+        match option:
+            case 1:
+                print_header("Add Module")
+                option = add_module()
+            case 2:
+                print_header("Remove Module")
+                option = remove_module()
+            case 0:
+                print_header("Modules Manager")
+                print_value(1, "Add Module")
+                print_value(2, "Remove Module")
+                option = input_optional("Option", "[1/2/q]: ", [1, 2])
+        print()
 
 
 def get_branch(cwd_folder: Path):
@@ -160,36 +273,56 @@ def push_git(cwd_folder: Path, timestamp: float, branch: str):
 
 def main():
     parser = parse_parameters()
-    args = parser.parse_args()
-
+    args = SafeArgs(parser.parse_args())
     root_folder = Path(args.root_folder)
 
+    """
+    cli.py config
+    """
     if args.new_config:
         create_new_config(root_folder)
-        sys.exit(0)
+        return
 
-    if args.add_module:
-        add_new_module(root_folder)
-        sys.exit(0)
+    if args.module_manager:
+        module_manager(root_folder)
+        return
 
-    if args.user_name is not None and args.api_token is None:
-        raise KeyError("'api token' is undefined")
+    if args.track_json:
+        add_new_module(root_folder, args.track_json)
+        return
 
-    if args.push and args.branch is None:
-        raise KeyError("'branch' is undefined")
+    if args.id_list:
+        remove_modules(root_folder, args.id_list)
+        return
 
+    if "new_config" in args:
+        parser.parse_args(["config", "--help"])
+        return
+
+    """
+    cli.py github
+    """
     sync = Sync(root_folder)
     sync.get_config()
 
-    if args.user_name is not None:
-        sync.get_hosts_from_github(user_name=args.user_name, api_token=args.api_token)
-    else:
-        sync.get_hosts_form_local()
+    if args.user_name and args.api_token is None:
+        raise KeyError("'api token' is undefined")
 
+    if args.user_name:
+        sync.get_hosts_from_github(user_name=args.user_name, api_token=args.api_token)
+
+    """
+    cli.py sync
+    """
+    if args.push and args.branch is None:
+        raise KeyError("'branch' is undefined")
+
+    sync.get_hosts_form_local()
     repo = sync.get_repo()
-    if not args.no_sync:
-        repo.pull(maxsize=args.file_maxsize, debug=args.debug)
-        repo.write_modules_json()
+    repo.pull(maxsize=args.file_maxsize, debug=args.debug)
+    repo.write_modules_json()
+
+    if args.remove_unused:
         repo.clear_modules()
 
     if args.push and not args.no_sync:
