@@ -41,7 +41,7 @@ class Hosts:
         user = github.get_user(user_name)
         for repo in user.get_repos():
             try:
-                if not self.is_module(repo):
+                if not self._is_module(repo):
                     continue
 
                 self._log.i(f"get host: {repo.name}")
@@ -52,19 +52,24 @@ class Hosts:
                 except UnknownObjectException:
                     update_to = repo.clone_url
 
+                _license = self._get_license(repo)
                 track_json = self.modules_folder.joinpath(repo.name, "track.json")
                 if track_json.exists():
                     item = load_json(track_json)
+                    item.update(
+                        update_to=update_to,
+                        license=_license
+                    )
                 else:
                     item = AttrDict(
                         id=repo.name,
                         update_to=update_to,
-                        license=self.get_license(repo),
+                        license=_license,
                         changelog=""
                     )
 
                 if not is_update_json:
-                    item.changelog = self.get_changelog(repo)
+                    item.changelog = self._get_changelog(repo)
 
                 self._hosts.append(item)
                 self._add_new_module(item)
@@ -76,7 +81,7 @@ class Hosts:
         self._log.i(f"number of modules: {self.size}")
 
     @staticmethod
-    def get_license(repo) -> str:
+    def _get_license(repo) -> str:
         from github import UnknownObjectException
 
         try:
@@ -89,7 +94,7 @@ class Hosts:
         return _license
 
     @staticmethod
-    def get_changelog(repo) -> str:
+    def _get_changelog(repo) -> str:
         from github import UnknownObjectException
 
         try:
@@ -100,7 +105,7 @@ class Hosts:
         return changelog
 
     @staticmethod
-    def is_module(repo):
+    def _is_module(repo):
         from github import UnknownObjectException
 
         try:
