@@ -3,6 +3,7 @@ import os
 import argparse
 import shutil
 import subprocess
+from typing import Callable
 from argparse import Namespace
 from pathlib import Path
 from datetime import datetime
@@ -253,11 +254,16 @@ def module_manager(root_folder: Path):
 
 
 def get_branch(cwd_folder: Path):
-    result = subprocess.run(
-        ["git", "branch", "--all"],
-        stdout=subprocess.PIPE,
-        cwd=cwd_folder.as_posix()
-    )
+    try:
+        result = subprocess.run(
+            ["git", "branch", "--all"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            cwd=cwd_folder.as_posix()
+        )
+    except FileNotFoundError:
+        return None
+
     for out in result.stdout.decode("utf-8").splitlines():
         if out.startswith("*"):
             out = out.strip().split(maxsplit=1)
@@ -273,14 +279,12 @@ def push_git(cwd_folder: Path, timestamp: float, branch: str):
     subprocess.run(["git", "push", "-u", "origin", branch], cwd=cwd_folder.as_posix())
 
 
-def main():
-    parser = parse_parameters()
-    args = SafeArgs(parser.parse_args())
-    root_folder = Path(args.root_folder)
-
+def cli_config(args: SafeArgs, print_help: Callable):
     """
     cli.py config
     """
+    root_folder = Path(args.root_folder)
+
     if args.new_config:
         create_new_config(root_folder)
         return
@@ -297,13 +301,14 @@ def main():
         remove_modules(root_folder, args.id_list)
         return
 
-    if "new_config" in args:
-        parser.parse_args(["config", "--help"])
-        return
+    print_help()
 
+
+def cli_github(args: SafeArgs):
     """
     cli.py github
     """
+    root_folder = Path(args.root_folder)
     sync = Sync(root_folder)
     sync.get_config()
 
@@ -314,12 +319,17 @@ def main():
         sync.get_hosts_from_github(user_name=args.user_name, api_token=args.api_token)
         return
 
+
+def cli_sync(args: SafeArgs):
     """
     cli.py sync
     """
     if args.push and args.branch is None:
         raise KeyError("'branch' is undefined")
 
+    root_folder = Path(args.root_folder)
+    sync = Sync(root_folder)
+    sync.get_config()
     sync.get_hosts_form_local()
     repo = sync.get_repo()
     repo.pull(maxsize=args.file_maxsize, debug=args.debug)
@@ -330,6 +340,25 @@ def main():
 
     if args.push and not args.no_sync:
         push_git(cwd_folder=root_folder, timestamp=repo.timestamp, branch=args.branch)
+
+
+def main():
+    parser = parse_parameters()
+    args = SafeArgs(parser.parse_args())
+
+    def config_help():
+        parser.parse_args(["config", "--help"])
+
+    if "new_config" in args:
+        cli_config(args, print_help=config_help)
+
+    if "user_name" in args:
+        cli_github(args)
+
+    if "push" in args:
+        cli_sync(args)
+
+    parser.parse_args(["--help"])
 
 
 if __name__ == "__main__":
