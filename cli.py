@@ -235,18 +235,20 @@ def module_manager(root_folder: Path):
 
     option = 0
     while True:
-        match option:
-            case 1:
-                print_header("Add Module")
-                option = add_module()
-            case 2:
-                print_header("Remove Module")
-                option = remove_module()
-            case 0:
-                print_header("Modules Manager")
-                print_value(1, "Add Module")
-                print_value(2, "Remove Module")
-                option = input_optional("Option", "[1/2/q]: ", [1, 2])
+        if option == 0:
+            print_header("Modules Manager")
+            print_value(1, "Add Module")
+            print_value(2, "Remove Module")
+            option = input_optional("Option", "[1/2/q]: ", [1, 2])
+
+        elif option == 1:
+            print_header("Add Module")
+            option = add_module()
+
+        elif option == 2:
+            print_header("Remove Module")
+            option = remove_module()
+
         print()
 
 
