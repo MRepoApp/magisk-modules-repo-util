@@ -352,13 +352,14 @@ def main():
     if "new_config" in args:
         cli_config(args, print_help=config_help)
 
-    if "user_name" in args:
+    elif "user_name" in args:
         cli_github(args)
 
-    if "push" in args:
+    elif "push" in args:
         cli_sync(args)
 
-    parser.parse_args(["--help"])
+    else:
+        parser.parse_args(["--help"])
 
 
 if __name__ == "__main__":
