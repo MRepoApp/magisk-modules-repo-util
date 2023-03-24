@@ -166,7 +166,7 @@ def create_new_config(root_folder: Path):
 
     while True:
         repo_url = input_force("Url of Repository", "[str]: ")
-        if not repo_url.endswith("/"):
+        if repo_url.endswith("/"):
             config.repo_url = repo_url
             break
 
