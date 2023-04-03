@@ -70,14 +70,11 @@ class Repo:
     def _update_json_file(self, _id: str):
         return self._modules_folder.joinpath(_id, "update.json")
 
-    def get_track_json(self, _id: str) -> Optional[AttrDict]:
+    def get_track_json(self, _id: str) -> AttrDict:
         if self._track_json.id != _id or self._track_json.data is None:
             self._track_json.id = _id
             json_file = self._track_json_file(_id)
-            if json_file.exists():
-                self._track_json.data = load_json(json_file)
-            else:
-                self._track_json.data = None
+            self._track_json.data = load_json(json_file)
 
         return self._track_json.data
 
@@ -277,10 +274,6 @@ class Repo:
 
     def _update_track(self, host: AttrDict, version_size: int, last_update: float):
         track_json: AttrDict = self.get_track_json(host.id)
-        if track_json is None:
-            track_json = host.copy()
-            track_json.added = self.timestamp
-
         track_json.last_update = last_update
         track_json.versions = version_size
         write_json(track_json, self._track_json_file(host.id))

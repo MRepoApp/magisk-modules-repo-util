@@ -189,6 +189,7 @@ def add_new_module(root_folder: Path, track: AttrDict):
     module_folder = root_folder.joinpath("modules", track.id)
     os.makedirs(module_folder, exist_ok=True)
     track_json = module_folder.joinpath("track.json")
+    track.added = datetime.now().timestamp()
     write_json(track, track_json)
 
 

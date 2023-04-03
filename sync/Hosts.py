@@ -1,6 +1,7 @@
 import os
 from typing import Optional
 from pathlib import Path
+from datetime import datetime
 from .AttrDict import AttrDict
 from .File import load_json, write_json
 from .Log import Log
@@ -18,6 +19,7 @@ class Hosts:
             self._init_repo(user_name, api_token)
 
     def _add_new_module(self, track: AttrDict):
+        track.added = datetime.now().timestamp()
         module_folder = self.modules_folder.joinpath(track.id)
         os.makedirs(module_folder, exist_ok=True)
         track_json = module_folder.joinpath("track.json")
