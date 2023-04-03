@@ -5,7 +5,7 @@ import requests
 import subprocess
 from typing import Union
 from pathlib import Path
-from zipfile import ZipFile, ZIP_DEFLATED
+from zipfile import ZipFile
 from requests import HTTPError
 from subprocess import CalledProcessError
 from .AttrDict import AttrDict
@@ -74,29 +74,27 @@ def downloader(url: str, out: Path):
 
 
 def git_clone(url: str, out: Path):
-    dir_name = url.split("/")[-1].replace(".git", "")
-    repo_dir = out.parent.joinpath(dir_name)
+    repo_dir = out.with_suffix("")
 
     try:
         subprocess.run(
-            args=["git", "clone", url, "--depth=1"],
+            args=["git", "clone", url, repo_dir.as_posix(), "--depth=1"],
             cwd=out.parent.as_posix(),
-            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
             check=True
         )
     except CalledProcessError:
         shutil.rmtree(repo_dir, ignore_errors=True)
         raise HTTPError("the remote repository clone failed")
 
-    shutil.rmtree(repo_dir.joinpath(".git"), ignore_errors=True)
-    shutil.rmtree(repo_dir.joinpath(".github"), ignore_errors=True)
+    for path in repo_dir.glob(".git*"):
+        if path.is_dir():
+            shutil.rmtree(path, ignore_errors=True)
 
-    with ZipFile(out, "w", ZIP_DEFLATED) as f:
-        for dir_path, dir_names, file_names in os.walk(repo_dir):
-            file_path = dir_path.replace(repo_dir.as_posix(), "")
-            for file_name in file_names:
-                f.write(os.path.join(dir_path, file_name), file_path + file_name)
+        if path.is_file():
+            os.remove(path)
 
+    shutil.make_archive(repo_dir.as_posix(), format="zip", root_dir=repo_dir)
     shutil.rmtree(repo_dir)
 
 
