@@ -57,7 +57,7 @@ def parse_parameters():
     root_folder = Path(__file__).resolve().parent.parent
 
     try:
-        api_token = os.environ["GIT_TOKEN"]
+        api_token = os.environ["GITHUB_TOKEN"]
     except KeyError:
         api_token = None
 
@@ -127,7 +127,7 @@ def parse_parameters():
                         metavar="api token",
                         type=str,
                         default=api_token,
-                        help="defined in env as 'GIT_TOKEN', default: {0}".format('%(default)s'))
+                        help="defined in env as 'GITHUB_TOKEN', default: {0}".format('%(default)s'))
     github.add_argument("-m",
                         dest="file_maxsize",
                         metavar="max file size",

@@ -68,15 +68,13 @@ options:
 
 ### cli.py github
 - Generate track.json(s) from github
-- Dependencies
-    - [PyGithub](https://github.com/PyGithub/PyGithub) 
-    - [GIT_TOKEN](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token)
+- Dependencies: [PyGithub](https://github.com/PyGithub/PyGithub),  [GITHUB_TOKEN](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token)
 ```
 usage: cli.py github [-h] [-k api token] [-m max file size] -u username
 
 options:
   -h, --help        show this help message and exit
-  -k api token      defined in env as 'GIT_TOKEN', default: None
+  -k api token      defined in env as 'GITHUB_TOKEN', default: None
   -m max file size  default: 50.0
   -u username       username or organization name
 ```
@@ -113,9 +111,11 @@ options:
 | id | required | Id of the module itself |
 | update_to | required | Url of updateJson or zipFile, or the name of zipFile, or the url of a git repository (end with `.git`) |
 | license | optional | SPDX ID |
-| changelog | optional | No be uesed on updateJson |
+| changelog | optional | Url of changelog.md (The best is markdown, simple text is also acceptable, **do not use html**) |
 
-### Upload from updateJson
+### Update from updateJson
+This is for those modules that provide [updateJson](https://topjohnwu.github.io/Magisk/guides.html#moduleprop). 
+
 ```json
 {
   "id": "zygisk_lsposed",
@@ -124,7 +124,10 @@ options:
 }
 ```
 
-### Upload from url
+### Update from url
+This is for those have the same url to release new modules.
+- If url has changed, you have to edit it.
+
 ```json
 {
   "id": "zygisk_lsposed",
@@ -134,19 +137,10 @@ options:
 }
 ```
 
-### Upload from local
-1. Create a new folder named *local* in *your-repo*
-2. Put the zip file (and changelog.md) into *local*
-```json
-{
-  "id": "zygisk_lsposed",
-  "update_to": "LSPosed-v1.8.6-6712-zygisk-release.zip",
-  "license": "GPL-3.0",
-  "changelog": "changelog.md"
-}
-```
+### Update from git
+This is for those you can get the module by packaging all files in the repository, such as [Magisk-Modules-Repo](https://github.com/Magisk-Modules-Repo) and [Magisk-Modules-Alt-Repo](https://github.com/Magisk-Modules-Alt-Repo). 
+- If you are looking how to add *Magisk-Modules-Alt-Repo* to *MRepo*, please refer to [ya0211/magisk-modules-alt-repo](https://github.com/ya0211/magisk-modules-alt-repo).
 
-### Upload from git
 ```json
 {
   "id": "busybox-ndk",
@@ -156,20 +150,51 @@ options:
 }
 ```
 
+### Update from local
+1. Create a new folder named *local* in *your-repo*
+2. Put the zip file (and changelog.md) into *local*
+
+```json
+{
+  "id": "zygisk_lsposed",
+  "update_to": "LSPosed-v1.8.6-6712-zygisk-release.zip",
+  "license": "GPL-3.0",
+  "changelog": "changelog.md"
+}
+```
+
 ## For developer
 ```
+your-repo
 ├── config
 │   └── config.json
+│
 ├── json
 │   └── modules.json
+│
+├── local
+│   ├── ...
+│   └── ...
+│
 ├── log
-│   └── sync_2023-03-18_16:59:45.038227.log
+│   ├── sync_2023-03-18_16:59:45.038227.log
+│   ├── ...
+│   └── ...
+│
 ├── modules
-│   └── zygisk_lsposed
-│       ├── track.json
-│       ├── update.json
-│       ├── v1.8.6_(6712)_6712.md
-│       └── v1.8.6_(6712)_6712.zip
+│   ├── zygisk_lsposed
+│   │   ├── track.json
+│   │   ├── update.json
+│   │   ├── v1.8.6_(6712)_6712.md
+│   │   ├── v1.8.6_(6712)_6712.zip
+│   │   ├── ...
+│   │   └── ...
+│   │
+│   ├── another_module
+│   │   ├── ...
+│   │   └── ...
+│   └── .
+│
 └── util
 ```
 ### modules.json
