@@ -100,7 +100,7 @@ def git_clone(url: str, out: Path):
         for dir_path, dir_names, file_names in os.walk(repo_dir):
             file_path = dir_path.replace(repo_dir.as_posix(), "")
             for file_name in file_names:
-                f.write(os.path.join(dir_path, file_name), os.path.join(file_path,file_name))
+                f.write(os.path.join(dir_path, file_name), os.path.join(file_path, file_name))
 
     shutil.rmtree(repo_dir)
 
