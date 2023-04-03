@@ -138,7 +138,7 @@ class Repo:
             url = self._get_file_from_url(changelog_file, changelog)
 
             text = changelog_file.read_text().strip()
-            if "<html>" in text:
+            if "</html>" in text:
                 os.remove(changelog_file)
                 return ""
 
