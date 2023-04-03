@@ -38,6 +38,9 @@ class AttrDict(dict):
 
         return self.__dict__[item]
 
+    def __bool__(self):
+        return True
+
     @property
     def size(self) -> int:
         return self.__len__()

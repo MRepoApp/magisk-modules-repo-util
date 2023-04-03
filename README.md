@@ -28,7 +28,7 @@ Magisk Modules Repo Util
 
 options:
   -h, --help            show this help message and exit
-  -d, --debug           debug mode, all errors will be thrown
+  -d, --debug           debug mode, unknown errors will be thrown
   -r root folder        default: ../magisk-modules-repo
 
 sub-command:
@@ -46,6 +46,7 @@ usage: cli.py sync [-h] [-r] [-p] [-b branch] [-m max file size]
 options:
   -h, --help           show this help message and exit
   -r, --remove-unused  remove unused modules
+  -f, --force-update   clear all versions and update modules
 
 git:
   -p, --push           push to git repository
@@ -109,9 +110,9 @@ options:
 | Key | Attribute | Description |
 |:-:|:-:|:-:|
 | id | required | Id of the module itself |
-| update_to | required | Url of updateJson or zipFile, or the name of zipFile, or the url of a git repository (end with `.git`) |
+| update_to | required | Url of updateJson or zipFile, or file name of zipFile, or url of a git repository (end with `.git`) |
 | license | optional | SPDX ID |
-| changelog | optional | Url of changelog.md (The best is markdown, simple text is also acceptable, **do not use html**) |
+| changelog | optional | Url of changelog.md or file name of changelog.md (the best is markdown, simple text is also ok, **no html**) |
 
 ### Update from updateJson
 This is for those modules that provide [updateJson](https://topjohnwu.github.io/Magisk/guides.html#moduleprop). 
@@ -120,6 +121,19 @@ This is for those modules that provide [updateJson](https://topjohnwu.github.io/
 {
   "id": "zygisk_lsposed",
   "update_to": "https://lsposed.github.io/LSPosed/release/zygisk.json",
+  "license": "GPL-3.0"
+}
+```
+
+### Update from local updateJson
+The `update_to` requires the relative directory of *local*.
+1. Create a new folder named *local* in *your-repo*
+2. Put the update.json into *local*
+
+```json
+{
+  "id": "zygisk_lsposed",
+  "update_to": "zygisk.json",
   "license": "GPL-3.0"
 }
 ```
@@ -150,7 +164,8 @@ This is for those you can get the module by packaging all files in the repositor
 }
 ```
 
-### Update from local
+### Update from local zip
+The `update_to` requires the relative directory of *local*.
 1. Create a new folder named *local* in *your-repo*
 2. Put the zip file (and changelog.md) into *local*
 

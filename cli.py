@@ -67,7 +67,7 @@ def parse_parameters():
     main_parser.add_argument("-d",
                              "--debug",
                              action="store_true",
-                             help="debug mode, all errors will be thrown")
+                             help="debug mode, unknown errors will be thrown")
     main_parser.add_argument("-r",
                              dest="root_folder",
                              metavar="root folder",
@@ -80,6 +80,10 @@ def parse_parameters():
                       "--remove-unused",
                       action="store_true",
                       help="remove unused modules")
+    sync.add_argument("-f",
+                      "--force-update",
+                      action="store_true",
+                      help="clear all versions and update modules")
 
     git = sync.add_argument_group("git")
     git.add_argument("-p",
@@ -260,11 +264,11 @@ def get_branch(cwd_folder: Path):
             stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL,
             cwd=cwd_folder.as_posix()
-        )
+        ).stdout.decode("utf-8")
     except FileNotFoundError:
         return None
 
-    for out in result.stdout.decode("utf-8").splitlines():
+    for out in result.splitlines():
         if out.startswith("*"):
             out = out.strip().split(maxsplit=1)
             return out[-1]
@@ -332,7 +336,7 @@ def cli_sync(args: SafeArgs):
     sync.get_config()
     sync.get_hosts_form_local()
     repo = sync.get_repo()
-    repo.pull(maxsize=args.file_maxsize, debug=args.debug)
+    repo.pull(maxsize=args.file_maxsize, force_update=args.force_update ,debug=args.debug)
     repo.write_modules_json()
 
     if args.remove_unused:

@@ -2,10 +2,13 @@ import os
 import shutil
 from pathlib import Path
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Union
+from requests import HTTPError
 from .Log import Log
 from .AttrDict import AttrDict
 from .File import *
+from .UpdateJsonError import UpdateJsonError
+from .MagiskModuleError import MagiskModuleError
 
 
 class Repo:
@@ -30,15 +33,15 @@ class Repo:
         self.modules_json = AttrDict(
             name=name,
             timestamp=self.timestamp,
-            modules=[]
+            modules=list()
         )
-        self.modules_list = []
-        self.id_list = []
+        self.modules_list = list()
 
-        if self.json_file.exists():
-            self.old_modules_list = load_json(self.json_file).modules
-        else:
-            self.old_modules_list = []
+        self.force_update = False,
+        self.debug = False
+
+        self._update_json = AttrDict(id=None, data=None)
+        self._track_json = AttrDict(id=None, data=None)
 
     @staticmethod
     def isNotNone(text: str) -> bool:
@@ -48,36 +51,81 @@ class Repo:
     def isWith(text: str, start: str, end: str) -> bool:
         return text.startswith(start) and text.endswith(end)
 
-    def _tmp_file(self, item: AttrDict) -> Path:
-        item_dir = self._modules_folder.joinpath(item.id)
-        file_name = f"{item.id}.zip"
+    def _tmp_file(self, _id: str) -> Path:
+        item_dir = self._modules_folder.joinpath(_id)
+        file_name = f"{_id}.zip"
         os.makedirs(item_dir, exist_ok=True)
 
         return item_dir.joinpath(file_name)
 
-    def _zip_file(self, item: AttrDict) -> Path:
-        item_dir = self._modules_folder.joinpath(item.id)
-        file_name = "{0}_{1}.zip".format(item.version.replace(" ", "_"), item.versionCode)
+    def _zip_file(self, module: AttrDict) -> Path:
+        item_dir = self._modules_folder.joinpath(module.id)
+        file_name = "{0}_{1}.zip".format(module.version.replace(" ", "_"), module.versionCode)
 
         return item_dir.joinpath(file_name)
+
+    def _track_json_file(self, _id: str):
+        return self._modules_folder.joinpath(_id, "track.json")
+
+    def _update_json_file(self, _id: str):
+        return self._modules_folder.joinpath(_id, "update.json")
+
+    def get_track_json(self, _id: str) -> Optional[AttrDict]:
+        if self._track_json.id != _id or self._track_json.data is None:
+            self._track_json.id = _id
+            json_file = self._track_json_file(_id)
+            if json_file.exists():
+                self._track_json.data = load_json(json_file)
+            else:
+                self._track_json.data = None
+
+        return self._track_json.data
+
+    def get_update_json(self, _id: str) -> Optional[AttrDict]:
+        if self._update_json.id != _id or self._update_json.data is None:
+            self._update_json.id = _id
+            json_file = self._update_json_file(_id)
+            if json_file.exists():
+                self._update_json.data = load_json(json_file)
+            else:
+                self._update_json.data = None
+
+        return self._update_json.data
+
+    @staticmethod
+    def load_update_json(_in: Union[Path, str]) -> AttrDict:
+        if isinstance(_in, Path):
+            _dict = load_json(_in)
+        elif isinstance(_in, str):
+            _dict = load_json_url(_in)
+        else:
+            _dict = AttrDict()
+
+        try:
+            _dict.versionCode = int(_dict.versionCode)
+        except ValueError:
+            msg = f"wrong type of versionCode, expected int but got {type(_dict.versionCode).__name__}"
+            raise UpdateJsonError(msg)
+
+        return _dict
 
     def _get_url(self, _id: str, _file: str) -> str:
         return f"{self._repo_url}{self._modules_folder.name}/{_id}/{_file}"
 
     @staticmethod
-    def _update_module_info(item: AttrDict, module_file: Path):
-        prop = AttrDict(get_props(module_file))
-        item.name = prop.name
-        item.version = prop.version
-        item.versionCode = int(prop.versionCode)
-        item.author = prop.author
-        item.description = prop.description
+    def _update_module_info(module: AttrDict, module_file: Path):
+        prop = get_props(module_file)
+        module.version = prop.version
+        module.versionCode = prop.versionCode
+        module.name = prop.name
+        module.author = prop.author
+        module.description = prop.description
 
-    def _get_version_item_common(self, item: AttrDict, zip_file: Path) -> AttrDict:
+    def _get_version_item_common(self, module: AttrDict, zip_file: Path) -> AttrDict:
         versions_item = AttrDict(timestamp=self.timestamp)
-        versions_item.version = item.version
-        versions_item.versionCode = item.versionCode
-        versions_item.zipUrl = self._get_url(item.id, zip_file.name)
+        versions_item.version = module.version
+        versions_item.versionCode = module.versionCode
+        versions_item.zipUrl = self._get_url(module.id, zip_file.name)
         versions_item.changelog = ""
 
         return versions_item
@@ -89,11 +137,11 @@ class Repo:
 
     def _get_changelog_url(self, zip_file: Path, changelog: str) -> str:
         if self.isNotNone(changelog) and self.isWith(changelog, "http", "md"):
-            changelog_file = zip_file.parent.joinpath(zip_file.name.replace("zip", "md"))
+            changelog_file = zip_file.with_suffix(".md")
             url = self._get_file_from_url(changelog_file, changelog)
 
             text = changelog_file.read_text().strip()
-            if text.startswith("<!DOCTYPE html>"):
+            if "<html>" in text:
                 os.remove(changelog_file)
                 return ""
 
@@ -101,212 +149,252 @@ class Repo:
         else:
             return ""
 
-    def _get_module_from_json(self, item: AttrDict, host: AttrDict) -> AttrDict:
-        tmp_file = self._tmp_file(item)
-        update_json: AttrDict = load_json_url(host.update_to)
-        downloader(update_json.zipUrl, tmp_file)
-        self._update_module_info(item, tmp_file)
+    def _is_updatable(self, _id: str, version_code: int):
+        local_update_json = self.get_update_json(_id)
+        if local_update_json is not None:
+            versions: list = local_update_json.versions
+            latest_version = AttrDict(versions[0])
+            if latest_version.versionCode < version_code:
+                return True
+            else:
+                return False
 
-        zip_file = self._zip_file(item)
+        return True
+
+    def _get_module_from_json(self, module: AttrDict, host: AttrDict) -> Union[AttrDict, bool]:
+        tmp_file = self._tmp_file(module.id)
+        update_json: AttrDict = self.load_update_json(host.update_to)
+        module.update(version=update_json.version, versionCode=update_json.versionCode)
+
+        if not (self.force_update or self._is_updatable(module.id, update_json.versionCode)):
+            return False
+
+        timestamp = downloader(update_json.zipUrl, tmp_file)
+        self._update_module_info(module, tmp_file)
+
+        zip_file = self._zip_file(module)
         shutil.move(tmp_file, zip_file)
 
-        versions_item = self._get_version_item_common(item, zip_file)
+        versions_item = self._get_version_item_common(module, zip_file)
         versions_item.changelog = self._get_changelog_url(zip_file, update_json.changelog)
+        versions_item.timestamp = timestamp or self.timestamp
 
         return versions_item
 
-    def _get_module_from_url(self, item: AttrDict, host: AttrDict) -> AttrDict:
-        tmp_file = self._tmp_file(item)
-        downloader(host.update_to, tmp_file)
-        self._update_module_info(item, tmp_file)
+    def _get_module_from_url(self, module: AttrDict, host: AttrDict) -> Union[AttrDict, bool]:
+        tmp_file = self._tmp_file(module.id)
+        timestamp = downloader(host.update_to, tmp_file)
+        self._update_module_info(module, tmp_file)
 
-        zip_file = self._zip_file(item)
+        if not (self.force_update or self._is_updatable(module.id, module.versionCode)):
+            os.remove(tmp_file)
+            return False
+
+        zip_file = self._zip_file(module)
         shutil.move(tmp_file, zip_file)
 
-        versions_item = self._get_version_item_common(item, zip_file)
+        versions_item = self._get_version_item_common(module, zip_file)
         versions_item.changelog = self._get_changelog_url(zip_file, host.changelog)
+        versions_item.timestamp = timestamp or self.timestamp
 
         return versions_item
 
-    def _get_module_from_git(self, item: AttrDict, host: AttrDict):
-        tmp_file = self._tmp_file(item)
-        git_clone(host.update_to, tmp_file)
-        self._update_module_info(item, tmp_file)
+    def _get_module_from_git(self, module: AttrDict, host: AttrDict) -> Union[AttrDict, bool]:
+        tmp_file = self._tmp_file(module.id)
+        timestamp = git_clone(host.update_to, tmp_file)
+        self._update_module_info(module, tmp_file)
 
-        zip_file = self._zip_file(item)
+        if not (self.force_update or self._is_updatable(module.id, module.versionCode)):
+            os.remove(tmp_file)
+            return False
+
+        zip_file = self._zip_file(module)
         shutil.move(tmp_file, zip_file)
 
-        versions_item = self._get_version_item_common(item, zip_file)
+        versions_item = self._get_version_item_common(module, zip_file)
+        versions_item.changelog = self._get_changelog_url(zip_file, host.changelog)
+        versions_item.timestamp = timestamp or self.timestamp
 
         return versions_item
 
-    def _get_module_from_local(self, item: AttrDict, host: AttrDict):
-        item_dir = self._modules_folder.joinpath(item.id)
+    def _get_module_from_zip(self, module: AttrDict, host: AttrDict) -> Union[AttrDict, bool]:
+        item_dir = self._modules_folder.joinpath(module.id)
         os.makedirs(item_dir, exist_ok=True)
 
         tmp_file = self._local_folder.joinpath(host.update_to)
         if not tmp_file.exists():
             raise FileNotFoundError(f"No such file: '{tmp_file}'")
 
-        self._update_module_info(item, tmp_file)
-        zip_file = self._zip_file(item)
+        timestamp = os.path.getctime(tmp_file)
+        self._update_module_info(module, tmp_file)
+
+        if not (self.force_update or self._is_updatable(module.id, module.versionCode)):
+            return False
+
+        zip_file = self._zip_file(module)
         shutil.copy(tmp_file, zip_file)
 
-        versions_item = self._get_version_item_common(item, zip_file)
+        versions_item = self._get_version_item_common(module, zip_file)
+        versions_item.timestamp = timestamp
 
         if self.isNotNone(host.changelog) and host.changelog.endswith("md"):
-            changelog_tmp = tmp_file.parent.joinpath(host.changelog)
+            changelog_tmp = tmp_file.with_name(host.changelog)
             if not changelog_tmp.exists():
-                self._log.e(f"{item.id}: {changelog_tmp}: does not exist")
+                self._log.w(f"{module.id}: {changelog_tmp}: does not exist")
                 return versions_item
 
-            changelog_file = zip_file.parent.joinpath(zip_file.name.replace("zip", "md"))
+            changelog_file = zip_file.with_suffix(".md")
             shutil.copy(changelog_tmp, changelog_file)
-            versions_item.changelog = self._get_url(item.id, changelog_file.name)
+            versions_item.changelog = self._get_url(module.id, changelog_file.name)
 
         return versions_item
 
+    def _update_module(self, module: AttrDict, host: AttrDict) -> Union[AttrDict, bool, None]:
+        if self.isWith(host.update_to, "http", "json"):
+            self._log.i(f"{module.id}: update module from json: {host.update_to}")
+            return self._get_module_from_json(module, host)
+
+        elif host.update_to.endswith("json"):
+            self._log.i(f"{module.id}: update module from local json: {host.update_to}")
+            host.update(update_to=self._local_folder.joinpath(host.update_to))
+            return self._get_module_from_json(module, host)
+
+        elif self.isWith(host.update_to, "http", "zip"):
+            self._log.i(f"{module.id}: update module from url: {host.update_to}")
+            return self._get_module_from_url(module, host)
+
+        elif self.isWith(host.update_to, "http", "git"):
+            self._log.i(f"{module.id}: update module from git: {host.update_to}")
+            return self._get_module_from_git(module, host)
+
+        elif host.update_to.endswith("zip"):
+            self._log.i(f"{module.id}: update module from local zip: {host.update_to}")
+            return self._get_module_from_zip(module, host)
+
+        else:
+            self._log.e(f"{module.id}: update module failed: unsupported type({host.update_to})")
+            return None
+
+    def _update_track(self, host: AttrDict, version_size: int, last_update: float):
+        track_json: AttrDict = self.get_track_json(host.id)
+        if track_json is None:
+            track_json = host.copy()
+            track_json.added = self.timestamp
+
+        track_json.last_update = last_update
+        track_json.versions = version_size
+        write_json(track_json, self._track_json_file(host.id))
+
+    def _check_latest_version(self, module: AttrDict):
+        update_json = self.get_update_json(module.id)
+        if update_json is not None:
+            versions: list = update_json.versions
+            latest_version = AttrDict(versions[0], id=module.id)
+
+            zip_file = self._zip_file(latest_version)
+            if not zip_file.exists():
+                return False
+
+            self._update_module_info(module, zip_file)
+            module.states = {
+                "zipUrl": latest_version.zipUrl,
+                "changelog": latest_version.changelog
+            }
+
+            return True
+        else:
+            return False
+
     def _clear_old_version(self, _id: str, versions: list):
-        for old_item in versions[self._max_num - 1:]:
-            old_item = AttrDict(old_item)
-            file_name = "{0}_{1}.zip".format(
-                old_item.version.replace(" ", "_"),
-                old_item.versionCode
-            )
-            f = self._modules_folder.joinpath(_id, file_name)
-            if f.exists():
-                os.remove(f)
+        for old_version in versions[self._max_num - 1:]:
+            old_version = AttrDict(old_version, id=_id)
+            zip_file = self._zip_file(old_version)
+
+            if zip_file.exists():
+                os.remove(zip_file)
 
             versions.pop()
 
-            self._log.i(f"{_id}: remove old version: {file_name}")
+            self._log.w(f"{_id}: remove old version: {zip_file.name}")
 
-    def _limit_file_size(self, item: AttrDict, maxsize: float) -> bool:
-        zip_file = self._zip_file(item)
+    def _limit_file_size(self, module: AttrDict, maxsize: float) -> bool:
+        zip_file = self._zip_file(module)
         return os.stat(zip_file).st_size > maxsize * 1024.0 * 1024.0
 
-    def _update_module(self, item: AttrDict, host: AttrDict) -> Optional[AttrDict]:
-        if self.isWith(host.update_to, "http", "json"):
-            self._log.i(f"{item.id}: update module from json: {host.update_to}")
-            return self._get_module_from_json(item, host)
+    def pull(self, *, maxsize: float = 50, force_update: bool = False, debug: bool = False):
+        self.force_update = force_update
+        self.debug = debug
 
-        elif self.isWith(host.update_to, "http", "zip"):
-            self._log.i(f"{item.id}: update module from url: {host.update_to}")
-            return self._get_module_from_url(item, host)
-
-        elif self.isWith(host.update_to, "http", "git"):
-            self._log.i(f"{item.id}: update module from git: {host.update_to}")
-            return self._get_module_from_git(item, host)
-
-        elif host.update_to.endswith("zip"):
-            self._log.i(f"{item.id}: update module from local: {host.update_to}")
-            return self._get_module_from_local(item, host)
-
-        else:
-            self._log.i(f"{item.id}: update module failed: unsupported type({host.update_to})")
-            return None
-
-    def _update_track(self, host: AttrDict, version_size: int, added: int = None, last_update: int = None):
-        local_track_json = self._modules_folder.joinpath(host.id, "track.json")
-        if local_track_json.exists():
-            track_info: AttrDict = load_json(local_track_json)
-        else:
-            track_info = host.copy()
-            track_info.added = added or self.timestamp
-
-        track_info.last_update = last_update or self.timestamp
-        track_info.versions = version_size
-        write_json(track_info, local_track_json)
-
-    def _find_old_module(self, _id: str):
-        for module in self.old_modules_list:
-            if module["id"] == _id:
-                return module
-
-        return None
-
-    def pull(self, maxsize: float = 50, debug: bool = False):
         for host in self._hosts_list:
             host = AttrDict(host)
-            item = AttrDict(id=host.id, license=host.license or "")
+            module = AttrDict(id=host.id, license=host.license or "")
 
-            local_track_json = self._modules_folder.joinpath(host.id, "track.json")
-            local_update_json = self._modules_folder.joinpath(host.id, "update.json")
+            if self.force_update:
+                self.clear_all_versions(host.id)
 
             try:
-                versions_item = self._update_module(item, host)
+                versions_item = self._update_module(module, host)
 
-                if self._limit_file_size(item, maxsize):
+                if versions_item is None:
+                    continue
+
+                if not versions_item:
+                    self._check_latest_version(module)
+                    self.modules_list.append(module)
+                    self._log.i(f"{host.id}: already the latest version: {module.version}-{module.versionCode}")
+                    continue
+
+                if self._limit_file_size(module, maxsize):
                     self._log.w(f"{host.id}: zip file size exceeds limit ({maxsize}MB)")
                     shutil.rmtree(self._modules_folder.joinpath(host.id))
                     continue
 
+                module.states = {
+                    "zipUrl": versions_item.zipUrl,
+                    "changelog": versions_item.changelog
+                }
+
             except BaseException as err:
-                if debug:
-                    raise err
+                tmp_file = self._tmp_file(host.id)
+                if tmp_file.exists():
+                    os.remove(tmp_file)
 
                 msg = "{} " * len(err.args)
                 msg = msg.format(*err.args).rstrip()
                 self._log.e(f"{host.id}: update module failed: {type(err).__name__}({msg})")
 
-                old_module = self._find_old_module(host.id)
-                if local_update_json.exists() and old_module is not None:
+                if self._check_latest_version(module):
                     self._log.i(f"{host.id} will be keep because available versions exists")
-                    self.id_list.append(host.id)
-                    self.modules_list.append(old_module)
+                    self.modules_list.append(module)
+
+                if self.debug:
+                    if type(err) not in [UpdateJsonError, MagiskModuleError, HTTPError]:
+                        raise err
 
                 continue
 
-            if versions_item is None:
-                continue
-
-            item.states = {
-                "zipUrl": versions_item.zipUrl,
-                "changelog": versions_item.changelog
-            }
-
-            if local_update_json.exists():
-                update_info: AttrDict = load_json(local_update_json)
-                versions: list = update_info.versions
-
-                versions.sort(key=lambda v: v["timestamp"], reverse=True)
+            update_json = self.get_update_json(module.id)
+            if update_json is not None:
+                versions: list = update_json.versions
                 latest_version = AttrDict(versions[0])
-                oldest_version = AttrDict(versions[-1])
-                if versions_item.versionCode <= latest_version.versionCode:
-                    if not local_track_json.exists():
-                        self._update_track(
-                            host=host,
-                            version_size=len(versions),
-                            added=oldest_version.timestamp,
-                            last_update=latest_version.timestamp
-                        )
-
-                    latest_version.zipUrl = versions_item.zipUrl
-                    latest_version.changelog = versions_item.changelog
-                    versions[0] = latest_version
-                    update_info.versions = versions
-                    write_json(update_info, local_update_json)
-
-                    self.id_list.append(host.id)
-                    self.modules_list.append(item)
-                    self._log.i(f"{host.id}: already the latest version")
-                    continue
-
                 if len(versions) >= self._max_num:
                     self._clear_old_version(host.id, versions)
 
             else:
-                update_info = AttrDict(id=host.id, timestamp="", versions=[])
-                versions: list = update_info.versions
+                update_json = AttrDict(id=host.id, timestamp=self.timestamp, versions=list())
+                versions: list = update_json.versions
+                latest_version = AttrDict()
 
-            versions.insert(0, versions_item)
-            update_info.update(timestamp=self.timestamp, versions=versions)
-            write_json(update_info, local_update_json)
+            if latest_version.versionCode == versions_item.versionCode:
+                versions[0] = versions_item
+            else:
+                versions.insert(0, versions_item)
+            update_json.update(timestamp=versions_item.timestamp, versions=versions)
+            write_json(update_json, self._update_json_file(module.id))
 
-            self._update_track(host=host, version_size=len(versions))
+            self._update_track(host=host, version_size=len(versions), last_update=versions_item.timestamp)
 
-            self.id_list.append(host.id)
-            self.modules_list.append(item)
+            self.modules_list.append(module)
             self._log.i(f"{host.id}: latest version: {versions_item.version}-{versions_item.versionCode}")
 
     def write_modules_json(self):
@@ -314,11 +402,27 @@ class Repo:
         write_json(self.modules_json, self.json_file)
 
     def clear_modules(self):
-        if len(self.id_list) == 0:
-            for host in self._hosts_list:
-                self.id_list.append(host["id"])
+        if len(self.modules_list) == 0:
+            _list = self.modules_list
+        else:
+            _list = self._hosts_list
+
+        id_list = list()
+        for item in _list:
+            id_list.append(item["id"])
 
         for f in self._modules_folder.glob("*"):
-            if f.name not in self.id_list:
-                self._log.w(f"clear removed modules: {f.name}")
+            if f.name not in id_list:
+                self._log.w(f"clear unused modules: {f.name}")
                 shutil.rmtree(f, ignore_errors=True)
+
+    def clear_all_versions(self, _id: str):
+        for path in self._modules_folder.joinpath(_id).glob("*"):
+            if path == self._track_json_file(_id):
+                continue
+
+            if path.is_file():
+                os.remove(path)
+
+            if path.is_dir():
+                shutil.rmtree(path)
