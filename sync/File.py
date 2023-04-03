@@ -90,12 +90,17 @@ def git_clone(url: str, out: Path):
 
     shutil.rmtree(repo_dir.joinpath(".git"), ignore_errors=True)
     shutil.rmtree(repo_dir.joinpath(".github"), ignore_errors=True)
+    shutil.rmtree(repo_dir.joinpath(".gitlab"), ignore_errors=True)
+    if os.path.exists(repo_dir.joinpath(".gitattributes")):
+        os.remove(repo_dir.joinpath(".gitattributes"))
+    if os.path.exists(repo_dir.joinpath(".gitignore")):
+        os.remove(repo_dir.joinpath(".gitignore"))
 
     with ZipFile(out, "w", ZIP_DEFLATED) as f:
         for dir_path, dir_names, file_names in os.walk(repo_dir):
             file_path = dir_path.replace(repo_dir.as_posix(), "")
             for file_name in file_names:
-                f.write(os.path.join(dir_path, file_name), file_path + file_name)
+                f.write(os.path.join(dir_path, file_name), os.path.join(file_path,file_name))
 
     shutil.rmtree(repo_dir)
 
