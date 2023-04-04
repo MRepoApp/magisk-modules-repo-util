@@ -215,12 +215,12 @@ class Repo:
         return versions_item
 
     def _get_module_from_zip(self, module: AttrDict, host: AttrDict) -> Union[AttrDict, bool]:
+        tmp_file = host.update_to
+        if not tmp_file.exists():
+            raise FileNotFoundError(f"No such file: {tmp_file.as_posix()}")
+
         item_dir = self._modules_folder.joinpath(module.id)
         os.makedirs(item_dir, exist_ok=True)
-
-        tmp_file = self._local_folder.joinpath(host.update_to)
-        if not tmp_file.exists():
-            raise FileNotFoundError(f"No such file: '{tmp_file}'")
 
         timestamp = os.path.getctime(tmp_file)
         self._update_module_info(module, tmp_file)
@@ -252,8 +252,8 @@ class Repo:
             return self._get_module_from_json(module, host)
 
         elif host.update_to.endswith("json"):
-            self._log.i(f"{module.id}: update module from local json: {host.update_to}")
             host.update(update_to=self._local_folder.joinpath(host.update_to))
+            self._log.i(f"{module.id}: update module from local json: {host.update_to}")
             return self._get_module_from_json(module, host)
 
         elif self.isWith(host.update_to, "http", "zip"):
@@ -265,6 +265,7 @@ class Repo:
             return self._get_module_from_git(module, host)
 
         elif host.update_to.endswith("zip"):
+            host.update(update_to=self._local_folder.joinpath(host.update_to))
             self._log.i(f"{module.id}: update module from local zip: {host.update_to}")
             return self._get_module_from_zip(module, host)
 
@@ -357,7 +358,7 @@ class Repo:
                 self._log.e(f"{host.id}: update module failed: {type(err).__name__}({msg})")
 
                 if self._check_latest_version(module):
-                    self._log.i(f"{host.id} will be keep because available versions exists")
+                    self._log.i(f"{host.id} will be kept because available versions exists")
                     self.modules_list.append(module)
 
                 if self.debug:

@@ -112,7 +112,7 @@ options:
 | id | required | Id of the module itself |
 | update_to | required | Url of updateJson or zipFile, or file name of zipFile, or url of a git repository (end with `.git`) |
 | license | optional | SPDX ID |
-| changelog | optional | Url of changelog.md or file name of changelog.md (the best is markdown, simple text is also ok, **no html**) |
+| changelog | optional | Url of changelog.md or file name of changelog.md (markdown is the best, simple text is also ok, **no html**) |
 
 ### Update from updateJson
 This is for those modules that provide [updateJson](https://topjohnwu.github.io/Magisk/guides.html#moduleprop). 
@@ -126,7 +126,7 @@ This is for those modules that provide [updateJson](https://topjohnwu.github.io/
 ```
 
 ### Update from local updateJson
-The `update_to` requires the relative directory of *local*.
+The `update_to` requires a relative directory of *local*.
 1. Create a new folder named *local* in *your-repo*
 2. Put the update.json into *local*
 
@@ -139,7 +139,7 @@ The `update_to` requires the relative directory of *local*.
 ```
 
 ### Update from url
-This is for those have the same url to release new modules.
+This is for those have a same url to release new modules.
 - If url has changed, you have to edit it.
 
 ```json
@@ -152,8 +152,8 @@ This is for those have the same url to release new modules.
 ```
 
 ### Update from git
-This is for those you can get the module by packaging all files in the repository, such as [Magisk-Modules-Repo](https://github.com/Magisk-Modules-Repo) and [Magisk-Modules-Alt-Repo](https://github.com/Magisk-Modules-Alt-Repo). 
-- If you are looking how to add *Magisk-Modules-Alt-Repo* to *MRepo*, please refer to [ya0211/magisk-modules-alt-repo](https://github.com/ya0211/magisk-modules-alt-repo).
+This is for those you can **get the module by packaging all files** in the repository, such as [Magisk-Modules-Repo](https://github.com/Magisk-Modules-Repo) and [Magisk-Modules-Alt-Repo](https://github.com/Magisk-Modules-Alt-Repo). 
+- If you are looking how to add *Magisk-Modules-Alt-Repo* to *MRepo*, you can refer to [ya0211/magisk-modules-alt-repo](https://github.com/ya0211/magisk-modules-alt-repo).
 
 ```json
 {
@@ -165,7 +165,7 @@ This is for those you can get the module by packaging all files in the repositor
 ```
 
 ### Update from local zip
-The `update_to` requires the relative directory of *local*.
+The `update_to` requires a relative directory of *local*.
 1. Create a new folder named *local* in *your-repo*
 2. Put the zip file (and changelog.md) into *local*
 

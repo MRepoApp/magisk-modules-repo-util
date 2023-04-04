@@ -168,12 +168,12 @@ def create_new_config(root_folder: Path):
 
     config.repo_name = input_force("Name of Repository", "[str]: ")
 
-    while True:
-        repo_url = input_force("Url of Repository", "[str]: ")
-        if repo_url.endswith("/"):
-            config.repo_url = repo_url
-            break
+    repo_url = input_force("Url of Repository", "[str]: ")
+    if not repo_url.endswith("/"):
+        repo_url += "/"
 
+    config.repo_url = repo_url
+    print(repo_url)
     config.max_num = input_int("Maximum Number of Old Modules", "[int]: ")
     config.show_log = input_bool("Show Log", "[y/n]: ")
 
@@ -337,7 +337,7 @@ def cli_sync(args: SafeArgs):
     sync.get_config()
     sync.get_hosts_form_local()
     repo = sync.get_repo()
-    repo.pull(maxsize=args.file_maxsize, force_update=args.force_update ,debug=args.debug)
+    repo.pull(maxsize=args.file_maxsize, force_update=args.force_update, debug=args.debug)
     repo.write_modules_json()
 
     if args.remove_unused:
