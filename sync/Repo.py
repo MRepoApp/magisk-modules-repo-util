@@ -358,7 +358,7 @@ class Repo:
                 self._log.e(f"{host.id}: update module failed: {type(err).__name__}({msg})")
 
                 if self._check_latest_version(module):
-                    self._log.i(f"{host.id} will be kept because available versions exists")
+                    self._log.i(f"{host.id} will be kept because available version(s) exist")
                     self.modules_list.append(module)
 
                 if self.debug:
@@ -389,7 +389,7 @@ class Repo:
             self._update_track(host=host, version_size=len(versions), last_update=versions_item.timestamp)
 
             self.modules_list.append(module)
-            self._log.i(f"{host.id}: latest version: {versions_item.version}-{versions_item.versionCode}")
+            self._log.i(f"{host.id}: update to latest version: {versions_item.version}-{versions_item.versionCode}")
 
     def write_modules_json(self):
         self.modules_json.modules = self.modules_list
