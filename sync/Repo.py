@@ -174,7 +174,7 @@ class Repo:
 
         versions_item = self._get_version_item_common(module, zip_file)
         versions_item.changelog = self._get_changelog_url(zip_file, update_json.changelog)
-        versions_item.timestamp = timestamp or self.timestamp
+        versions_item.timestamp = timestamp
 
         return versions_item
 
@@ -192,7 +192,7 @@ class Repo:
 
         versions_item = self._get_version_item_common(module, zip_file)
         versions_item.changelog = self._get_changelog_url(zip_file, host.changelog)
-        versions_item.timestamp = timestamp or self.timestamp
+        versions_item.timestamp = timestamp
 
         return versions_item
 
@@ -210,7 +210,7 @@ class Repo:
 
         versions_item = self._get_version_item_common(module, zip_file)
         versions_item.changelog = self._get_changelog_url(zip_file, host.changelog)
-        versions_item.timestamp = timestamp or self.timestamp
+        versions_item.timestamp = timestamp
 
         return versions_item
 

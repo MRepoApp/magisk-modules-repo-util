@@ -5,6 +5,7 @@ import requests
 import subprocess
 from pathlib import Path
 from zipfile import ZipFile
+from datetime import datetime
 from requests import HTTPError
 from dateutil.parser import parse
 from typing import Union, Optional
@@ -84,13 +85,13 @@ def downloader(url: str, out: Path) -> Optional[float]:
             last_modified = response.headers["Last-Modified"]
             return parse(last_modified).timestamp()
         else:
-            return None
+            return datetime.now().timestamp()
     else:
         os.remove(out)
         raise HTTPError(response.text)
 
 
-def git_clone(url: str, out: Path) -> Optional[float]:
+def git_clone(url: str, out: Path) -> float:
     repo_dir = out.with_suffix("")
 
     try:
@@ -106,7 +107,7 @@ def git_clone(url: str, out: Path) -> Optional[float]:
 
     try:
         result = subprocess.run(
-            ["git", "log", "-1", "--format=%cd"],
+            ["git", "log", "--format=%cd"],
             stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL,
             cwd=repo_dir.as_posix()
@@ -114,7 +115,7 @@ def git_clone(url: str, out: Path) -> Optional[float]:
 
         last_committed = parse(result).timestamp()
     except CalledProcessError:
-        last_committed = None
+        last_committed = datetime.now().timestamp()
 
     for path in repo_dir.glob(".git*"):
         if path.is_dir():
@@ -122,6 +123,11 @@ def git_clone(url: str, out: Path) -> Optional[float]:
 
         if path.is_file():
             os.remove(path)
+
+    for root, _, files in os.walk(repo_dir):
+        for file in files:
+            path = os.path.join(root, file)
+            os.utime(path, (last_committed, last_committed))
 
     shutil.make_archive(repo_dir.as_posix(), format="zip", root_dir=repo_dir)
     shutil.rmtree(repo_dir)
