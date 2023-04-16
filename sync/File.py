@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import shutil
 import requests
@@ -14,8 +15,15 @@ from .AttrDict import AttrDict
 from .MagiskModuleError import MagiskModuleError
 
 
+def filter_json(text: str) -> str:
+    return re.sub(r",(?=\s*?[}\]])", "", text)
+
+
 def load_json(json_file: Path) -> Union[list, AttrDict]:
-    obj = json.load(open(json_file, encoding="utf-8"))
+    with open(json_file, encoding="utf-8", mode="r") as f:
+        text = filter_json(f.read())
+        obj = json.loads(text)
+
     if isinstance(obj, dict):
         return AttrDict(obj)
 
@@ -27,7 +35,8 @@ def load_json_url(url: str) -> Union[list, AttrDict]:
     if not response.ok:
         raise HTTPError(response.text)
 
-    obj = response.json()
+    text = filter_json(response.text)
+    obj = json.loads(text)
     if isinstance(obj, dict):
         return AttrDict(obj)
 
