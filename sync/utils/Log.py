@@ -5,13 +5,13 @@ import functools
 from typing import Optional
 from glob import glob
 from pathlib import Path
-from datetime import datetime
+from datetime import date
 
 logger_initialized = {}
 
 
 @functools.lru_cache()
-def get_logger(name='root', log_file=None, log_level=logging.DEBUG):
+def get_logger(name: str = "root", log_file: Optional[Path] = None, log_level=logging.DEBUG):
     logger = logging.getLogger(name)
     if name in logger_initialized:
         return logger
@@ -20,17 +20,25 @@ def get_logger(name='root', log_file=None, log_level=logging.DEBUG):
             return logger
 
     formatter = logging.Formatter(
-        '[%(asctime)s] %(name)s %(levelname)s: %(message)s',
+        "[%(asctime)s] %(name)s %(levelname)s: %(message)s",
         datefmt="%Y/%m/%d %H:%M:%S")
 
-    stream_handler = logging.StreamHandler(stream=sys.stdout)
-    stream_handler.setFormatter(formatter)
-    logger.addHandler(stream_handler)
+    stdout_handler = logging.StreamHandler(stream=sys.stdout)
+    stdout_handler.setFormatter(formatter)
+    stdout_handler.addFilter(lambda log: log.levelno < logging.ERROR)
+
+    stderr_handler = logging.StreamHandler(stream=sys.stderr)
+    stderr_handler.setFormatter(formatter)
+    stderr_handler.addFilter(lambda log: log.levelno >= logging.ERROR)
+
+    logger.addHandler(stdout_handler)
+    logger.addHandler(stderr_handler)
 
     if log_file is not None:
         log_file_folder = os.path.split(log_file)[0]
         os.makedirs(log_file_folder, exist_ok=True)
-        file_handler = logging.FileHandler(log_file, 'a')
+
+        file_handler = logging.FileHandler(log_file, "a")
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
 
@@ -41,46 +49,34 @@ def get_logger(name='root', log_file=None, log_level=logging.DEBUG):
 
 class Log:
     def __init__(self, tag: str, log_folder: Optional[Path] = None, show_log: bool = True):
-        self._tag = tag
+        log_file = None
+        if log_folder is not None:
+            log_file = f"{tag}-{date.today()}.log"
+            log_file = log_folder.joinpath(log_file)
+            self.clear(log_folder, tag)
+
         self._show_log = show_log
+        self._logging = get_logger(name=tag, log_file=log_file)
 
-        if log_folder is None:
-            self._log_file = None
-
-        else:
-            self._log_folder = log_folder
-
-            log_file = f"{self._tag.lower()}_{datetime.now()}.log".replace(" ", "_")
-            self._log_file = log_folder.joinpath(log_file)
-            self.clear()
-
-    @property
-    def tag(self):
-        return self._tag
-
-    @tag.setter
-    def tag(self, value: str):
-        self._tag = value
-
-    def log(self, level: int, msg: str) -> None:
+    def log(self, level: int, msg: str):
         if self._show_log:
-            _logging = get_logger(name=self._tag, log_file=self._log_file)
-            _logging.log(level=level, msg=msg)
+            self._logging.log(level=level, msg=msg)
 
     def d(self, msg: str):
         self.log(level=logging.DEBUG, msg=msg)
 
-    def i(self, msg: str) -> None:
+    def i(self, msg: str):
         self.log(level=logging.INFO, msg=msg)
 
-    def w(self, msg: str) -> None:
+    def w(self, msg: str):
         self.log(level=logging.WARN, msg=msg)
 
-    def e(self, msg: str) -> None:
+    def e(self, msg: str):
         self.log(level=logging.ERROR, msg=msg)
 
-    def clear(self, keep_num: int = 3):
-        log_files = sorted(glob(f"{self._log_folder}/{self._tag.lower()}*"), reverse=True)
-        if len(log_files) >= keep_num + 1:
-            for old_log in log_files[keep_num:]:
-                os.remove(old_log)
+    @classmethod
+    def clear(cls, log_folder: Path, tag: str, max_num: int = 3):
+        log_files = sorted(glob(f"{log_folder}/{tag}*"), reverse=True)
+        if len(log_files) >= max_num + 1:
+            for log_file in log_files[max_num:]:
+                os.remove(log_file)
