@@ -103,10 +103,6 @@ def parse_parameters():
                         "--new-config",
                         action="store_true",
                         help="create a new config.json")
-    config.add_argument("-m",
-                        "--module-manager",
-                        action="store_true",
-                        help="interactive module manager")
     config.add_argument("-a",
                         "--add-module",
                         dest="track_json",
@@ -194,65 +190,6 @@ def remove_modules(root_folder: Path, id_list: list):
         shutil.rmtree(module_folder.joinpath(_id))
 
 
-def module_manager(root_folder: Path):
-    modules_folder = root_folder.joinpath("modules")
-    os.makedirs(modules_folder, exist_ok=True)
-
-    def add_module() -> int:
-        track = AttrDict(
-            id="",
-            update_to="",
-            license="",
-            changelog=""
-        )
-
-        track.id = input_force("id", "[str]: ")
-        track.update_to = input_force("update_to", "[str]: ")
-        track.license = input_common("license", "[str]: ")
-        track.changelog = input_common("changelog", "[str]: ")
-
-        _add = input_bool(f"Save", "[y/n]: ")
-        if _add:
-            add_new_module(root_folder, track)
-
-        _continue = input_bool(f"Add Another", "[y/n]: ")
-        if not _continue:
-            return 0
-        else:
-            return 1
-
-    def remove_module() -> int:
-        id_list = [_dir for _dir in sorted(modules_folder.glob("*/"))]
-        for i in range(len(id_list)):
-            print_value(i, id_list[i].name)
-        index_list = input_common("Index", "[int ...]: ").split()
-        for i in index_list:
-            try:
-                shutil.rmtree(id_list[int(i)])
-            except BaseException as err:
-                print_value("Error", err)
-
-        return 0
-
-    option = 0
-    while True:
-        if option == 0:
-            print_header("Modules Manager")
-            print_value(1, "Add Module")
-            print_value(2, "Remove Module")
-            option = input_optional("Option", "[1/2/q]: ", [1, 2])
-
-        elif option == 1:
-            print_header("Add Module")
-            option = add_module()
-
-        elif option == 2:
-            print_header("Remove Module")
-            option = remove_module()
-
-        print()
-
-
 def get_branch(cwd_folder: Path):
     try:
         result = subprocess.run(
@@ -287,10 +224,6 @@ def cli_config(args: SafeArgs, print_help: Callable):
 
     if args.new_config:
         create_new_config(root_folder)
-        return
-
-    if args.module_manager:
-        module_manager(root_folder)
         return
 
     if args.track_json:
