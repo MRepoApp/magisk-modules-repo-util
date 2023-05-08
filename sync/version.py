@@ -1,4 +1,4 @@
-from .utils.Modifier import command_exec
+from .expansion import command_exec
 
 
 def get_baseVersion():

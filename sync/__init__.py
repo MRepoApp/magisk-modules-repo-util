@@ -1,5 +1,5 @@
 from .core import *
-from ._version import get_versionCode, get_version
+from .version import get_versionCode, get_version
 
 version = get_version()
 versionCode = get_versionCode()
