@@ -1,6 +1,4 @@
-import subprocess
-from pathlib import Path
-from typing import Optional
+from .utils.Modifier import command_exec
 
 
 def get_baseVersion():
@@ -11,31 +9,28 @@ def get_baseVersionCode():
     return 100
 
 
-def command_exec(args: str) -> Optional[str]:
-    root_folder = Path(__file__).resolve().parent
-    try:
-        return subprocess.run(
-            args=args.split(),
-            stdout=subprocess.PIPE,
-            stderr=subprocess.DEVNULL,
-            cwd=root_folder
-        ).stdout.decode("utf-8")
-    except FileNotFoundError:
-        return None
+@command_exec
+def git_short_sha():
+    return "git rev-parse --short HEAD"
+
+
+@command_exec
+def git_commit_count():
+    return "git rev-list --count HEAD"
 
 
 def get_version():
-    result = command_exec("git rev-parse --short HEAD")
-    if result is not None:
-        return f"{get_baseVersion()}.{result.strip()}"
+    sha = git_short_sha()
+    if sha is not None:
+        return f"{get_baseVersion()}.{sha}"
     else:
         return get_baseVersion()
 
 
 def get_versionCode():
-    result = command_exec("git rev-list --count HEAD")
-    if result is not None:
-        return int(result.strip()) + get_baseVersionCode()
+    count = git_commit_count()
+    if count is not None:
+        return int(count) + get_baseVersionCode()
     else:
         return get_baseVersionCode()
 
