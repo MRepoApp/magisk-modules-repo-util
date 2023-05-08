@@ -9,6 +9,7 @@ from .AttrDict import AttrDict
 from ..error import UpdateJsonError, MagiskModuleError
 from ..utils.File import *
 from ..utils.Log import Log
+from .._version import get_version, get_versionCode
 
 
 class Repo:
@@ -30,9 +31,11 @@ class Repo:
         self._max_num = max_num
 
         self.timestamp = datetime.now().timestamp()
+        desc = AttrDict(version=get_version(), versionCode=get_versionCode())
         self.modules_json = AttrDict(
             name=name,
             timestamp=self.timestamp,
+            desc=desc,
             modules=list()
         )
         self.modules_list = list()
