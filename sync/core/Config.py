@@ -1,9 +1,10 @@
 from typing import Optional
 from pathlib import Path
+
 from .AttrDict import AttrDict
-from .File import load_json
-from .ConfigError import ConfigError
-from .Log import Log
+from ..error import ConfigError
+from ..utils import load_json
+from ..utils.Log import Log
 
 
 class Config:

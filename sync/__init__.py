@@ -1,12 +1,8 @@
-from .Sync import Sync
-from .Config import Config
-from .Hosts import Hosts
-from .Repo import Repo
-from .AttrDict import AttrDict
-from .ConfigError import ConfigError
-from .UpdateJsonError import UpdateJsonError
-from .MagiskModuleError import MagiskModuleError
+from .core import *
 from ._version import get_versionCode, get_version
+
+version = get_version()
+versionCode = get_versionCode()
 
 __all__ = [
     "Sync",
@@ -14,9 +10,6 @@ __all__ = [
     "Hosts",
     "Repo",
     "AttrDict",
-    "ConfigError",
-    "UpdateJsonError",
-    "MagiskModuleError",
-    "get_version",
-    "get_versionCode"
+    "version",
+    "versionCode"
 ]

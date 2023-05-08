@@ -4,11 +4,11 @@ from pathlib import Path
 from datetime import datetime
 from typing import Optional, Union
 from requests import HTTPError
-from .Log import Log
+
 from .AttrDict import AttrDict
-from .File import *
-from .UpdateJsonError import UpdateJsonError
-from .MagiskModuleError import MagiskModuleError
+from ..error import UpdateJsonError, MagiskModuleError
+from ..utils.File import *
+from ..utils.Log import Log
 
 
 class Repo:
