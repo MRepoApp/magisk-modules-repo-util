@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 import os
-import argparse
 import shutil
+import argparse
 import subprocess
-from typing import Callable
-from argparse import Namespace
 from pathlib import Path
+from typing import Callable
 from datetime import datetime
+from argparse import Namespace
+
 from sync import Sync
 from sync.AttrDict import AttrDict
 from sync.Print import print_header, print_value
@@ -14,7 +15,7 @@ from sync.Input import *
 from sync.File import write_json
 
 
-class JsonAction(argparse.Action):
+class DictAction(argparse.Action):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
@@ -22,22 +23,16 @@ class JsonAction(argparse.Action):
         _dict = self._to_dict(values)
         setattr(namespace, self.dest, _dict)
 
-    def _to_dict(self, values) -> AttrDict:
-        values = [value.split("=", maxsplit=1) for value in values]
-        _keys = [v[0] for v in values]
-        _values = [v[-1] for v in values]
-
+    @staticmethod
+    def _to_dict(values) -> AttrDict:
         _dict = AttrDict()
-        if _keys == _values:
-            for i in range(self.nargs):
-                _dict[self.metavar[i]] = _values[i]
+        for value in values:
+            value = value.split("=", maxsplit=1)
+            if len(value) != 2:
+                continue
 
-            return _dict
-
-        for i in range(self.nargs):
-            k = _keys[i]
-            if k in self.metavar:
-                _dict[k] = _values[i]
+            k, v = value
+            _dict[k] = v
 
         return _dict
 
@@ -115,9 +110,9 @@ def parse_parameters():
     config.add_argument("-a",
                         "--add-module",
                         dest="track_json",
-                        metavar=("id", "update_to", "license", "changelog"),
-                        action=JsonAction,
-                        nargs=4)
+                        metavar="key=value",
+                        action=DictAction,
+                        nargs="+")
     config.add_argument("-r",
                         "--remove-module",
                         dest="id_list",
