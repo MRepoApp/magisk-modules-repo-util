@@ -8,9 +8,9 @@ from typing import Callable
 from datetime import datetime
 from argparse import Namespace
 
-from sync import Sync
+from sync import Sync, get_version, get_versionCode
 from sync.AttrDict import AttrDict
-from sync.Print import print_header, print_value
+from sync.Print import print_header
 from sync.Input import *
 from sync.File import write_json
 
@@ -69,6 +69,16 @@ def parse_parameters():
                              type=str,
                              default=root_folder.as_posix(),
                              help="default: {0}".format('%(default)s'))
+    main_parser.add_argument("-v",
+                             "--version",
+                             action="version",
+                             version=get_version(),
+                             help="show util's version and exit")
+    main_parser.add_argument("-V",
+                             "--versionCode",
+                             action="version",
+                             version=str(get_versionCode()),
+                             help="show util's versionCode and exit")
 
     sync = sub_parser.add_parser("sync", help="sync modules and push to repository")
     sync.add_argument("-r",

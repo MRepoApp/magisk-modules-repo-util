@@ -6,6 +6,7 @@ from .AttrDict import AttrDict
 from .ConfigError import ConfigError
 from .UpdateJsonError import UpdateJsonError
 from .MagiskModuleError import MagiskModuleError
+from ._version import get_versionCode, get_version
 
 __all__ = [
     "Sync",
@@ -15,5 +16,7 @@ __all__ = [
     "AttrDict",
     "ConfigError",
     "UpdateJsonError",
-    "MagiskModuleError"
+    "MagiskModuleError",
+    "get_version",
+    "get_versionCode"
 ]
