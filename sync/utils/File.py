@@ -11,8 +11,8 @@ from requests import HTTPError
 from dateutil.parser import parse
 from typing import Union, Optional
 from subprocess import CalledProcessError
-from ..core import AttrDict
-from ..error import MagiskModuleError
+from ..core.AttrDict import AttrDict
+from ..error.MagiskModuleError import MagiskModuleError
 
 
 def filter_json(text: str) -> str:
