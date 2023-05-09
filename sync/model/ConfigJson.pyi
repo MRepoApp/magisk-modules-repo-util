@@ -1,0 +1,23 @@
+from pathlib import Path
+
+from .AttrDict import AttrDict
+from .JsonIO import JsonIO
+
+
+class ConfigJson(AttrDict, JsonIO):
+    repo_name: str
+    repo_url: str
+    max_num: int
+    show_log: bool
+    log_dir: Path
+
+    def _set_default(self):...
+    def _set_max_num(self):...
+    def _set_show_log(self):...
+    def _set_log_dir(self, *args):...
+    @classmethod
+    def load(cls, file: Path) -> ConfigJson:...
+    @classmethod
+    def default(cls) -> ConfigJson:...
+    @classmethod
+    def filename(cls) -> str:...
