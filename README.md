@@ -1,5 +1,7 @@
 # Magisk Modules Repo Util
 
+- ⚠️Util is being refactored, there will be some bugs
+- ⚠️Don't use the latest commit, use the one before [7cf0647](https://github.com/ya0211/magisk-modules-repo-util/tree/7cf06474a2aaf33307bbc5c541adf10025663dc3)
 - This util is to build module repository for [MRepo](https://github.com/ya0211/MRepo)
 - `sync` is a python package
 
