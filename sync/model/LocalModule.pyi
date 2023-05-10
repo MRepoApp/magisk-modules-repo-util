@@ -1,6 +1,8 @@
 from pathlib import Path
+from typing import List
 
 from .AttrDict import AttrDict
+
 
 class LocalModule(AttrDict):
     id: str
@@ -9,9 +11,10 @@ class LocalModule(AttrDict):
     versionCode: int
     author: str
     description: str
-    updateJson: str
 
     @property
     def version_display(self) -> int: ...
     @classmethod
     def from_file(cls, file: Path) -> LocalModule: ...
+    @classmethod
+    def expected_fields(cls) -> List[str]: ...

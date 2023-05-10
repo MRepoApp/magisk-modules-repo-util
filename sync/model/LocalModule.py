@@ -20,18 +20,17 @@ class LocalModule(AttrDict):
             props = zip_file.read("module.prop")
         except KeyError:
             os.remove(file)
-            raise MagiskModuleError("this is not a Magisk module")
+            raise MagiskModuleError(f"{file.name} is not a magisk module")
 
-        props = props.decode("utf-8")
         obj = AttrDict()
-
-        for item in props.splitlines():
-            prop = item.split("=", 1)
+        fields = cls.expected_fields()
+        for item in props.decode("utf-8").splitlines():
+            prop = item.split("=", maxsplit=1)
             if len(prop) != 2:
                 continue
 
             key, value = prop
-            if key == "" or key.startswith("#"):
+            if key == "" or key.startswith("#") or key not in fields:
                 continue
 
             obj[key] = value
@@ -41,8 +40,18 @@ class LocalModule(AttrDict):
         except ValueError:
             msg = f"wrong type of versionCode, expected int but got {type(obj.versionCode).__name__}"
             raise MagiskModuleError(msg)
-
         except TypeError:
             raise MagiskModuleError("versionCode does not exist in module.prop")
 
         return LocalModule(obj)
+
+    @classmethod
+    def expected_fields(cls):
+        return [
+            "id",
+            "name",
+            "version",
+            "versionCode",
+            "author",
+            "description"
+        ]
