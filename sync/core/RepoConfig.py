@@ -21,14 +21,18 @@ class RepoConfig(ConfigJson):
         self._set_log_dir(root_folder)
 
         self._log = Log("RepoConfig", self._log_dir, self.show_log)
+        self._log.d("__init__")
         for key in obj.keys():
-            self._log.i(f"{key}: {self.__getattribute__(key)}")
+            self._log.d(f"[{key}]: [{self.get(key)}]")
+
+    def __del__(self):
+        self._log.d("__del__")
 
     def _check_config(self):
         if StrUtils.isNone(self.repo_url):
             raise ConfigError("repo_url field is undefined")
-        if not self.repo_url.endswith("/"):
-            raise ConfigError("repo_url need to end with '/'")
+        elif not StrUtils.isWith(self.repo_url, "http", "/"):
+            raise ConfigError(f"repo_url must start with 'http' and end with '/'")
 
     def _set_log_dir(self, root_folder):
         if self.log_dir is not None:

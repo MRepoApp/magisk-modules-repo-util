@@ -12,38 +12,41 @@ class GithubTracks:
     def __init__(self, api_token, root_folder, config):
         self._log = Log("GithubTracks", config.log_dir, config.show_log)
         self._modules_folder = root_folder.joinpath("modules")
-
         self._github = Github(login_or_token=api_token)
         self._tracks = list()
+
+        self._log.d("__init__")
+
+    def __del__(self):
+        self._log.d("__del__")
 
     @run_catching
     def _get_from_repo_common(self, repo: Repository):
         if not self.is_module_repo(repo):
-            raise MagiskModuleError(f"{repo.name} is not the target repository")
+            raise MagiskModuleError(f"{repo.name} is not magisk module repository")
 
-        self._log.i(f"get track from repo: {repo.name}")
         try:
             update_to = repo.get_contents("update.json").download_url
+            changelog = ""
         except UnknownObjectException:
             update_to = repo.clone_url
+            changelog = self.get_changelog(repo)
 
-        track_json = TrackJson(
+        return TrackJson(
             id=repo.name,
             update_to=update_to,
             license=self.get_license(repo),
-            changelog=""
+            changelog=changelog
         )
 
-        if not update_to.endswith("json"):
-            track_json.changelog = self.get_changelog(repo)
-
-        return track_json
-
     def _get_from_repo(self, repo, cover):
+        self._log.i(f"_get_from_repo: [{repo.name}] -> loading")
+
         result = self._get_from_repo_common(repo)
         if result.is_failure:
             msg = Log.get_msg(result.error)
-            self._log.e(f"{repo.name}: get track failed: {msg}")
+            self._log.e(f"_get_from_repo: [{repo.name}] -> {msg}")
+
             return None
         else:
             track_json: TrackJson = result.value
@@ -58,14 +61,15 @@ class GithubTracks:
         return self._get_from_repo(repo, cover)
 
     def get_tracks(self, user_name, cover=True):
-        self._log.i(f"load tracks from username: {user_name}")
+        self._log.i(f"get_tracks: user_name = {user_name}, ")
+
         user = self._github.get_user(user_name)
         for repo in user.get_repos():
             track_json = self._get_from_repo(repo, cover)
             if track_json is not None:
                 self._tracks.append(track_json)
 
-        self._log.i(f"number of modules: {self.size}")
+        self._log.i(f"get_tracks: size = {self.size}")
         return self._tracks
 
     @classmethod
