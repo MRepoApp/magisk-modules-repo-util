@@ -13,7 +13,7 @@ class VersionItem(AttrDict):
     changelog: str
 
     @property
-    def version_display(self) -> int:...
+    def version_display(self) -> int: ...
 
 
 class UpdateJson(AttrDict, JsonIO):
@@ -22,6 +22,6 @@ class UpdateJson(AttrDict, JsonIO):
     versions: List[VersionItem]
 
     @classmethod
-    def load(cls, file: Path) -> UpdateJson:...
+    def load(cls, file: Path) -> UpdateJson: ...
     @classmethod
     def filename(cls) -> str: ...
