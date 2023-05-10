@@ -1,7 +1,6 @@
 import os
 from datetime import datetime
-from pathlib import Path
-from typing import Optional, List
+from typing import List
 
 from ..expansion import run_catching
 from ..model import TrackJson
@@ -9,8 +8,8 @@ from ..utils.Log import Log
 
 
 class LocalTracks:
-    def __init__(self, root_folder: Path, *, log_folder: Optional[Path] = None, show_log: bool = True):
-        self._log = Log("LocalTracks", log_folder, show_log)
+    def __init__(self, root_folder, config):
+        self._log = Log("LocalTracks", config.log_dir, config.show_log)
         self._modules_folder = root_folder.joinpath("modules")
 
         self._tracks: List[TrackJson] = list()

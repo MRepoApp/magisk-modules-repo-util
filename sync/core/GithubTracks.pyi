@@ -4,6 +4,7 @@ from typing import Optional, List
 from github import Github
 from github.Repository import Repository
 
+from .RepoConfig import RepoConfig
 from ..expansion import run_catching, Result
 from ..model import TrackJson
 from ..utils.Log import Log
@@ -15,7 +16,7 @@ class GithubTracks:
     _github: Github
     _tracks: List[TrackJson]
 
-    def __init__(self, api_token: str, root_folder: Path, *, log_folder: Optional[Path], show_log: bool):...
+    def __init__(self, api_token: str, root_folder: Path, config: RepoConfig):...
     @run_catching
     def _get_from_repo_common(self, repo: Repository) -> Result:...
     def _get_from_repo(self, repo: Repository, cover: bool) -> Optional[TrackJson]:...

@@ -9,8 +9,8 @@ from ..utils.Log import Log
 
 
 class GithubTracks:
-    def __init__(self, api_token, root_folder, *, log_folder=None, show_log=True):
-        self._log = Log("GithubTracks", log_folder, show_log)
+    def __init__(self, api_token, root_folder, config):
+        self._log = Log("GithubTracks", config.log_dir, config.show_log)
         self._modules_folder = root_folder.joinpath("modules")
 
         self._github = Github(login_or_token=api_token)
