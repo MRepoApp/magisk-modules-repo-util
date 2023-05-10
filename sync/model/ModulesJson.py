@@ -1,3 +1,5 @@
+import re
+
 from .AttrDict import AttrDict
 from .JsonIO import JsonIO
 
@@ -9,6 +11,20 @@ class OnlineModule(AttrDict):
             return self.version
         else:
             return f"{self.version} ({self.versionCode})"
+
+    @property
+    def _base_filename(self):
+        filename = self.version_display.replace(" ", "_")
+        filename = re.sub(r"[^a-zA-Z0-9\-._]", "", filename)
+        return filename
+
+    @property
+    def changelog_filename(self):
+        return f"{self._base_filename}.md"
+
+    @property
+    def zipfile_filename(self):
+        return f"{self._base_filename}.zip"
 
     @classmethod
     def from_dict(cls, obj: dict):

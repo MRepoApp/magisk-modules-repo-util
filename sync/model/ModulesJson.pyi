@@ -13,17 +13,23 @@ class OnlineModule(AttrDict):
     name: str
     author: str
     description: str
-    states: AttrDict
+    states: AttrDict # TODO: Rename to metadata in version 2.0
 
     @property
-    def version_display(self) -> int: ...
+    def version_display(self) -> str: ...
+    @property
+    def _base_filename(self) -> str: ...
+    @property
+    def changelog_filename(self) -> str: ...
+    @property
+    def zipfile_filename(self) -> str: ...
     @classmethod
     def from_dict(cls, obj: dict) -> OnlineModule: ...
 
 
 class ModulesJson(AttrDict, JsonIO):
     name: str
-    timestamp: float
+    timestamp: float # TODO: Move to metadata in version 2.0
     metadata: AttrDict
     modules: List[OnlineModule]
 
