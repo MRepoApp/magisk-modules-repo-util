@@ -49,11 +49,11 @@ class GithubTracks(BaseTracks):
         if result.is_failure:
             msg = Log.get_msg(result.error)
             self._log.e(f"_get_from_repo: [{repo.name}] -> {msg}")
-
             return None
         else:
             track_json: TrackJson = result.value
-            LocalTracks.add_track(track_json, self._modules_folder, cover)
+            if cover is not None:
+                LocalTracks.add_track(track_json, self._modules_folder, cover)
 
             return track_json
 
