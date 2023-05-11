@@ -14,6 +14,7 @@ class RepoConfig(ConfigJson):
 
         obj = self.load(config_json)
         super().__init__(obj)
+
         self._check_config()
         self._set_default()
         self._set_max_num()

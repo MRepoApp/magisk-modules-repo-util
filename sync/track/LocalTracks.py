@@ -2,17 +2,20 @@ import os
 from datetime import datetime
 from typing import List
 
+from .BaseTracks import BaseTracks
 from ..expansion import run_catching
 from ..model import TrackJson
 from ..utils.Log import Log
 
 
-class LocalTracks:
+class LocalTracks(BaseTracks):
     def __init__(self, root_folder, config):
         self._log = Log("LocalTracks", config.log_dir, config.show_log)
         self._modules_folder = root_folder.joinpath("modules")
+
         self._tracks: List[TrackJson] = list()
 
+        self._modules_folder.mkdir(exist_ok=True)
         self._log.d("__init__")
 
     def __del__(self):
@@ -56,7 +59,7 @@ class LocalTracks:
     @classmethod
     def add_track(cls, json, modules_folder, cover=True):
         json_file = modules_folder.joinpath(json.id, TrackJson.filename())
-        os.makedirs(json_file.parent, exist_ok=True)
+        json_file.parent.mkdir(exist_ok=True)
 
         if not json_file.exists():
             json.added = datetime.now().timestamp()

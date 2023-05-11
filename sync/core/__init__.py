@@ -1,13 +1,9 @@
-from .Sync import Sync
-from .Config import Config
-from .Hosts import Hosts
-from .Repo import Repo
-from .AttrDict import AttrDict
+from .RepoConfig import RepoConfig
+from .RepoPull import RepoPull
+from .RepoSync import RepoSync
 
 __all__ = [
-    "Sync",
-    "Config",
-    "Hosts",
-    "Repo",
-    "AttrDict",
+    "RepoConfig",
+    "RepoPull",
+    "RepoSync"
 ]

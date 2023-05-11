@@ -4,13 +4,14 @@ from typing import Optional, List
 from github import Github
 from github.Repository import Repository
 
-from .RepoConfig import RepoConfig
+from .BaseTracks import BaseTracks
+from ..core import RepoConfig
 from ..expansion import run_catching, Result
 from ..model import TrackJson
 from ..utils.Log import Log
 
 
-class GithubTracks:
+class GithubTracks(BaseTracks):
     _log: Log
     _modules_folder: Path
     _github: Github

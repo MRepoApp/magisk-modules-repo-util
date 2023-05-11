@@ -12,11 +12,12 @@ logger_initialized = {}
 
 class Log:
     def __init__(self, tag: str, log_folder: Optional[Path] = None, show_log: bool = True):
-        log_file = None
         if log_folder is not None:
             log_file = f"{tag}-{date.today()}.log"
             log_file = log_folder.joinpath(log_file)
             self.clear(log_folder, tag)
+        else:
+            log_file = None
 
         self._show_log = show_log
         self._logging = self.get_logger(name=tag, log_file=log_file)
@@ -75,8 +76,7 @@ class Log:
         logger.addHandler(stderr_handler)
 
         if log_file is not None:
-            log_file_folder = os.path.split(log_file)[0]
-            os.makedirs(log_file_folder, exist_ok=True)
+            log_file.parent.mkdir(parents=True, exist_ok=True)
 
             file_handler = logging.FileHandler(log_file, "a")
             file_handler.setFormatter(formatter)

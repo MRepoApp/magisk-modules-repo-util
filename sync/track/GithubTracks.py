@@ -1,6 +1,7 @@
 from github import Github, UnknownObjectException
 from github.Repository import Repository
 
+from .BaseTracks import BaseTracks
 from .LocalTracks import LocalTracks
 from ..error import MagiskModuleError
 from ..expansion import run_catching
@@ -8,13 +9,15 @@ from ..model import TrackJson
 from ..utils.Log import Log
 
 
-class GithubTracks:
+class GithubTracks(BaseTracks):
     def __init__(self, api_token, root_folder, config):
         self._log = Log("GithubTracks", config.log_dir, config.show_log)
         self._modules_folder = root_folder.joinpath("modules")
+
         self._github = Github(login_or_token=api_token)
         self._tracks = list()
 
+        self._modules_folder.mkdir(exist_ok=True)
         self._log.d("__init__")
 
     def __del__(self):

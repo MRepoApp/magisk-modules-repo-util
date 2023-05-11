@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Optional, List
 
-from .RepoConfig import RepoConfig
+from ..core import RepoConfig
 from ..expansion import run_catching, Result
 from ..model import TrackJson
 from ..utils.Log import Log
