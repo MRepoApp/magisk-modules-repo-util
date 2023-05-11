@@ -2,6 +2,7 @@ import os
 from zipfile import ZipFile
 
 from .AttrDict import AttrDict
+from .ModulesJson import OnlineModule
 from ..error import MagiskModuleError
 
 
@@ -12,6 +13,9 @@ class LocalModule(AttrDict):
             return self.version
         else:
             return f"{self.version} ({self.versionCode})"
+
+    def to_online_module(self):
+        return OnlineModule(self)
 
     @classmethod
     def from_file(cls, file):

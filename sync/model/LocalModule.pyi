@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import List
 
 from .AttrDict import AttrDict
+from .ModulesJson import OnlineModule
 
 
 class LocalModule(AttrDict):
@@ -14,6 +15,7 @@ class LocalModule(AttrDict):
 
     @property
     def version_display(self) -> int: ...
+    def to_online_module(self) -> OnlineModule: ...
     @classmethod
     def from_file(cls, file: Path) -> LocalModule: ...
     @classmethod
