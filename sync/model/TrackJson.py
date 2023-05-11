@@ -11,3 +11,15 @@ class TrackJson(AttrDict, JsonIO):
     @classmethod
     def filename(cls):
         return "track.json"
+
+    @classmethod
+    def empty(cls):
+        return TrackJson(
+            id="",
+            update_to="",
+            license="",
+            changelog="",
+            added=0.0,
+            last_update=0.0,
+            versions=0
+        )
