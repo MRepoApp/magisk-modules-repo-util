@@ -8,11 +8,12 @@ from ..utils import Log
 
 class Pull:
     _log: Log
-    _modules_folder: Path
     _local_folder: Path
 
     _config: ConfigJson
     _track: TrackJson
+
+    modules_folder: Path
 
     def __init__(self, root_folder: Path, config: ConfigJson): ...
     @staticmethod
