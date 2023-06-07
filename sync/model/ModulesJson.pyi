@@ -3,6 +3,7 @@ from typing import List
 
 from .AttrDict import AttrDict
 from .JsonIO import JsonIO
+from .UpdateJson import VersionItem
 
 
 class OnlineModule(AttrDict):
@@ -23,6 +24,7 @@ class OnlineModule(AttrDict):
     def changelog_filename(self) -> str: ...
     @property
     def zipfile_filename(self) -> str: ...
+    def to_VersionItem(self, timestamp: float) -> VersionItem: ...
     @classmethod
     def from_dict(cls, obj: dict) -> OnlineModule: ...
 

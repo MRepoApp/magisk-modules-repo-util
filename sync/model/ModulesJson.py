@@ -2,6 +2,7 @@ import re
 
 from .AttrDict import AttrDict
 from .JsonIO import JsonIO
+from .UpdateJson import VersionItem
 
 
 class OnlineModule(AttrDict):
@@ -25,6 +26,15 @@ class OnlineModule(AttrDict):
     @property
     def zipfile_filename(self):
         return f"{self._base_filename}.zip"
+
+    def to_VersionItem(self, timestamp):
+        return VersionItem(
+            timestamp=timestamp,
+            version=self.version,
+            versionCode=self.versionCode,
+            zipUrl=self.states.zipUrl,
+            changelog=self.states.changelog
+        )
 
     @classmethod
     def from_dict(cls, obj: dict):
