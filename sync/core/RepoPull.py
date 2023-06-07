@@ -78,9 +78,15 @@ class RepoPull:
 
     def pull_from_zip(self, track):
         zip_file = self._local_folder.joinpath(track.update_to)
+        if not zip_file.exists():
+            self._log.i(f"pull_from_zip: [{track.id}] -> {track.update_to} is not in {self._local_folder}")
+            return None
 
         if isinstance(track.changelog, str) and track.changelog.endswith("md"):
             changelog = self._local_folder.joinpath(track.changelog)
+            if not changelog.exists():
+                self._log.i(f"pull_from_zip: [{track.id}] -> {track.changelog} is not in {self._local_folder}")
+                changelog = None
         else:
             self._log.w(f"pull_from_zip: [{track.id}] -> unsupported changelog type [{track.changelog}]")
             changelog = None
