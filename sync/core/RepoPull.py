@@ -40,47 +40,47 @@ class RepoPull:
     def _safe_download(url, out):
         return HttpUtils.download(url, out)
 
-    def _get_file_url(self, module_id, file):
-        module_folder = self._modules_folder.joinpath(module_id)
-        url = f"{self._config.repo_url}{self._modules_folder.name}/{module_id}/{file.name}"
+    def _get_file_url(self, file):
+        module_folder = self._modules_folder.joinpath(self._track.id)
+        url = f"{self._config.repo_url}{self._modules_folder.name}/{self._track.id}/{file.name}"
 
         if not (file.is_relative_to(module_folder) and file.exists()):
             raise FileNotFoundError(f"{file} is not in {module_folder}")
         else:
             return url
 
-    def _get_changelog_common(self, track):
-        if not isinstance(track.changelog, str):
+    def _get_changelog_common(self, changelog):
+        if not isinstance(changelog, str):
             return None
 
         unsupported = False
-        changelog = None
-        if track.changelog.startswith("http"):
-            if track.changelog.endswith("md"):
-                changelog = self._modules_folder.joinpath(track.id, f"{track.id}.zip")
-                result = self._safe_download(track.changelog, changelog)
+        changelog_file = None
+        if changelog.startswith("http"):
+            if changelog.endswith("md"):
+                changelog_file = self._modules_folder.joinpath(self._track.id, f"{self._track.id}.zip")
+                result = self._safe_download(changelog, changelog_file)
                 if result.is_failure:
                     msg = Log.get_msg(result.error)
-                    self._log.e(f"_get_changelog_common: [{track.id}] -> {msg}")
-                    changelog = None
+                    self._log.e(f"_get_changelog_common: [{self._track.id}] -> {msg}")
+                    changelog_file = None
             else:
                 unsupported = True
         else:
-            if track.changelog.endswith("md"):
-                changelog = self._local_folder.joinpath(track.changelog)
-                if not changelog.exists():
-                    msg = f"_get_changelog_common: [{track.id}] -> {track.changelog} is not in {self._local_folder}"
+            if changelog.endswith("md"):
+                changelog_file = self._local_folder.joinpath(changelog)
+                if not changelog_file.exists():
+                    msg = f"_get_changelog_common: [{self._track.id}] -> {changelog} is not in {self._local_folder}"
                     self._log.i(msg)
-                    changelog = None
+                    changelog_file = None
             else:
                 unsupported = True
 
         if unsupported:
-            self._log.w(f"_get_changelog_common: [{track.id}] -> unsupported changelog type [{track.changelog}]")
+            self._log.w(f"_get_changelog_common: [{self._track.id}] -> unsupported changelog type [{changelog}]")
 
-        return changelog
+        return changelog_file
 
-    def _pull_from_zip_common(self, zip_file, changelog, *, delete_tmp=True):
+    def _pull_from_zip_common(self, zip_file, changelog_file, *, delete_tmp=True):
         online_module = LocalModule.from_file(zip_file).to_online_module()
         module_folder = self._modules_folder.joinpath(online_module.id)
 
@@ -90,38 +90,52 @@ class RepoPull:
         else:
             return None
 
-        target_changelog = module_folder.joinpath(online_module.changelog_filename)
+        target_changelog_file = module_folder.joinpath(online_module.changelog_filename)
         changelog_url = ""
-        if changelog is not None:
-            self._copy_file(changelog, target_changelog, delete_tmp)
-            changelog_url = self._get_file_url(online_module.id, target_changelog)
+        if changelog_file is not None:
+            self._copy_file(changelog_file, target_changelog_file, delete_tmp)
+            changelog_url = self._get_file_url(target_changelog_file)
 
         online_module.license = self._track.license
         online_module.states = AttrDict(
-            zipUrl=self._get_file_url(online_module.id, target_zip_file),
+            zipUrl=self._get_file_url(target_zip_file),
             changelog=changelog_url
         )
 
         return online_module
 
-    def pull_from_json(self, track):
-        pass
+    def pull_from_json(self, track, *, local):
+        if local:
+            track.update_to = self._local_folder.joinpath(track.update_to)
+
+        update_json = MagiskUpdateJson.load(track.update_to)
+        target_zip_file = self._modules_folder.joinpath(track.id, update_json.zipfile_filename)
+        if target_zip_file.exists():
+            return None
+
+        zip_file = self._modules_folder.joinpath(track.id, f"{track.id}.zip")
+        last_modified = HttpUtils.download(update_json.zipUrl, zip_file)
+
+        self._track = track
+        changelog = self._get_changelog_common(update_json.changelog)
+        online_module = self._pull_from_zip_common(zip_file, changelog, delete_tmp=False)
+        return online_module, last_modified
 
     def pull_from_url(self, track):
         zip_file = self._modules_folder.joinpath(track.id, f"{track.id}.zip")
-        last_committed = HttpUtils.download(track.update_to, zip_file)
+        last_modified = HttpUtils.download(track.update_to, zip_file)
 
         self._track = track
-        changelog = self._get_changelog_common(track)
+        changelog = self._get_changelog_common(track.changelog)
         online_module = self._pull_from_zip_common(zip_file, changelog, delete_tmp=False)
-        return online_module, last_committed
+        return online_module, last_modified
 
     def pull_from_git(self, track):
         zip_file = self._modules_folder.joinpath(track.id, f"{track.id}.zip")
         last_committed = HttpUtils.git_clone(track.update_to, zip_file)
 
         self._track = track
-        changelog = self._get_changelog_common(track)
+        changelog = self._get_changelog_common(track.changelog)
         online_module = self._pull_from_zip_common(zip_file, changelog, delete_tmp=False)
         return online_module, last_committed
 
@@ -134,7 +148,7 @@ class RepoPull:
             return None, 0.0
 
         self._track = track
-        changelog = self._get_changelog_common(track)
+        changelog = self._get_changelog_common(track.changelog)
         online_module = self._pull_from_zip_common(zip_file, changelog, delete_tmp=False)
         return online_module, last_modified
 
@@ -144,12 +158,12 @@ class RepoPull:
 
         if track.update_to.startswith("http"):
             if track.update_to.endswith("json"):
-                return self.pull_from_json(track)
+                return self.pull_from_json(track, local=False)
             elif track.update_to.endswith("zip"):
                 return self.pull_from_url(track)
         else:
             if track.update_to.endswith("json"):
-                return self.pull_from_json(track)
+                return self.pull_from_json(track, local=True)
             elif track.update_to.endswith("zip"):
                 return self.pull_from_zip(track)
 
