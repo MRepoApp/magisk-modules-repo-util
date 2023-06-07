@@ -6,7 +6,7 @@ from ..utils.Log import Log
 from ..utils.StrUtils import StrUtils
 
 
-class RepoConfig(ConfigJson):
+class Config(ConfigJson):
     def __init__(self, root_folder):
         config_json = root_folder.joinpath("config", ConfigJson.filename())
         if not config_json.exists():
@@ -21,7 +21,7 @@ class RepoConfig(ConfigJson):
         self._set_show_log()
         self._set_log_dir(root_folder)
 
-        self._log = Log("RepoConfig", self._log_dir, self.show_log)
+        self._log = Log("Config", self._log_dir, self.show_log)
         self._log.d("__init__")
         for key in obj.keys():
             self._log.d(f"[{key}]: [{self.get(key)}]")

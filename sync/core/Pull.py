@@ -1,26 +1,18 @@
 import os
 import shutil
-from datetime import datetime
 
 from ..expansion import run_catching
 from ..model import *
 from ..utils import Log, HttpUtils
 
 
-class RepoPull:
+class Pull:
     def __init__(self, root_folder, config):
-        self._log = Log("RepoPull", config.log_dir, config.show_log)
+        self._log = Log("Pull", config.log_dir, config.show_log)
         self._modules_folder = root_folder.joinpath("modules")
         self._local_folder = root_folder.joinpath("local")
 
         self._config = config
-        self.timestamp = datetime.now().timestamp()
-        self.modules_json = ModulesJson(
-            name=config.repo_name,
-            timestamp=self.timestamp,
-            modules=list()
-        )
-
         self._track = TrackJson.empty()
         self._modules_folder.mkdir(exist_ok=True)
         self._log.d("__init__")
@@ -80,7 +72,7 @@ class RepoPull:
 
         return changelog_file
 
-    def _pull_from_zip_common(self, zip_file, changelog_file, *, delete_tmp=True):
+    def _from_zip_common(self, zip_file, changelog_file, *, delete_tmp=True):
         online_module = LocalModule.from_file(zip_file).to_online_module()
         module_folder = self._modules_folder.joinpath(online_module.id)
 
@@ -104,7 +96,7 @@ class RepoPull:
 
         return online_module
 
-    def pull_from_json(self, track, *, local):
+    def from_json(self, track, *, local):
         if local:
             track.update_to = self._local_folder.joinpath(track.update_to)
 
@@ -118,60 +110,54 @@ class RepoPull:
 
         self._track = track
         changelog = self._get_changelog_common(update_json.changelog)
-        online_module = self._pull_from_zip_common(zip_file, changelog, delete_tmp=False)
+        online_module = self._from_zip_common(zip_file, changelog, delete_tmp=False)
         return online_module, last_modified
 
-    def pull_from_url(self, track):
+    def from_url(self, track):
         zip_file = self._modules_folder.joinpath(track.id, f"{track.id}.zip")
         last_modified = HttpUtils.download(track.update_to, zip_file)
 
         self._track = track
         changelog = self._get_changelog_common(track.changelog)
-        online_module = self._pull_from_zip_common(zip_file, changelog, delete_tmp=False)
+        online_module = self._from_zip_common(zip_file, changelog, delete_tmp=False)
         return online_module, last_modified
 
-    def pull_from_git(self, track):
+    def from_git(self, track):
         zip_file = self._modules_folder.joinpath(track.id, f"{track.id}.zip")
         last_committed = HttpUtils.git_clone(track.update_to, zip_file)
 
         self._track = track
         changelog = self._get_changelog_common(track.changelog)
-        online_module = self._pull_from_zip_common(zip_file, changelog, delete_tmp=False)
+        online_module = self._from_zip_common(zip_file, changelog, delete_tmp=False)
         return online_module, last_committed
 
-    def pull_from_zip(self, track):
+    def from_zip(self, track):
         zip_file = self._local_folder.joinpath(track.update_to)
         last_modified = os.path.getmtime(zip_file)
 
         if not zip_file.exists():
-            self._log.i(f"pull_from_zip: [{track.id}] -> {track.update_to} is not in {self._local_folder}")
+            self._log.i(f"from_zip: [{track.id}] -> {track.update_to} is not in {self._local_folder}")
             return None, 0.0
 
         self._track = track
         changelog = self._get_changelog_common(track.changelog)
-        online_module = self._pull_from_zip_common(zip_file, changelog, delete_tmp=False)
+        online_module = self._from_zip_common(zip_file, changelog, delete_tmp=False)
         return online_module, last_modified
 
-    def pull_from_track(self, track):
+    def from_track(self, track):
         if not isinstance(track.update_to, str):
             return None
 
         if track.update_to.startswith("http"):
             if track.update_to.endswith("json"):
-                return self.pull_from_json(track, local=False)
+                return self.from_json(track, local=False)
             elif track.update_to.endswith("zip"):
-                return self.pull_from_url(track)
+                return self.from_url(track)
         else:
             if track.update_to.endswith("json"):
-                return self.pull_from_json(track, local=True)
+                return self.from_json(track, local=True)
             elif track.update_to.endswith("zip"):
-                return self.pull_from_zip(track)
+                return self.from_zip(track)
 
-        self._log.e(f"pull_from_track: [{track.id}] -> unsupported update_to type [{track.update_to}]")
+        self._log.e(f"from_track: [{track.id}] -> unsupported update_to type [{track.update_to}]")
         return None
-
-    def pull_module(self, track):
-        pass
-
-    def pull_modules(self, tracks):
-        pass

@@ -1,9 +1,9 @@
-from .RepoConfig import RepoConfig
-from .RepoPull import RepoPull
-from .RepoSync import RepoSync
+from .Config import Config
+from .Pull import Pull
+from .Sync import Sync
 
 __all__ = [
-    "RepoConfig",
-    "RepoPull",
-    "RepoSync"
+    "Config",
+    "Pull",
+    "Sync"
 ]
