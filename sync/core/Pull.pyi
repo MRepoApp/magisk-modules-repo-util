@@ -1,8 +1,8 @@
 from pathlib import Path
-from typing import Optional, List, Tuple
+from typing import Optional, Tuple
 
 from ..expansion import run_catching, Result
-from ..model import *
+from ..model import TrackJson, ConfigJson, OnlineModule
 from ..utils import Log
 
 

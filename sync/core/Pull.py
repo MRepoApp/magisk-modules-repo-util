@@ -2,7 +2,7 @@ import os
 import shutil
 
 from ..expansion import run_catching
-from ..model import *
+from ..model import TrackJson, LocalModule, AttrDict, MagiskUpdateJson
 from ..utils import Log, HttpUtils
 
 
@@ -72,7 +72,7 @@ class Pull:
 
         return changelog_file
 
-    def _from_zip_common(self, zip_file, changelog_file, *, delete_tmp=True):
+    def _from_zip_common(self, zip_file, changelog_file, *, delete_tmp):
         online_module = LocalModule.from_file(zip_file).to_online_module()
         module_folder = self._modules_folder.joinpath(online_module.id)
 
@@ -80,6 +80,8 @@ class Pull:
         if not target_zip_file.exists():
             self._copy_file(zip_file, target_zip_file, delete_tmp)
         else:
+            if delete_tmp:
+                os.remove(zip_file)
             return None
 
         target_changelog_file = module_folder.joinpath(online_module.changelog_filename)
@@ -110,7 +112,7 @@ class Pull:
 
         self._track = track
         changelog = self._get_changelog_common(update_json.changelog)
-        online_module = self._from_zip_common(zip_file, changelog, delete_tmp=False)
+        online_module = self._from_zip_common(zip_file, changelog, delete_tmp=True)
         return online_module, last_modified
 
     def from_url(self, track):
@@ -119,7 +121,7 @@ class Pull:
 
         self._track = track
         changelog = self._get_changelog_common(track.changelog)
-        online_module = self._from_zip_common(zip_file, changelog, delete_tmp=False)
+        online_module = self._from_zip_common(zip_file, changelog, delete_tmp=True)
         return online_module, last_modified
 
     def from_git(self, track):
@@ -128,7 +130,7 @@ class Pull:
 
         self._track = track
         changelog = self._get_changelog_common(track.changelog)
-        online_module = self._from_zip_common(zip_file, changelog, delete_tmp=False)
+        online_module = self._from_zip_common(zip_file, changelog, delete_tmp=True)
         return online_module, last_committed
 
     def from_zip(self, track):
@@ -150,13 +152,20 @@ class Pull:
 
         if track.update_to.startswith("http"):
             if track.update_to.endswith("json"):
+                self._log.d(f"from_track: [{track.id}] -> from online json")
                 return self.from_json(track, local=False)
             elif track.update_to.endswith("zip"):
+                self._log.d(f"from_track: [{track.id}] -> from online zip")
                 return self.from_url(track)
+            elif track.update_to.endswith("git"):
+                self._log.d(f"from_track: [{track.id}] -> from git")
+                return self.from_git(track)
         else:
             if track.update_to.endswith("json"):
+                self._log.d(f"from_track: [{track.id}] -> from local json")
                 return self.from_json(track, local=True)
             elif track.update_to.endswith("zip"):
+                self._log.d(f"from_track: [{track.id}] -> from local zip")
                 return self.from_zip(track)
 
         self._log.e(f"from_track: [{track.id}] -> unsupported update_to type [{track.update_to}]")
