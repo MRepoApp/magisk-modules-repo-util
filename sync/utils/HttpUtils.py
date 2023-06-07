@@ -6,7 +6,7 @@ import subprocess
 from datetime import datetime
 from pathlib import Path
 from subprocess import CalledProcessError
-from typing import Optional, Union
+from typing import Union
 
 import requests
 from dateutil.parser import parse
@@ -34,7 +34,7 @@ class HttpUtils:
         return obj
 
     @classmethod
-    def download(cls, url: str, out: Path) -> Optional[float]:
+    def download(cls, url: str, out: Path) -> float:
         response = requests.get(url, stream=True)
         if response.ok:
             block_size = 1024
@@ -64,7 +64,7 @@ class HttpUtils:
             )
         except CalledProcessError:
             shutil.rmtree(repo_dir, ignore_errors=True)
-            raise HTTPError("the remote repository clone failed")
+            raise HTTPError(f"git repository clone failed: {url}")
 
         try:
             result = subprocess.run(
