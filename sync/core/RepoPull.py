@@ -3,7 +3,7 @@ import shutil
 from datetime import datetime
 
 from ..model import *
-from ..utils import Log
+from ..utils import Log, HttpUtils
 
 
 class RepoPull:
@@ -78,9 +78,11 @@ class RepoPull:
 
     def pull_from_zip(self, track):
         zip_file = self._local_folder.joinpath(track.update_to)
+        last_modified = os.path.getmtime(zip_file)
+
         if not zip_file.exists():
             self._log.i(f"pull_from_zip: [{track.id}] -> {track.update_to} is not in {self._local_folder}")
-            return None
+            return None, 0.0
 
         if isinstance(track.changelog, str) and track.changelog.endswith("md"):
             changelog = self._local_folder.joinpath(track.changelog)
@@ -92,7 +94,8 @@ class RepoPull:
             changelog = None
 
         self._track = track
-        return self._pull_from_zip_common(zip_file, changelog, delete_tmp=False)
+        online_module = self._pull_from_zip_common(zip_file, changelog, delete_tmp=False)
+        return online_module, last_modified
 
     def pull_from_track(self, track):
         if track.update_to.startswith("http"):
