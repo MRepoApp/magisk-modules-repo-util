@@ -14,7 +14,7 @@ class LocalModule(AttrDict):
         else:
             return f"{self.version} ({self.versionCode})"
 
-    def to_online_module(self):
+    def to_OnlineModule(self):
         return OnlineModule(self)
 
     @classmethod
