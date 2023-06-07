@@ -2,6 +2,7 @@ import os
 import shutil
 from datetime import datetime
 
+from ..expansion import run_catching
 from ..model import *
 from ..utils import Log, HttpUtils
 
@@ -34,6 +35,11 @@ class RepoPull:
             if delete_old:
                 os.remove(old)
 
+    @staticmethod
+    @run_catching
+    def _safe_download(url, out):
+        return HttpUtils.download(url, out)
+
     def _get_file_url(self, module_id, file):
         module_folder = self._modules_folder.joinpath(module_id)
         url = f"{self._config.repo_url}{self._modules_folder.name}/{module_id}/{file.name}"
@@ -42,6 +48,37 @@ class RepoPull:
             raise FileNotFoundError(f"{file} is not in {module_folder}")
         else:
             return url
+
+    def _get_changelog_common(self, track):
+        if not isinstance(track.changelog, str):
+            return None
+
+        unsupported = False
+        changelog = None
+        if track.changelog.startswith("http"):
+            if track.changelog.endswith("md"):
+                changelog = self._modules_folder.joinpath(track.id, f"{track.id}.zip")
+                result = self._safe_download(track.changelog, changelog)
+                if result.is_failure:
+                    msg = Log.get_msg(result.error)
+                    self._log.e(f"_get_changelog_common: [{track.id}] -> {msg}")
+                    changelog = None
+            else:
+                unsupported = True
+        else:
+            if track.changelog.endswith("md"):
+                changelog = self._local_folder.joinpath(track.changelog)
+                if not changelog.exists():
+                    msg = f"_get_changelog_common: [{track.id}] -> {track.changelog} is not in {self._local_folder}"
+                    self._log.i(msg)
+                    changelog = None
+            else:
+                unsupported = True
+
+        if unsupported:
+            self._log.w(f"_get_changelog_common: [{track.id}] -> unsupported changelog type [{track.changelog}]")
+
+        return changelog
 
     def _pull_from_zip_common(self, zip_file, changelog, *, delete_tmp=True):
         online_module = LocalModule.from_file(zip_file).to_online_module()
@@ -71,10 +108,22 @@ class RepoPull:
         pass
 
     def pull_from_url(self, track):
-        pass
+        zip_file = self._modules_folder.joinpath(track.id, f"{track.id}.zip")
+        last_committed = HttpUtils.download(track.update_to, zip_file)
+
+        self._track = track
+        changelog = self._get_changelog_common(track)
+        online_module = self._pull_from_zip_common(zip_file, changelog, delete_tmp=False)
+        return online_module, last_committed
 
     def pull_from_git(self, track):
-        pass
+        zip_file = self._modules_folder.joinpath(track.id, f"{track.id}.zip")
+        last_committed = HttpUtils.git_clone(track.update_to, zip_file)
+
+        self._track = track
+        changelog = self._get_changelog_common(track)
+        online_module = self._pull_from_zip_common(zip_file, changelog, delete_tmp=False)
+        return online_module, last_committed
 
     def pull_from_zip(self, track):
         zip_file = self._local_folder.joinpath(track.update_to)
@@ -84,20 +133,15 @@ class RepoPull:
             self._log.i(f"pull_from_zip: [{track.id}] -> {track.update_to} is not in {self._local_folder}")
             return None, 0.0
 
-        if isinstance(track.changelog, str) and track.changelog.endswith("md"):
-            changelog = self._local_folder.joinpath(track.changelog)
-            if not changelog.exists():
-                self._log.i(f"pull_from_zip: [{track.id}] -> {track.changelog} is not in {self._local_folder}")
-                changelog = None
-        else:
-            self._log.w(f"pull_from_zip: [{track.id}] -> unsupported changelog type [{track.changelog}]")
-            changelog = None
-
         self._track = track
+        changelog = self._get_changelog_common(track)
         online_module = self._pull_from_zip_common(zip_file, changelog, delete_tmp=False)
         return online_module, last_modified
 
     def pull_from_track(self, track):
+        if not isinstance(track.update_to, str):
+            return None
+
         if track.update_to.startswith("http"):
             if track.update_to.endswith("json"):
                 return self.pull_from_json(track)
