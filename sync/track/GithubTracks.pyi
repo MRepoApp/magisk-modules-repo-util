@@ -5,9 +5,8 @@ from github import Github
 from github.Repository import Repository
 
 from .BaseTracks import BaseTracks
-from ..core import RepoConfig
 from ..expansion import run_catching, Result
-from ..model import TrackJson
+from ..model import TrackJson, ConfigJson
 from ..utils.Log import Log
 
 
@@ -17,7 +16,7 @@ class GithubTracks(BaseTracks):
     _github: Github
     _tracks: List[TrackJson]
 
-    def __init__(self, api_token: str, root_folder: Path, config: RepoConfig): ...
+    def __init__(self, api_token: str, root_folder: Path, config: ConfigJson): ...
     @run_catching
     def _get_from_repo_common(self, repo: Repository) -> Result: ...
     def _get_from_repo(self, repo: Repository, cover: Optional[bool]) -> Optional[TrackJson]: ...
