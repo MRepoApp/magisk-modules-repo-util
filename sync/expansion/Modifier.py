@@ -15,24 +15,34 @@ def run_catching(func: Callable[..., Any]) -> Callable[..., Result]:
     return wrapper
 
 
-def command_exec(func: Callable[..., str]) -> Callable[..., Optional[str]]:
-    @run_catching
-    def safe_run(*args, **kwargs):
-        return subprocess.run(
-                args=func(*args, **kwargs).split(" "),
-                stdout=subprocess.PIPE,
-                stderr=subprocess.DEVNULL,
-                cwd=Path(__file__).resolve().parent
-            ).stdout.decode("utf-8").strip()
+class Command:
+    cwd_folder = None
 
-    def wrapper(*args, **kwargs):
-        result = safe_run(*args, **kwargs)
-        return result.value
+    @classmethod
+    def set_cwd_folder(cls, cwd: Optional[Path] = None):
+        cls.cwd_folder = cwd
 
-    return wrapper
+    @classmethod
+    def exec(cls):
+        def decorator(func: Callable[..., str]) -> Callable[..., Optional[str]]:
+            @run_catching
+            def safe_run(*args, **kwargs):
+                return subprocess.run(
+                        args=func(*args, **kwargs).split(" "),
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.DEVNULL,
+                        cwd=cls.cwd_folder
+                    ).stdout.decode("utf-8").strip()
+
+            def wrapper(*args, **kwargs):
+                result = safe_run(*args, **kwargs)
+                return result.value
+
+            return wrapper
+        return decorator
 
 
 __all__ = [
     "run_catching",
-    "command_exec"
+    "Command"
 ]
