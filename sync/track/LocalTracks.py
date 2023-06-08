@@ -1,9 +1,8 @@
-import os
 from datetime import datetime
 from typing import List
 
 from .BaseTracks import BaseTracks
-from ..expansion import run_catching
+from ..modifier import Result
 from ..model import TrackJson
 from ..utils.Log import Log
 
@@ -21,7 +20,7 @@ class LocalTracks(BaseTracks):
     def __del__(self):
         self._log.d("__del__")
 
-    @run_catching
+    @Result.catching()
     def _get_from_file(self, file):
         return TrackJson.load(file)
 

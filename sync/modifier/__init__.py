@@ -1,8 +1,7 @@
-from .Modifier import *
+from .Command import Command
 from .Result import Result
 
 __all__ = [
-    "run_catching",
     "Command",
     "Result"
 ]

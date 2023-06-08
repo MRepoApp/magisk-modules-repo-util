@@ -4,7 +4,7 @@ from github.Repository import Repository
 from .BaseTracks import BaseTracks
 from .LocalTracks import LocalTracks
 from ..error import MagiskModuleError
-from ..expansion import run_catching
+from ..modifier import Result
 from ..model import TrackJson
 from ..utils.Log import Log
 
@@ -23,7 +23,7 @@ class GithubTracks(BaseTracks):
     def __del__(self):
         self._log.d("__del__")
 
-    @run_catching
+    @Result.catching()
     def _get_from_repo_common(self, repo: Repository):
         if not self.is_module_repo(repo):
             raise MagiskModuleError(f"{repo.name} is not magisk module repository")
@@ -43,7 +43,7 @@ class GithubTracks(BaseTracks):
         )
 
     def _get_from_repo(self, repo, cover):
-        self._log.i(f"_get_from_repo: [{repo.name}] -> loading")
+        self._log.d(f"_get_from_repo: repo_name = {repo.name}")
 
         result = self._get_from_repo_common(repo)
         if result.is_failure:

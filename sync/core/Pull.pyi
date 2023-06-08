@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Optional, Tuple
 
-from ..expansion import run_catching, Result
+from ..modifier import Result
 from ..model import TrackJson, ConfigJson, OnlineModule
 from ..utils import Log
 
@@ -19,7 +19,7 @@ class Pull:
     @staticmethod
     def _copy_file(old: Path, new: Path, delete_old: bool = True): ...
     @staticmethod
-    @run_catching
+    @Result.catching()
     def _safe_download(url: str, out: Path) -> Result: ...
     def _get_file_url(self, file: Path) -> str: ...
     def _get_changelog_common(self, changelog: str) -> Optional[Path]: ...

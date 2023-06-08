@@ -1,7 +1,7 @@
 import os
 import shutil
 
-from ..expansion import run_catching
+from ..modifier import Result
 from ..model import TrackJson, LocalModule, AttrDict, MagiskUpdateJson
 from ..utils import Log, HttpUtils
 
@@ -30,7 +30,7 @@ class Pull:
                 os.remove(old)
 
     @staticmethod
-    @run_catching
+    @Result.catching()
     def _safe_download(url, out):
         return HttpUtils.download(url, out)
 
