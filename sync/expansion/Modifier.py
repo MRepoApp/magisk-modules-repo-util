@@ -1,6 +1,6 @@
 import subprocess
 from pathlib import Path
-from typing import Callable, Any
+from typing import Callable, Any, Optional
 from .Result import Result
 
 
@@ -15,7 +15,7 @@ def run_catching(func: Callable[..., Any]) -> Callable[..., Result]:
     return wrapper
 
 
-def command_exec(func: Callable[..., str]) -> Callable[..., str]:
+def command_exec(func: Callable[..., str]) -> Callable[..., Optional[str]]:
     @run_catching
     def safe_run(*args, **kwargs):
         return subprocess.run(
