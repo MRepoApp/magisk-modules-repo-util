@@ -1,9 +1,10 @@
+import subprocess
 from datetime import datetime
 
 from .Pull import Pull
 from ..model import ModulesJson, UpdateJson
 from ..track import BaseTracks, LocalTracks, GithubTracks
-from ..utils import Log
+from ..utils import Log, GitUtils
 
 
 class Sync:
@@ -139,3 +140,15 @@ class Sync:
     def write_modules_json(self):
         json_file = self._json_folder.joinpath(self.modules_json.filename())
         self.modules_json.write(json_file)
+
+    def push_by_git(self):
+        if not GitUtils.is_enable():
+            self._log.e("push_by_git: git command not found")
+            return
+
+        branch = GitUtils.current_branch()
+        msg = f"Update by CLI ({datetime.fromtimestamp(self.timestamp)})"
+
+        subprocess.run(["git", "add", "."], cwd=self._root_folder.as_posix())
+        subprocess.run(["git", "commit", "-m", msg], cwd=self._root_folder.as_posix())
+        subprocess.run(["git", "push", "-u", "origin", branch], cwd=self._root_folder.as_posix())
