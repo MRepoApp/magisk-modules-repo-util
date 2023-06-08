@@ -3,7 +3,7 @@ import shutil
 
 from ..modifier import Result
 from ..model import TrackJson, LocalModule, AttrDict, MagiskUpdateJson
-from ..utils import Log, HttpUtils
+from ..utils import Log, HttpUtils, GitUtils
 
 
 class Pull:
@@ -128,7 +128,7 @@ class Pull:
 
     def from_git(self, track):
         zip_file = self.modules_folder.joinpath(track.id, f"{track.id}.zip")
-        last_committed = HttpUtils.git_clone(track.update_to, zip_file)
+        last_committed = GitUtils.clone_and_zip(track.update_to, zip_file)
 
         self._track = track
         changelog = self._get_changelog_common(track.changelog)
