@@ -21,10 +21,11 @@ class Config(ConfigJson):
         self._set_show_log()
         self._set_log_dir(root_folder)
 
-        self._log = Log("Config", self._log_dir, self.show_log)
+        self._log = Log("Config", self.log_dir, self.show_log)
         self._log.d("__init__")
+
         for key in obj.keys():
-            self._log.d(f"[{key}]: [{self.get(key)}]")
+            self._log.d(f"[{key}]: {self.get(key)}")
 
     def __del__(self):
         self._log.d("__del__")
