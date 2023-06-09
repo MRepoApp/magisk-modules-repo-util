@@ -11,11 +11,18 @@ logger_initialized = {}
 
 
 class Log:
+    _file_prefix: str = None
+
     def __init__(self, tag: str, log_folder: Optional[Path] = None, show_log: bool = True):
         if log_folder is not None:
-            log_file = f"{tag}-{date.today()}.log"
+            if self._file_prefix is None:
+                prefix = tag.lower()
+            else:
+                prefix = self._file_prefix
+
+            log_file = f"{prefix}_{date.today()}.log"
             log_file = log_folder.joinpath(log_file)
-            self.clear(log_folder, tag)
+            self.clear(log_folder, prefix)
         else:
             log_file = None
 
@@ -39,8 +46,12 @@ class Log:
         self.log(level=logging.ERROR, msg=msg)
 
     @classmethod
-    def clear(cls, log_folder: Path, tag: str, max_num: int = 3):
-        log_files = sorted(glob(f"{log_folder}/{tag}*"), reverse=True)
+    def set_file_prefix(cls, name: str):
+        cls._file_prefix = name
+
+    @classmethod
+    def clear(cls, log_folder: Path, prefix: str, max_num: int = 3):
+        log_files = sorted(glob(f"{log_folder}/{prefix}*"), reverse=True)
         if len(log_files) >= max_num + 1:
             for log_file in log_files[max_num:]:
                 os.remove(log_file)
