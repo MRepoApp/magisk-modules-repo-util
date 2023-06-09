@@ -9,15 +9,20 @@ from ..utils import Log, GitUtils
 
 
 class Sync:
-    def __init__(self, root_folder, config):
+    def __init__(self, root_folder, config, tracks=None):
         self._log = Log("Sync", config.log_dir, config.show_log)
         self._root_folder = root_folder
         self._pull = Pull(root_folder, config)
 
+        self._is_updatable = False
         self._json_folder = Config.get_json_folder(root_folder)
         self._modules_folder = self._pull.modules_folder
         self._config = config
-        self._tracks = BaseTracks()
+
+        if tracks is None:
+            self._tracks = BaseTracks()
+        else:
+            self._tracks = tracks
 
         self.timestamp = datetime.now().timestamp()
         self.modules_json = ModulesJson(
@@ -29,6 +34,10 @@ class Sync:
 
     def __del__(self):
         self._log.d("__del__")
+
+    def _set_updatable(self):
+        if not self.is_updatable:
+            self._is_updatable = True
 
     def _update_jsons(self, track):
         module_folder = self._modules_folder.joinpath(track.id)
@@ -110,6 +119,7 @@ class Sync:
             if online_module is None:
                 continue
 
+            self._set_updatable()
             self.modules_json.modules.append(online_module)
             self._log.i(f"update_by_ids: [{track.id}] -> update to {online_module.version_display}")
 
@@ -117,10 +127,16 @@ class Sync:
         self.update_by_ids(module_ids=None, **kwargs)
 
     def write_modules_json(self):
+        if not self.is_updatable:
+            return
+
         json_file = self._json_folder.joinpath(self.modules_json.filename())
         self.modules_json.write(json_file)
 
     def push_by_git(self):
+        if not self.is_updatable:
+            return
+
         if not GitUtils.is_enable():
             self._log.e("push_by_git: git command not found")
             return
@@ -131,3 +147,7 @@ class Sync:
         subprocess.run(["git", "add", "."], cwd=self._root_folder.as_posix())
         subprocess.run(["git", "commit", "-m", msg], cwd=self._root_folder.as_posix())
         subprocess.run(["git", "push", "-u", "origin", branch], cwd=self._root_folder.as_posix())
+
+    @property
+    def is_updatable(self):
+        return self._is_updatable
