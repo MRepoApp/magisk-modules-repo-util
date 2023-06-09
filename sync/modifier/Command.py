@@ -5,11 +5,11 @@ from .Result import Result
 
 
 class Command:
-    cwd_folder = None
+    _cwd_folder = None
 
     @classmethod
     def set_cwd_folder(cls, cwd: Optional[Path] = None):
-        cls.cwd_folder = cwd
+        cls._cwd_folder = cwd
 
     @classmethod
     def exec(cls):
@@ -20,7 +20,7 @@ class Command:
                         args=func(*args, **kwargs).split(" "),
                         stdout=subprocess.PIPE,
                         stderr=subprocess.DEVNULL,
-                        cwd=cls.cwd_folder
+                        cwd=cls._cwd_folder
                     ).stdout.decode("utf-8").strip()
 
             def wrapper(*args, **kwargs):
