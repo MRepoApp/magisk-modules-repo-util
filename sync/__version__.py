@@ -26,6 +26,11 @@ def get_versionCode():
 
 
 __all__ = [
-    "get_version",
-    "get_versionCode"
+    "version",
+    "versionCode",
+    "__version__"
 ]
+
+version = get_version()
+versionCode = get_versionCode()
+__version__ = f"{get_version()} (${get_versionCode()})"

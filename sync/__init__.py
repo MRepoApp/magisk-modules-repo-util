@@ -1,9 +1,7 @@
-from .version import get_versionCode, get_version
-
-version = get_version()
-versionCode = get_versionCode()
+from .core import *
 
 __all__ = [
-    "version",
-    "versionCode"
+    "Config",
+    "Pull",
+    "Sync"
 ]
