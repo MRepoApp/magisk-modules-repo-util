@@ -1,16 +1,17 @@
+import shutil
 from datetime import datetime
 from typing import List
 
 from .BaseTracks import BaseTracks
-from ..modifier import Result
 from ..model import TrackJson
+from ..modifier import Result
 from ..utils.Log import Log
 
 
 class LocalTracks(BaseTracks):
-    def __init__(self, root_folder, config):
+    def __init__(self, modules_folder, config):
         self._log = Log("LocalTracks", config.log_dir, config.show_log)
-        self._modules_folder = root_folder.joinpath("modules")
+        self._modules_folder = modules_folder
 
         self._tracks: List[TrackJson] = list()
 
@@ -56,14 +57,18 @@ class LocalTracks(BaseTracks):
         return self._tracks
 
     @classmethod
-    def add_track(cls, json, modules_folder, cover=True):
-        json_file = modules_folder.joinpath(json.id, TrackJson.filename())
+    def add_track(cls, track, modules_folder, cover=True):
+        json_file = modules_folder.joinpath(track.id, TrackJson.filename())
         json_file.parent.mkdir(exist_ok=True)
 
         if not json_file.exists():
-            json.added = datetime.now().timestamp()
-            json.write(json_file)
+            track.added = datetime.now().timestamp()
+            track.write(json_file)
         elif cover:
-            old_json = TrackJson.load(json_file)
-            json.added = old_json.added
-            json.write(json_file)
+            old = TrackJson.load(json_file)
+            track.added = old.added
+            track.write(json_file)
+
+    @classmethod
+    def del_track(cls, module_id, modules_folder):
+        shutil.rmtree(modules_folder.joinpath(module_id), ignore_errors=True)

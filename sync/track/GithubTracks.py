@@ -4,15 +4,15 @@ from github.Repository import Repository
 from .BaseTracks import BaseTracks
 from .LocalTracks import LocalTracks
 from ..error import MagiskModuleError
-from ..modifier import Result
 from ..model import TrackJson
+from ..modifier import Result
 from ..utils.Log import Log
 
 
 class GithubTracks(BaseTracks):
-    def __init__(self, api_token, root_folder, config):
+    def __init__(self, api_token, modules_folder, config):
         self._log = Log("GithubTracks", config.log_dir, config.show_log)
-        self._modules_folder = root_folder.joinpath("modules")
+        self._modules_folder = modules_folder
 
         self._github = Github(login_or_token=api_token)
         self._tracks = list()
