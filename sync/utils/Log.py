@@ -58,7 +58,8 @@ class Log:
 
     @classmethod
     def get_msg(cls, err: BaseException) -> str:
-        msg = ", ".join(err.args)
+        msg = "{} " * len(err.args)
+        msg = msg.format(*err.args).rstrip()
         return f"{err.__class__.__name__}({msg})"
 
     @classmethod
