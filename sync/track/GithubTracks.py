@@ -63,14 +63,28 @@ class GithubTracks(BaseTracks):
 
         return self._get_from_repo(repo, cover)
 
-    def get_tracks(self, user_name, cover=True):
+    def get_tracks(self, user_name, repo_names=None, cover=True):
         self._log.i(f"get_tracks: user_name = {user_name}, ")
 
         user = self._github.get_user(user_name)
-        for repo in user.get_repos():
-            track_json = self._get_from_repo(repo, cover)
-            if track_json is not None:
-                self._tracks.append(track_json)
+        if repo_names is None:
+            for repo in user.get_repos():
+                track_json = self._get_from_repo(repo, cover)
+                if track_json is not None:
+                    self._tracks.append(track_json)
+        else:
+            for repo_name in repo_names:
+                try:
+                    repo = user.get_repo(repo_name)
+                except UnknownObjectException as err:
+                    repo = None
+                    msg = Log.get_msg(err)
+                    self._log.e(f"get_tracks: [{repo_name}] -> {msg}")
+
+                if repo is not None:
+                    track_json = self._get_from_repo(repo, cover)
+                    if track_json is not None:
+                        self._tracks.append(track_json)
 
         self._log.i(f"get_tracks: size = {self.size}")
         return self._tracks

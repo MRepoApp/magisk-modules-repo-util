@@ -37,11 +37,13 @@ class LocalTracks(BaseTracks):
         else:
             return result.value
 
-    def get_tracks(self):
+    def get_tracks(self, module_ids=None):
         self._log.i(f"get_tracks: modules_folder = {self._modules_folder}")
+        if module_ids is None:
+            module_ids = [_dir.name for _dir in sorted(self._modules_folder.glob("*/"))]
 
-        for module_dir in sorted(self._modules_folder.glob("*/")):
-            track_json = self.get_track(module_dir.name)
+        for module_id in module_ids:
+            track_json = self.get_track(module_id)
             if track_json is not None:
                 self._tracks.append(track_json)
 
@@ -49,11 +51,11 @@ class LocalTracks(BaseTracks):
         return self._tracks
 
     @property
-    def size(self) -> int:
+    def size(self):
         return self._tracks.__len__()
 
     @property
-    def tracks(self) -> list:
+    def tracks(self):
         return self._tracks
 
     @classmethod

@@ -89,46 +89,21 @@ class Sync:
         else:
             return self.create_local_tracks()
 
-    def update_by_id(self, module_id, **kwargs):
-        user_name = kwargs.get("user_name", None)
-        if user_name is not None:
-            if self._check_tracks(self._tracks, GithubTracks):
-                track = self._tracks.get_track(
-                    user_name=user_name,
-                    repo_name=module_id,
-                    cover=kwargs.get("cover", True)
-                )
-            else:
-                msg = f"unsupported tracks interface type [{type(self._tracks).__name__}]"
-                self._log.e(f"update_by_id: {msg}")
-                raise RuntimeError(msg)
-        else:
-            track = self._tracks.get_track(module_id)
-
-        if track is None:
-            return
-
-        online_module = self._update_jsons(track)
-        if online_module is None:
-            return
-
-        self.modules_json.modules.append(online_module)
-        self._log.i(f"update_by_id: [{track.id}] -> update to {online_module.version_display}")
-
-    def update_all(self, **kwargs):
+    def update_by_ids(self, module_ids, **kwargs):
         user_name = kwargs.get("user_name", None)
         if user_name is not None:
             if self._check_tracks(self._tracks, GithubTracks):
                 tracks = self._tracks.get_tracks(
                     user_name=user_name,
+                    repo_names=module_ids,
                     cover=kwargs.get("cover", True)
                 )
             else:
                 msg = f"unsupported tracks interface type [{type(self._tracks).__name__}]"
-                self._log.e(f"update_all: {msg}")
+                self._log.e(f"update_by_ids: {msg}")
                 raise RuntimeError(msg)
         else:
-            tracks = self._tracks.get_tracks()
+            tracks = self._tracks.get_tracks(module_ids)
 
         for track in tracks:
             online_module = self._update_jsons(track)
@@ -136,7 +111,10 @@ class Sync:
                 continue
 
             self.modules_json.modules.append(online_module)
-            self._log.i(f"update_all: [{track.id}] -> update to {online_module.version_display}")
+            self._log.i(f"update_by_ids: [{track.id}] -> update to {online_module.version_display}")
+
+    def update_all(self, **kwargs):
+        self.update_by_ids(module_ids=None, **kwargs)
 
     def write_modules_json(self):
         json_file = self._json_folder.joinpath(self.modules_json.filename())
