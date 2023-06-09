@@ -1,8 +1,9 @@
 import os
 import shutil
 
-from ..modifier import Result
+from .Config import Config
 from ..model import TrackJson, LocalModule, AttrDict, MagiskUpdateJson
+from ..modifier import Result
 from ..utils import Log, HttpUtils, GitUtils
 
 
@@ -14,7 +15,7 @@ class Pull:
         self._config = config
         self._track = TrackJson.empty()
 
-        self.modules_folder = root_folder.joinpath("modules")
+        self.modules_folder = Config.get_modules_folder(root_folder)
         self.modules_folder.mkdir(exist_ok=True)
 
         self._log.d("__init__")

@@ -1,6 +1,7 @@
 import subprocess
 from datetime import datetime
 
+from .Config import Config
 from .Pull import Pull
 from ..model import ModulesJson, UpdateJson
 from ..track import BaseTracks, LocalTracks, GithubTracks
@@ -13,7 +14,7 @@ class Sync:
         self._root_folder = root_folder
         self._pull = Pull(root_folder, config)
 
-        self._json_folder = root_folder.joinpath("json")
+        self._json_folder = Config.get_json_folder(root_folder)
         self._modules_folder = self._pull.modules_folder
         self._config = config
         self._tracks = BaseTracks()
@@ -68,7 +69,7 @@ class Sync:
         self._log.i("create_github_tracks")
         self._tracks = GithubTracks(
             api_token=api_token,
-            root_folder=self._root_folder,
+            modules_folder=self._modules_folder,
             config=self._config
         )
         return self._tracks
@@ -76,7 +77,7 @@ class Sync:
     def create_local_tracks(self):
         self._log.i("create_local_tracks")
         self._tracks = LocalTracks(
-            root_folder=self._root_folder,
+            modules_folder=self._modules_folder,
             config=self._config
         )
         return self._tracks

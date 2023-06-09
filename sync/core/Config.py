@@ -8,7 +8,7 @@ from ..utils.StrUtils import StrUtils
 
 class Config(ConfigJson):
     def __init__(self, root_folder):
-        config_json = root_folder.joinpath("config", ConfigJson.filename())
+        config_json = self.get_config_folder(root_folder).joinpath(ConfigJson.filename())
         if not config_json.exists():
             raise FileNotFoundError(config_json.as_posix())
 
@@ -42,3 +42,15 @@ class Config(ConfigJson):
                 _log_dir = root_folder.joinpath(_log_dir)
 
             self.log_dir = _log_dir
+
+    @classmethod
+    def get_config_folder(cls, root_folder):
+        return root_folder.joinpath("config")
+
+    @classmethod
+    def get_json_folder(cls, root_folder):
+        return root_folder.joinpath("json")
+
+    @classmethod
+    def get_modules_folder(cls, root_folder):
+        return root_folder.joinpath("modules")
