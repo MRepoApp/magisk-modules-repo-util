@@ -10,7 +10,7 @@ def get_baseVersionCode():
 
 
 def get_version():
-    sha = GitUtils.short_sha()
+    sha = GitUtils.commit_id()
     if sha is not None:
         return f"{get_baseVersion()}.{sha}"
     else:

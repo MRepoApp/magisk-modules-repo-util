@@ -44,7 +44,7 @@ class GitUtils:
 
     @classmethod
     @Command.exec()
-    def short_sha(cls) -> Optional[str]:
+    def commit_id(cls) -> Optional[str]:
         return "git rev-parse --short HEAD"
 
     @classmethod
