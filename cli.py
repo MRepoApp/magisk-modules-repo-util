@@ -13,5 +13,5 @@ if __name__ == "__main__":
     except KeyError:
         github_token = None
 
-    Main.set_args(root_folder=root_folder,github_token=github_token)
+    Main.set_default_args(root_folder=root_folder, github_token=github_token)
     sys.exit(Main.exec())
