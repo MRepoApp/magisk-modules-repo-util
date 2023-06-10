@@ -12,6 +12,7 @@ logger_initialized = {}
 
 class Log:
     _file_prefix: str = None
+    _enable_stdout: bool = True
 
     def __init__(self, tag: str, log_folder: Optional[Path] = None, show_log: bool = True):
         if log_folder is not None:
@@ -50,6 +51,10 @@ class Log:
         cls._file_prefix = name
 
     @classmethod
+    def set_enable_stdout(cls, value: bool):
+        cls._enable_stdout = value
+
+    @classmethod
     def clear(cls, log_folder: Path, prefix: str, max_num: int = 3):
         log_files = sorted(glob(f"{log_folder}/{prefix}*"), reverse=True)
         if len(log_files) >= max_num + 1:
@@ -76,15 +81,15 @@ class Log:
             "[%(asctime)s] %(name)s %(levelname)s: %(message)s",
             datefmt="%Y/%m/%d %H:%M:%S")
 
-        stdout_handler = logging.StreamHandler(stream=sys.stdout)
-        stdout_handler.setFormatter(formatter)
-        stdout_handler.addFilter(lambda log: log.levelno < logging.ERROR)
+        if cls._enable_stdout:
+            stdout_handler = logging.StreamHandler(stream=sys.stdout)
+            stdout_handler.setFormatter(formatter)
+            stdout_handler.addFilter(lambda log: log.levelno < logging.ERROR)
+            logger.addHandler(stdout_handler)
 
         stderr_handler = logging.StreamHandler(stream=sys.stderr)
         stderr_handler.setFormatter(formatter)
         stderr_handler.addFilter(lambda log: log.levelno >= logging.ERROR)
-
-        logger.addHandler(stdout_handler)
         logger.addHandler(stderr_handler)
 
         if log_file is not None:
