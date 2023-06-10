@@ -7,6 +7,8 @@ from ..utils import Log
 
 
 class Pull:
+    _max_size: float
+
     _log: Log
     _local_folder: Path
 
@@ -31,3 +33,5 @@ class Pull:
     def from_git(self, track: TrackJson) -> Tuple[Optional[OnlineModule], float]: ...
     def from_zip(self, track: TrackJson) -> Tuple[Optional[OnlineModule], float]: ...
     def from_track(self, track: TrackJson) -> Tuple[Optional[OnlineModule], float]: ...
+    @classmethod
+    def set_max_size(cls, value: float): ...

@@ -8,6 +8,8 @@ from ..utils import Log, HttpUtils, GitUtils
 
 
 class Pull:
+    _max_size = 50
+
     def __init__(self, root_folder, config):
         self._log = Log("Pull", config.log_dir, config.show_log)
         self._local_folder = root_folder.joinpath("local")
@@ -76,6 +78,12 @@ class Pull:
         return changelog_file
 
     def _from_zip_common(self, zip_file, changelog_file, *, delete_tmp):
+        zip_file_size = os.path.getsize(zip_file) / (1024 ** 2)
+        if zip_file_size > self._max_size:
+            if delete_tmp:
+                os.remove(zip_file)
+            return None
+
         online_module = LocalModule.from_file(zip_file).to_OnlineModule()
         module_folder = self.modules_folder.joinpath(online_module.id)
 
@@ -173,3 +181,7 @@ class Pull:
 
         self._log.e(f"from_track: [{track.id}] -> unsupported update_to type [{track.update_to}]")
         return None
+
+    @classmethod
+    def set_max_size(cls, value):
+        cls._max_size = value
