@@ -16,10 +16,10 @@ class Config(ConfigJson):
         super().__init__(obj)
 
         self._check_config()
-        self._set_default()
-        self._set_max_num()
-        self._set_show_log()
         self._set_log_dir(root_folder)
+
+        self.set_default()
+        self.check_type()
 
         self._log = Log("Config", self.log_dir, self.show_log)
         self._log.d("__init__")
@@ -37,12 +37,14 @@ class Config(ConfigJson):
             raise ConfigError(f"repo_url must start with 'http' and end with '/'")
 
     def _set_log_dir(self, root_folder):
-        if self.log_dir is not None:
-            _log_dir = Path(self.log_dir)
-            if not _log_dir.is_absolute():
-                _log_dir = root_folder.joinpath(_log_dir)
+        if self.log_dir is None:
+            return
 
-            self.log_dir = _log_dir
+        _log_dir = Path(self.log_dir)
+        if not _log_dir.is_absolute():
+            _log_dir = root_folder.joinpath(_log_dir)
+
+        self.log_dir = _log_dir
 
     @classmethod
     def get_config_folder(cls, root_folder):
