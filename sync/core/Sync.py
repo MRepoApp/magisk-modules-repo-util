@@ -1,9 +1,10 @@
+import os
 import subprocess
 from datetime import datetime
 
 from .Config import Config
 from .Pull import Pull
-from ..model import ModulesJson, UpdateJson
+from ..model import ModulesJson, UpdateJson, TrackJson
 from ..track import BaseTracks, LocalTracks, GithubTracks
 from ..utils import Log, GitUtils
 
@@ -39,15 +40,23 @@ class Sync:
         if not self.is_updatable:
             self._is_updatable = True
 
-    def _update_jsons(self, track):
+    def _update_jsons(self, track, force):
         module_folder = self._modules_folder.joinpath(track.id)
         online_module, timestamp = self._pull.from_track(track)
         if online_module is None:
             return None
 
         update_json_file = module_folder.joinpath(UpdateJson.filename())
+        track_json_file = module_folder.joinpath(TrackJson.filename())
+
+        if force:
+            for file in module_folder.glob("*"):
+                if file != track_json_file.name:
+                    os.remove(file)
+
         if update_json_file.exists():
             update_json = UpdateJson.load(update_json_file)
+            update_json.update(id=track.id)
         else:
             update_json = UpdateJson(
                 id=track.id,
@@ -58,11 +67,18 @@ class Sync:
         update_json.timestamp = timestamp
         update_json.versions.append(version_item)
 
+        if len(update_json.versions) > self._config.max_num:
+            old_item = update_json.versions.pop(0)
+            file_name = old_item.zipUrl.split("/")[-1]
+            zip_file = module_folder.joinpath(file_name)
+            if zip_file.exists():
+                os.remove(zip_file)
+
         track.last_update = timestamp
         track.versions = len(update_json.versions)
 
         update_json.write(update_json_file)
-        track.write(module_folder.joinpath(track.filename()))
+        track.write(track_json_file)
 
         return online_module
 
@@ -98,7 +114,7 @@ class Sync:
         else:
             return self.create_local_tracks()
 
-    def update_by_ids(self, module_ids, **kwargs):
+    def update_by_ids(self, module_ids, force, **kwargs):
         user_name = kwargs.get("user_name", None)
         if user_name is not None:
             if self._check_tracks(self._tracks, GithubTracks):
@@ -115,7 +131,7 @@ class Sync:
             tracks = self._tracks.get_tracks(module_ids)
 
         for track in tracks:
-            online_module = self._update_jsons(track)
+            online_module = self._update_jsons(track=track, force=force)
             if online_module is None:
                 continue
 
@@ -123,8 +139,8 @@ class Sync:
             self.modules_json.modules.append(online_module)
             self._log.i(f"update_by_ids: [{track.id}] -> update to {online_module.version_display}")
 
-    def update_all(self, **kwargs):
-        self.update_by_ids(module_ids=None, **kwargs)
+    def update_all(self, force, **kwargs):
+        self.update_by_ids(None, force, **kwargs)
 
     def write_modules_json(self):
         if not self.is_updatable:
@@ -133,7 +149,7 @@ class Sync:
         json_file = self._json_folder.joinpath(self.modules_json.filename())
         self.modules_json.write(json_file)
 
-    def push_by_git(self):
+    def push_by_git(self, branch):
         if not self.is_updatable:
             return
 
@@ -142,7 +158,6 @@ class Sync:
             self._log.e("push_by_git: git command not found")
             return
 
-        branch = GitUtils.current_branch()
         msg = f"Update by CLI ({datetime.fromtimestamp(self.timestamp)})"
 
         subprocess.run(["git", "add", "."], cwd=self._root_folder.as_posix())
