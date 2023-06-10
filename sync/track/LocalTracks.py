@@ -74,3 +74,14 @@ class LocalTracks(BaseTracks):
     @classmethod
     def del_track(cls, module_id, modules_folder):
         shutil.rmtree(modules_folder.joinpath(module_id), ignore_errors=True)
+
+    @classmethod
+    def update_track(cls, track, modules_folder):
+        json_file = modules_folder.joinpath(track.id, TrackJson.filename())
+
+        if not json_file.exists():
+            return
+
+        old = TrackJson.load(json_file)
+        old.update(track)
+        old.write(json_file)
