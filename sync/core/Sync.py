@@ -137,6 +137,7 @@ class Sync:
         if not self.is_updatable:
             return
 
+        GitUtils.set_cwd_folder(self._root_folder)
         if not GitUtils.is_enable():
             self._log.e("push_by_git: git command not found")
             return

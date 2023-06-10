@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from .utils import GitUtils
 
 
@@ -31,6 +33,7 @@ __all__ = [
     "__version__"
 ]
 
+GitUtils.set_cwd_folder(Path(__file__).resolve().parent)
 version = get_version()
 versionCode = get_versionCode()
 __version__ = f"{get_version()} (${get_versionCode()})"
