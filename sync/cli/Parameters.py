@@ -126,6 +126,11 @@ class Parameters:
             default=None,
             help="Remove module(s) for tracks."
         )
+        p.add_argument(
+            "--stdin",
+            action="store_true",
+            help="Write track given in json format piped through stdin."
+        )
 
         modify = p.add_argument_group("modify")
         modify.add_argument(

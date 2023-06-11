@@ -85,6 +85,7 @@ class Main:
         root_folder = Path(cls._args.root_folder).resolve()
         modules_folder = Config.get_modules_folder(root_folder)
         Log.set_enable_stdout(False)
+        os.makedirs(modules_folder, exist_ok=True)
 
         if cls._args.list:
             config = Config(root_folder)
@@ -113,6 +114,14 @@ class Main:
                     module_id=module_id,
                     modules_folder=modules_folder
                 )
+
+        elif cls._args.stdin:
+            track = TrackJson(json.load(fp=sys.stdin))
+            module_folder = modules_folder.joinpath(track.id)
+            os.makedirs(module_folder, exist_ok=True)
+
+            json_file = module_folder.joinpath(TrackJson.filename())
+            track.write(json_file)
 
         elif cls._args.target_id is not None:
             module_folder = modules_folder.joinpath(cls._args.target_id)
