@@ -154,7 +154,7 @@ class Main:
     def github(cls) -> int:
         root_folder = Path(cls._args.root_folder).resolve()
         modules_folder = Config.get_modules_folder(root_folder)
-        Log.set_enable_stdout(cls._args.quiet)
+        Log.set_enable_stdout(not cls._args.quiet)
         Pull.set_max_size(cls._args.max_size)
 
         config = Config(root_folder)
@@ -193,7 +193,7 @@ class Main:
     @classmethod
     def sync(cls) -> int:
         root_folder = Path(cls._args.root_folder).resolve()
-        Log.set_enable_stdout(cls._args.quiet)
+        Log.set_enable_stdout(not cls._args.quiet)
         Pull.set_max_size(cls._args.max_size)
 
         config = Config(root_folder)
