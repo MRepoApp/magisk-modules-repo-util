@@ -1,19 +1,10 @@
-from .Sync import Sync
-from .Config import Config
-from .Hosts import Hosts
-from .Repo import Repo
-from .AttrDict import AttrDict
-from .ConfigError import ConfigError
-from .UpdateJsonError import UpdateJsonError
-from .MagiskModuleError import MagiskModuleError
+from .core import *
+from .utils import Log
+
+Log.set_file_prefix("sync")
 
 __all__ = [
-    "Sync",
     "Config",
-    "Hosts",
-    "Repo",
-    "AttrDict",
-    "ConfigError",
-    "UpdateJsonError",
-    "MagiskModuleError"
+    "Pull",
+    "Sync"
 ]

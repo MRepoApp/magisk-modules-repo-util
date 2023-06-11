@@ -1,9 +1,3 @@
-from typing import Mapping, TypeVar
-
-_KT = TypeVar("_KT")
-_VT = TypeVar("_VT")
-
-
 class AttrDict(dict):
     def __init__(self, seq=None, **kwargs):
         if seq is None:
@@ -14,11 +8,15 @@ class AttrDict(dict):
         super().__init__(seq)
         self.__update_attr__()
 
+    def __repr__(self):
+        values = [f"{k}={v}" for k, v in self.items()]
+        return f"{self.__class__.__name__}({', '.join(values)})"
+
     def __update_attr__(self):
         for key in self.keys():
             self.__setattr__(key, self.get(key))
 
-    def update(self, __m: Mapping[_KT, _VT] = None, **kwargs: _VT):
+    def update(self, __m=None, **kwargs):
         if __m is None:
             super().update(**kwargs)
         else:
@@ -40,10 +38,6 @@ class AttrDict(dict):
 
     def __bool__(self):
         return True
-
-    @property
-    def size(self) -> int:
-        return self.__len__()
 
     def copy(self):
         return AttrDict(self.__dict__)

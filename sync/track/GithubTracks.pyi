@@ -1,0 +1,36 @@
+from pathlib import Path
+from typing import Optional, List
+
+from github import Github
+from github.Repository import Repository
+
+from .BaseTracks import BaseTracks
+from ..model import TrackJson, ConfigJson
+from ..modifier import Result
+from ..utils.Log import Log
+
+
+class GithubTracks(BaseTracks):
+    _log: Log
+    _modules_folder: Path
+    _github: Github
+    _tracks: List[TrackJson]
+
+    def __init__(self, api_token: str, modules_folder: Path, config: ConfigJson): ...
+    @Result.catching()
+    def _get_from_repo_common(self, repo: Repository) -> Result: ...
+    def _get_from_repo(self, repo: Repository, cover: Optional[bool]) -> Optional[TrackJson]: ...
+    def get_track(
+        self, user_name: str, repo_name: str, cover: Optional[bool] = ...
+    ) -> Optional[TrackJson]: ...
+    def get_tracks(self, user_name: str, repo_names: Optional[List[str]], cover: Optional[bool] = ...) -> List[TrackJson]: ...
+    @classmethod
+    def get_license(cls, repo: Repository) -> str: ...
+    @classmethod
+    def get_changelog(cls, repo: Repository) -> str: ...
+    @classmethod
+    def is_module_repo(cls, repo: Repository) -> bool: ...
+    @property
+    def size(self) -> int: ...
+    @property
+    def tracks(self) -> List[TrackJson]: ...
