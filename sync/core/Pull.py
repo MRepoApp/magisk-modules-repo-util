@@ -111,11 +111,21 @@ class Pull:
         return online_module
 
     def from_json(self, track, *, local):
+        module_folder = self.modules_folder.joinpath(track.id)
         if local:
             track.update_to = self._local_folder.joinpath(track.update_to)
 
-        module_folder = self.modules_folder.joinpath(track.id)
-        update_json = MagiskUpdateJson.load(track.update_to)
+        @Result.catching()
+        def load():
+            return MagiskUpdateJson.load(track.update_to)
+
+        result = load()
+        if result.is_failure:
+            msg = Log.get_msg(result.error)
+            self._log.e(f"from_json: [{self._track.id}] -> {msg}")
+            return None, 0.0
+        else:
+            update_json: MagiskUpdateJson = result.value
 
         target_zip_file = module_folder.joinpath(update_json.zipfile_filename)
         target_files = list(module_folder.glob(f"*{update_json.versionCode}.zip"))
@@ -124,7 +134,14 @@ class Pull:
             return None, 0.0
 
         zip_file = self.modules_folder.joinpath(track.id, f"{track.id}.zip")
-        last_modified = HttpUtils.download(update_json.zipUrl, zip_file)
+
+        result = self._safe_download(update_json.zipUrl, zip_file)
+        if result.is_failure:
+            msg = Log.get_msg(result.error)
+            self._log.e(f"from_json: [{self._track.id}] -> {msg}")
+            return None, 0.0
+        else:
+            last_modified = result.value
 
         self._track = track
         changelog = self._get_changelog_common(update_json.changelog)
@@ -133,7 +150,14 @@ class Pull:
 
     def from_url(self, track):
         zip_file = self.modules_folder.joinpath(track.id, f"{track.id}.zip")
-        last_modified = HttpUtils.download(track.update_to, zip_file)
+
+        result = self._safe_download(track.update_to, zip_file)
+        if result.is_failure:
+            msg = Log.get_msg(result.error)
+            self._log.e(f"from_url: [{self._track.id}] -> {msg}")
+            return None, 0.0
+        else:
+            last_modified = result.value
 
         self._track = track
         changelog = self._get_changelog_common(track.changelog)
