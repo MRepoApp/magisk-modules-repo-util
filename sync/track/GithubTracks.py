@@ -26,7 +26,7 @@ class GithubTracks(BaseTracks):
     @Result.catching()
     def _get_from_repo_common(self, repo: Repository):
         if not self.is_module_repo(repo):
-            raise MagiskModuleError(f"{repo.name} is not magisk module repository")
+            raise MagiskModuleError(f"{repo.name} is not a target magisk module repository")
 
         try:
             update_to = repo.get_contents("update.json").download_url
