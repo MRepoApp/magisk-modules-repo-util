@@ -23,6 +23,7 @@ class Parameters:
     MODULE = "module"
     GITHUB = "github"
     SYNC = "sync"
+    INDEX = "index"
 
     @classmethod
     def set_root_folder(cls, root: Path):
@@ -62,6 +63,7 @@ class Parameters:
         cls.configure_parser_module(sub_parsers)
         cls.configure_parser_github(sub_parsers)
         cls.configure_parser_sync(sub_parsers)
+        cls.configure_parser_index(sub_parsers)
 
         return p
 
@@ -231,6 +233,21 @@ class Parameters:
 
         cls.add_parser_git(p)
         cls.add_parser_env(p, add_quiet=True)
+
+    @classmethod
+    def configure_parser_index(cls, sub_parsers):
+        p = sub_parsers.add_parser(
+            cls.INDEX,
+            help="Generate modules.json from local."
+        )
+
+        p.add_argument(
+            "--stdout",
+            action="store_true",
+            help="Show the modules.json piped through stdout."
+        )
+
+        cls.add_parser_env(p)
 
     @classmethod
     def add_parser_env(cls, p, add_quiet=False):

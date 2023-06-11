@@ -4,7 +4,7 @@ from datetime import datetime
 
 from .Config import Config
 from .Pull import Pull
-from ..model import ModulesJson, UpdateJson, TrackJson
+from ..model import ModulesJson, UpdateJson, TrackJson, LocalModule, AttrDict
 from ..track import BaseTracks, LocalTracks, GithubTracks
 from ..utils import Log, GitUtils
 
@@ -26,12 +26,6 @@ class Sync:
         else:
             self._tracks = tracks
 
-        self.timestamp = datetime.now().timestamp()
-        self.modules_json = ModulesJson(
-            name=config.repo_name,
-            timestamp=self.timestamp,
-            modules=list()
-        )
         self._log.d("__init__")
 
     def __del__(self):
@@ -106,7 +100,7 @@ class Sync:
         return online_module
 
     def _check_tracks(self, obj, cls):
-        if isinstance(obj, BaseTracks):
+        if type(obj) is BaseTracks:
             msg = "Tracks interface has not been created, please use 'create_tracks' to create one"
             self._log.e(f"_check_tracks: {msg}")
             raise RuntimeError(msg)
@@ -161,35 +155,67 @@ class Sync:
                 continue
 
             self._set_updatable()
-            self.modules_json.modules.append(online_module)
             self._log.i(f"update_by_ids: [{track.id}] -> update to {online_module.version_display}")
 
     def update_all(self, force, **kwargs):
         self.update_by_ids(None, force, **kwargs)
 
-    def write_modules_json(self):
-        if not self.is_updatable:
-            return
+    def create_modules_json(self, to_file):
+        timestamp = datetime.now().timestamp()
+        json_file = self._json_folder.joinpath(ModulesJson.filename())
 
-        json_file = self._json_folder.joinpath(self.modules_json.filename())
-        if not self._is_full_update:
-            old_json = ModulesJson.load(json_file)
-            for online_module in old_json.modules:
-                if online_module not in self.modules_json.modules:
-                    self.modules_json.modules.append(online_module)
+        modules_json = ModulesJson(
+            name=self._config.repo_name,
+            timestamp=timestamp,
+            modules=list()
+        )
 
-        self.modules_json.modules.sort(key=lambda v: v.id)
-        self.modules_json.write(json_file)
+        if self._check_tracks(self._tracks, LocalTracks) and len(self._tracks.tracks) == 0:
+            self._tracks.get_tracks()
+
+        for track in self._tracks.tracks:
+            module_folder = self._modules_folder.joinpath(track.id)
+            update_json_file = module_folder.joinpath(UpdateJson.filename())
+            if not update_json_file.exists():
+                continue
+
+            update_json = UpdateJson.load(update_json_file)
+            latest_item = update_json.versions[-1]
+
+            file_name = latest_item.zipUrl.split("/")[-1]
+            zip_file = module_folder.joinpath(file_name)
+            if not zip_file.exists():
+                continue
+
+            online_module = LocalModule.from_file(zip_file).to_OnlineModule()
+            online_module.states = AttrDict(
+                zipUrl=latest_item.zipUrl,
+                changelog=latest_item.changelog
+            )
+
+            modules_json.modules.append(online_module)
+
+        modules_json.modules.sort(key=lambda v: v.id)
+        if to_file:
+            modules_json.write(json_file)
+
+        return modules_json
 
     def push_by_git(self, branch):
         if not self.is_updatable:
+            return
+
+        json_file = self._json_folder.joinpath(ModulesJson.filename())
+        if not json_file.exists():
+            self._log.e(f"push_by_git: {json_file.name} is not in {self._json_folder}")
             return
 
         if not GitUtils.is_enable():
             self._log.e("push_by_git: git command not found")
             return
 
-        msg = f"Update by CLI ({datetime.fromtimestamp(self.timestamp)})"
+        timestamp = ModulesJson.load(json_file).timestamp
+        msg = f"Update by CLI ({datetime.fromtimestamp(timestamp)})"
 
         subprocess.run(["git", "add", "."], cwd=self._root_folder.as_posix())
         subprocess.run(["git", "commit", "-m", msg], cwd=self._root_folder.as_posix())

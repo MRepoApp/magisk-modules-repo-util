@@ -48,6 +48,8 @@ class Main:
             return cls.github()
         elif cls._args.cmd == Parameters.SYNC:
             return cls.sync()
+        elif cls._args.cmd == Parameters.INDEX:
+            return cls.index()
 
     @classmethod
     def config(cls) -> int:
@@ -176,7 +178,7 @@ class Main:
                 user_name=cls._args.user_name,
                 cover=cls._args.cover
             )
-            sync.write_modules_json()
+            sync.create_modules_json(True)
 
             if cls._args.push:
                 sync.push_by_git(cls._args.git_branch)
@@ -208,9 +210,29 @@ class Main:
             module_ids=cls._args.module_ids,
             force=cls._args.force_update
         )
-        sync.write_modules_json()
+        sync.create_modules_json(True)
 
         if cls._args.push:
             sync.push_by_git(cls._args.git_branch)
+
+        return cls.CODE_SUCCESS
+
+    @classmethod
+    def index(cls) -> int:
+        root_folder = Path(cls._args.root_folder).resolve()
+        Log.set_enable_stdout(False)
+
+        config = Config(root_folder)
+
+        sync = Sync(
+            root_folder=root_folder,
+            config=config,
+            tracks=None
+        )
+        sync.create_local_tracks()
+
+        modules_json = sync.create_modules_json(not cls._args.stdout)
+        if cls._args.stdout:
+            json.dump(modules_json, fp=sys.stdout, indent=2)
 
         return cls.CODE_SUCCESS

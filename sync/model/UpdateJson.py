@@ -16,6 +16,7 @@ class UpdateJson(AttrDict, JsonIO):
     def load(cls, file):
         obj = JsonIO.load(file)
         obj.versions = [VersionItem(_obj) for _obj in obj.versions]
+        obj.versions.sort(key=lambda v: v.versionCode)
         return UpdateJson(**obj)
 
     @classmethod
