@@ -2,9 +2,10 @@ import os
 import shutil
 
 from .Config import Config
-from ..model import TrackJson, LocalModule, AttrDict, MagiskUpdateJson
+from ..model import TrackJson, LocalModule, AttrDict, MagiskUpdateJson, OnlineModule
 from ..modifier import Result
 from ..utils import Log, HttpUtils, GitUtils
+from ..track import LocalTracks
 
 
 class Pull:
@@ -46,7 +47,7 @@ class Pull:
             return url
 
     def _get_changelog_common(self, changelog):
-        if not isinstance(changelog, str):
+        if not isinstance(changelog, str) or changelog == "":
             return None
 
         unsupported = False
@@ -77,14 +78,32 @@ class Pull:
         return changelog_file
 
     def _from_zip_common(self, zip_file, changelog_file, *, delete_tmp):
+        module_folder = self.modules_folder.joinpath(self._track.id)
+
         zip_file_size = os.path.getsize(zip_file) / (1024 ** 2)
         if zip_file_size > self._max_size:
+            module_folder.joinpath(LocalTracks.TAG_DISABLE).touch()
             if delete_tmp:
                 os.remove(zip_file)
+
+            msg = f"file size exceeds limit ({self._max_size} MB), update check disabled"
+            self._log.w(f"_from_zip_common: [{self._track.id}] -> {msg}")
             return None
 
-        module_folder = self.modules_folder.joinpath(self._track.id)
-        online_module = LocalModule.from_file(zip_file).to_OnlineModule()
+        @Result.catching()
+        def get_online_module():
+            return LocalModule.from_file(zip_file).to_OnlineModule()
+
+        result = get_online_module()
+        if result.is_failure:
+            if delete_tmp:
+                os.remove(zip_file)
+
+            msg = Log.get_msg(result.error)
+            self._log.e(f"_from_zip_common: [{self._track.id}] -> {msg}")
+            return None
+        else:
+            online_module: OnlineModule = result.value
 
         target_zip_file = module_folder.joinpath(online_module.zipfile_filename)
         target_files = list(module_folder.glob(f"*{online_module.versionCode}.zip"))
@@ -166,7 +185,18 @@ class Pull:
 
     def from_git(self, track):
         zip_file = self.modules_folder.joinpath(track.id, f"{track.id}.zip")
-        last_committed = GitUtils.clone_and_zip(track.update_to, zip_file)
+
+        @Result.catching()
+        def git():
+            return GitUtils.clone_and_zip(track.update_to, zip_file)
+
+        result = git()
+        if result.is_failure:
+            msg = Log.get_msg(result.error)
+            self._log.e(f"from_git: [{self._track.id}] -> {msg}")
+            return None, 0.0
+        else:
+            last_committed = result.value
 
         self._track = track
         changelog = self._get_changelog_common(track.changelog)
