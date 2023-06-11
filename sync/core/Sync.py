@@ -86,10 +86,12 @@ class Sync:
 
         if len(update_json.versions) > self._config.max_num:
             old_item = update_json.versions.pop(0)
-            file_name = old_item.zipUrl.split("/")[-1]
-            zip_file = module_folder.joinpath(file_name)
-            if zip_file.exists():
-                os.remove(zip_file)
+            for file in module_folder.glob(f"*{old_item.versionCode}*"):
+                if not file.is_file():
+                    continue
+
+                self._log.d(f"_update_jsons: [{track.id}] -> remove {file.name}")
+                os.remove(file)
 
         track.last_update = timestamp
         track.versions = len(update_json.versions)
