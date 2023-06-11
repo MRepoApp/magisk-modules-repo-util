@@ -8,6 +8,8 @@ from ..utils.Log import Log
 
 
 class LocalTracks(BaseTracks):
+    TAG_DISABLE: str
+
     _log: Log
     _modules_folder: Path
     _tracks: List[TrackJson]

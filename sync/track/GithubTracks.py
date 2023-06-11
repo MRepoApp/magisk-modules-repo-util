@@ -64,7 +64,8 @@ class GithubTracks(BaseTracks):
         return self._get_from_repo(repo, cover)
 
     def get_tracks(self, user_name, repo_names=None, cover=True):
-        self._log.i(f"get_tracks: user_name = {user_name}, ")
+        self._tracks.clear()
+        self._log.i(f"get_tracks: user_name = {user_name}")
 
         user = self._github.get_user(user_name)
         if repo_names is None:

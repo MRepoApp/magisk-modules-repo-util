@@ -9,6 +9,8 @@ from ..utils.Log import Log
 
 
 class LocalTracks(BaseTracks):
+    TAG_DISABLE = ".disable"
+
     def __init__(self, modules_folder, config):
         self._log = Log("LocalTracks", config.log_dir, config.show_log)
         self._modules_folder = modules_folder
@@ -26,7 +28,8 @@ class LocalTracks(BaseTracks):
         return TrackJson.load(file)
 
     def get_track(self, module_id):
-        json_file = self._modules_folder.joinpath(module_id, TrackJson.filename())
+        module_folder = self._modules_folder.joinpath(module_id)
+        json_file = module_folder.joinpath(TrackJson.filename())
 
         result = self._get_from_file(json_file)
         if result.is_failure:
@@ -38,7 +41,9 @@ class LocalTracks(BaseTracks):
             return result.value
 
     def get_tracks(self, module_ids=None):
+        self._tracks.clear()
         self._log.i(f"get_tracks: modules_folder = {self._modules_folder}")
+
         if module_ids is None:
             module_ids = [_dir.name for _dir in sorted(self._modules_folder.glob("*/"))]
 

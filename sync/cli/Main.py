@@ -115,7 +115,9 @@ class Main:
                 )
 
         elif cls._args.target_id is not None:
-            json_file = modules_folder.joinpath(cls._args.target_id, TrackJson.filename())
+            module_folder = modules_folder.joinpath(cls._args.target_id)
+            json_file = module_folder.joinpath(TrackJson.filename())
+            tag_disable = module_folder.joinpath(LocalTracks.TAG_DISABLE)
 
             if cls._args.update_track_json is not None:
                 track = TrackJson(cls._args.update_track_json)
@@ -131,6 +133,14 @@ class Main:
                 for key in cls._args.key_list:
                     track.pop(key, None)
                 track.write(json_file)
+
+            elif cls._args.enable_update and module_folder.exists():
+                if tag_disable.exists():
+                    os.remove(tag_disable)
+
+            elif cls._args.disable_update and module_folder.exists():
+                if not tag_disable.exists():
+                    tag_disable.touch()
 
             elif cls._args.stdout and json_file.exists():
                 track = TrackJson.load(json_file)

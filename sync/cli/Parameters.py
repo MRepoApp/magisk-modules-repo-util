@@ -153,6 +153,16 @@ class Parameters:
             help="Remove key(s) (and all its value) in the track."
         )
         modify.add_argument(
+            "--enable-update",
+            action="store_true",
+            help="Enable update check for the track."
+        )
+        modify.add_argument(
+            "--disable-update",
+            action="store_true",
+            help="Disable update check for the track."
+        )
+        modify.add_argument(
             "--stdout",
             action="store_true",
             help="Show the track in json format piped through stdout."
