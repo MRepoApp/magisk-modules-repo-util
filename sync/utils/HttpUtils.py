@@ -31,6 +31,11 @@ class HttpUtils:
         return obj
 
     @classmethod
+    def _is_html(cls, text):
+        pattern = r'<html\s*>|<head\s*>|<body\s*>|<!doctype\s*html\s*>'
+        return re.search(pattern, text, re.IGNORECASE) is not None
+
+    @classmethod
     def download(cls, url: str, out: Path) -> float:
         response = requests.get(url, stream=True)
         if response.ok:
@@ -46,4 +51,9 @@ class HttpUtils:
                 return datetime.now().timestamp()
         else:
             os.remove(out)
-            raise HTTPError(response.text)
+
+            if cls._is_html(response.text):
+                msg = "404 not found"
+            else:
+                msg = response.text
+            raise HTTPError(msg)
