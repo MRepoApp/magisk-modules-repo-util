@@ -83,11 +83,13 @@ class Pull:
                 os.remove(zip_file)
             return None
 
-        online_module = LocalModule.from_file(zip_file).to_OnlineModule()
         module_folder = self.modules_folder.joinpath(self._track.id)
+        online_module = LocalModule.from_file(zip_file).to_OnlineModule()
 
         target_zip_file = module_folder.joinpath(online_module.zipfile_filename)
-        if not target_zip_file.exists():
+        target_files = list(module_folder.glob(f"*{online_module.versionCode}.zip"))
+
+        if not target_zip_file.exists() and len(target_files) == 0:
             self._copy_file(zip_file, target_zip_file, delete_tmp)
         else:
             if delete_tmp:
@@ -112,9 +114,13 @@ class Pull:
         if local:
             track.update_to = self._local_folder.joinpath(track.update_to)
 
+        module_folder = self.modules_folder.joinpath(track.id)
         update_json = MagiskUpdateJson.load(track.update_to)
-        target_zip_file = self.modules_folder.joinpath(track.id, update_json.zipfile_filename)
-        if target_zip_file.exists():
+
+        target_zip_file = module_folder.joinpath(update_json.zipfile_filename)
+        target_files = list(module_folder.glob(f"*{update_json.versionCode}.zip"))
+
+        if target_zip_file.exists() or len(target_files) != 0:
             return None, 0.0
 
         zip_file = self.modules_folder.joinpath(track.id, f"{track.id}.zip")
