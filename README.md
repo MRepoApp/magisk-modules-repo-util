@@ -3,81 +3,80 @@
 - This util is to build module repository for [MRepo](https://github.com/ya0211/MRepo)
 - `sync` is a python package
 
-## Setup
-**Please check out the examples below before you start.**
- 
-1. Create a folder (or a git repository and clone it), for example *your-repo*, clone [util](https://github.com/ya0211/magisk-modules-repo-util.git) into *your-repo* (or add it as a submodule of the git repository).
+## Getting Started
+### Initialize repository
+You should create a folder, or a git repository and clone it, for example `your-repo`, and clone util by running
+```shell
+$ git clone -b main https://github.com/ya0211/magisk-modules-repo-util.git util
+```
+or add it as a submodule of the git repository, use
+```shell
+$ git submodule add https://github.com/ya0211/magisk-modules-repo-util.git util
+```
 
-2. Create a **config.json** in *your-repo/config* by the following two ways: 
-    - Write it by yourself
-    - Run `cli.py config --new-config`
+### Create config.json
+You can write it to `your-repo/config/config.json` by yourself, or use
+```shell
+$ cli.py config --stdin << EOF
+{
+  "repo_name": "Your Magisk Repo",
+  "repo_url": "https://you.github.io/magisk-modules-repo/",
+  "max_num": 3,
+  "show_log": true,
+  "log_dir": "log"
+}
+EOF
+```
+or 
+```shell
+$ cli.py config --write repo_name="Your Magisk Repo" repo_url="https://you.github.io/magisk-modules-repo/" max_num=3 show_log=true log_dir="log"
+```
 
-3. Create **track.json** in *your-repo/modules/{id}* by the following four ways: 
-    - Write it by yourself
-    - Run `cli.py config --add-module <id update_to license changelog>`
-    - Run `cli.py config --module-manager`
-    - Run `cli.py github -u <username>`
+### Create track.json
+You can write it to `your-repo/modules/{id}/track.json` by yourself, or use
+```shell
+$ cli.py module --stdin << EOF
+{
+  "id": "zygisk_lsposed",
+  "update_to": "https://lsposed.github.io/LSPosed/release/zygisk.json",
+  "license": "GPL-3.0"
+}
+EOF
+```
+or
+```shell
+$ cli.py module --add id="zygisk_lsposed" update_to="https://lsposed.github.io/LSPosed/release/zygisk.json" license="GPL-3.0"
+```
+If you want to generate track.json from github repositories, use
+```shell
+$ cli.py github --user-name <github-user-name> --api-token=<github-api-token>
+```
+> About how to create an api token, you can refer to [Managing your personal access tokens](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens).
 
-4. Run `cli.py sync` to sync (or `cli.py sync -p` to sync and push)
+### Start Sync
+```shell
+$ cli.py sync 
+```
 
 ## cli.py
-``` 
-usage: cli.py [-h] [-d] [-r root folder] {sync,config,github} ...
+```
+$ cli.py --help
+usage: cli.py [-h] [-v] [-V] command ...
 
 Magisk Modules Repo Util
 
-options:
-  -h, --help            show this help message and exit
-  -d, --debug           debug mode, unknown errors will be thrown
-  -r root folder        default: ../magisk-modules-repo
-
-sub-command:
-  {sync,config,github}  sub-command help
-    sync                sync modules and push to repository
-    config              manage modules and repository metadata
-    github              generate track.json(s) from github
-```
-
-### cli.py sync
-- Sync modules and push to repository
-```
-usage: cli.py sync [-h] [-r] [-p] [-b branch] [-m max file size]
+positional arguments:
+  command
+    config            Modify config values of repository.
+    module            Magisk module tracks utility.
+    github            Generate track(s) from github.
+    sync              Sync modules and push to repository.
+    index             Generate modules.json from local.
 
 options:
-  -h, --help           show this help message and exit
-  -r, --remove-unused  remove unused modules
-  -f, --force-update   clear all versions and update modules
-
-git:
-  -p, --push           push to git repository
-  -b branch            branch for 'git push', default: main
-  -m max file size     default: 50.0
-```
-
-### cli.py config
-- Manage modules and repository metadata
-```
-usage: cli.py config [-h] [-c] [-m] [-a id update_to license changelog] [-r id [id ...]]
-
-options:
-  -h, --help            show this help message and exit
-  -c, --new-config      create a new config.json
-  -m, --module-manager  interactive module manager
-  -a id update_to license changelog, --add-module id update_to license changelog
-  -r id [id ...], --remove-module id [id ...]
-```
-
-### cli.py github
-- Generate track.json(s) from github
-- Dependencies: [PyGithub](https://github.com/PyGithub/PyGithub),  [GITHUB_TOKEN](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token)
-```
-usage: cli.py github [-h] [-k api token] [-m max file size] -u username
-
-options:
-  -h, --help        show this help message and exit
-  -k api token      defined in env as 'GITHUB_TOKEN', default: None
-  -m max file size  default: 50.0
-  -u username       username or organization name
+  -h, --help          Show this help message and exit.
+  -v, --version       Show util version and exit.
+  -V, --version-code  Show util version code and exit.
 ```
 
 ## config.json
@@ -192,7 +191,7 @@ your-repo
 │   └── ...
 │
 ├── log
-│   ├── sync_2023-03-18_16:59:45.038227.log
+│   ├── sync_2023-03-18.log
 │   ├── ...
 │   └── ...
 │
@@ -200,8 +199,8 @@ your-repo
 │   ├── zygisk_lsposed
 │   │   ├── track.json
 │   │   ├── update.json
-│   │   ├── v1.8.6_(6712)_6712.md
-│   │   ├── v1.8.6_(6712)_6712.zip
+│   │   ├── v1.8.6_6712.md
+│   │   ├── v1.8.6_6712.zip
 │   │   ├── ...
 │   │   └── ...
 │   │
@@ -227,8 +226,8 @@ your-repo
       "author": "LSPosed Developers",
       "description": "Another enhanced implementation of Xposed Framework. Supports Android 8.1 ~ 13. Requires Magisk 24.0+ and Zygisk enabled.",
       "states": {
-        "zipUrl": "{repo_url}modules/zygisk_lsposed/v1.8.6_(6712)_6712.zip",
-        "changelog": "{repo_url}modules/zygisk_lsposed/v1.8.6_(6712)_6712.md"
+        "zipUrl": "{repo_url}modules/zygisk_lsposed/v1.8.6_6712.zip",
+        "changelog": "{repo_url}modules/zygisk_lsposed/v1.8.6_6712.md"
       }
     }
   ]
@@ -245,8 +244,8 @@ your-repo
       "timestamp": 1679025505.129431,
       "version": "v1.8.6 (6712)",
       "versionCode": 6712,
-      "zipUrl": "{repo_url}modules/zygisk_lsposed/v1.8.6_(6712)_6712.zip",
-      "changelog": "{repo_url}modules/zygisk_lsposed/v1.8.6_(6712)_6712.md"
+      "zipUrl": "{repo_url}modules/zygisk_lsposed/v1.8.6_6712.zip",
+      "changelog": "{repo_url}modules/zygisk_lsposed/v1.8.6_6712.md"
     }
   ]
 }
