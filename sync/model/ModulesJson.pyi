@@ -16,6 +16,7 @@ class OnlineModule(AttrDict):
     description: str
     states: AttrDict # TODO: Rename to metadata in version 2.0
 
+    def __eq__(self, other) -> bool: ...
     @property
     def version_display(self) -> str: ...
     @property

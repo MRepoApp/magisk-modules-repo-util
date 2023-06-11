@@ -16,6 +16,7 @@ class Sync:
         self._pull = Pull(root_folder, config)
 
         self._is_updatable = False
+        self._is_full_update = True
         self._json_folder = Config.get_json_folder(root_folder)
         self._modules_folder = self._pull.modules_folder
         self._config = config
@@ -71,8 +72,8 @@ class Sync:
             if same_version:
                 self._log.w(f"_update_jsons: [{track.id}] -> {version_item.version_display} already exists")
                 return None
-        else:
-            update_json.versions.append(version_item)
+
+        update_json.versions.append(version_item)
 
         if len(update_json.versions) > self._config.max_num:
             old_item = update_json.versions.pop(0)
@@ -122,6 +123,8 @@ class Sync:
             return self.create_local_tracks()
 
     def update_by_ids(self, module_ids, force, **kwargs):
+        self._is_full_update = module_ids is None
+
         user_name = kwargs.get("user_name", None)
         if user_name is not None:
             if self._check_tracks(self._tracks, GithubTracks):
@@ -154,13 +157,19 @@ class Sync:
             return
 
         json_file = self._json_folder.joinpath(self.modules_json.filename())
+        if not self._is_full_update:
+            old_json = ModulesJson.load(json_file)
+            for online_module in old_json.modules:
+                if online_module not in self.modules_json.modules:
+                    self.modules_json.modules.append(online_module)
+
+        self.modules_json.modules.sort(key=lambda v: v.id)
         self.modules_json.write(json_file)
 
     def push_by_git(self, branch):
         if not self.is_updatable:
             return
 
-        GitUtils.set_cwd_folder(self._root_folder)
         if not GitUtils.is_enable():
             self._log.e("push_by_git: git command not found")
             return

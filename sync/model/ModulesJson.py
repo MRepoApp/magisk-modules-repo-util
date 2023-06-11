@@ -6,6 +6,12 @@ from .UpdateJson import VersionItem
 
 
 class OnlineModule(AttrDict):
+    def __eq__(self, other):
+        if isinstance(other, OnlineModule):
+            return self.id == other.id
+        else:
+            return False
+
     @property
     def version_display(self):
         if f"({self.versionCode})" in self.version:

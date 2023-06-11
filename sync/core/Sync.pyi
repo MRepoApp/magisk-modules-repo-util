@@ -13,6 +13,7 @@ class Sync:
     _pull: Pull
 
     _is_updatable: bool
+    _is_full_update: bool
     _json_folder: Path
     _modules_folder: Path
     _config: ConfigJson
