@@ -172,7 +172,10 @@ class Sync:
             modules=list()
         )
 
-        if self._check_tracks(self._tracks, LocalTracks) and len(self._tracks.tracks) == 0:
+        if not self._check_tracks(self._tracks, LocalTracks):
+            self.create_local_tracks()
+
+        if not self._is_full_update or len(self._tracks.tracks) == 0:
             self._tracks.get_tracks()
 
         for track in self._tracks.tracks:
