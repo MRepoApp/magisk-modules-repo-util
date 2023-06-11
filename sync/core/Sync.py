@@ -41,11 +41,26 @@ class Sync:
         if not self.is_updatable:
             self._is_updatable = True
 
+    def _check_ids(self, track, online_module):
+        if track.id == online_module.id:
+            return
+
+        msg = f"id is not same as in Module [{online_module.id}], it will be migrated"
+        self._log.w(f"_check_ids: [{track.id}] -> {msg}")
+
+        old_module_folder = self._modules_folder.joinpath(track.id)
+        new_module_folder = self._modules_folder.joinpath(online_module.id)
+        old_module_folder.rename(new_module_folder)
+
+        track.update(id=online_module.id)
+
     def _update_jsons(self, track, force):
-        module_folder = self._modules_folder.joinpath(track.id)
         online_module, timestamp = self._pull.from_track(track)
         if online_module is None:
             return None
+
+        self._check_ids(track, online_module)
+        module_folder = self._modules_folder.joinpath(track.id)
 
         update_json_file = module_folder.joinpath(UpdateJson.filename())
         track_json_file = module_folder.joinpath(TrackJson.filename())
