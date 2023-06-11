@@ -27,10 +27,9 @@ class Pull:
 
     @staticmethod
     def _copy_file(old, new, delete_old=True):
-        if not old.samefile(new):
-            shutil.copy(old, new)
-            if delete_old:
-                os.remove(old)
+        shutil.copy(old, new)
+        if delete_old:
+            os.remove(old)
 
     @staticmethod
     @Result.catching()
@@ -54,7 +53,7 @@ class Pull:
         changelog_file = None
         if changelog.startswith("http"):
             if changelog.endswith("md"):
-                changelog_file = self.modules_folder.joinpath(self._track.id, f"{self._track.id}.zip")
+                changelog_file = self.modules_folder.joinpath(self._track.id, f"{self._track.id}.md")
                 result = self._safe_download(changelog, changelog_file)
                 if result.is_failure:
                     msg = Log.get_msg(result.error)
@@ -85,7 +84,7 @@ class Pull:
             return None
 
         online_module = LocalModule.from_file(zip_file).to_OnlineModule()
-        module_folder = self.modules_folder.joinpath(online_module.id)
+        module_folder = self.modules_folder.joinpath(self._track.id)
 
         target_zip_file = module_folder.joinpath(online_module.zipfile_filename)
         if not target_zip_file.exists():
@@ -116,7 +115,7 @@ class Pull:
         update_json = MagiskUpdateJson.load(track.update_to)
         target_zip_file = self.modules_folder.joinpath(track.id, update_json.zipfile_filename)
         if target_zip_file.exists():
-            return None
+            return None, 0.0
 
         zip_file = self.modules_folder.joinpath(track.id, f"{track.id}.zip")
         last_modified = HttpUtils.download(update_json.zipUrl, zip_file)
@@ -159,7 +158,7 @@ class Pull:
 
     def from_track(self, track):
         if not isinstance(track.update_to, str):
-            return None
+            return None, 0.0
 
         if track.update_to.startswith("http"):
             if track.update_to.endswith("json"):
@@ -180,7 +179,7 @@ class Pull:
                 return self.from_zip(track)
 
         self._log.e(f"from_track: [{track.id}] -> unsupported update_to type [{track.update_to}]")
-        return None
+        return None, 0.0
 
     @classmethod
     def set_max_size(cls, value):
