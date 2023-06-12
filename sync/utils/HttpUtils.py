@@ -31,7 +31,7 @@ class HttpUtils:
         return obj
 
     @classmethod
-    def _is_html(cls, text):
+    def is_html(cls, text):
         pattern = r'<html\s*>|<head\s*>|<body\s*>|<!doctype\s*html\s*>'
         return re.search(pattern, text, re.IGNORECASE) is not None
 
@@ -52,7 +52,7 @@ class HttpUtils:
         else:
             os.remove(out)
 
-            if cls._is_html(response.text):
+            if cls.is_html(response.text):
                 msg = "404 not found"
             else:
                 msg = response.text

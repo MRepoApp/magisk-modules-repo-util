@@ -36,6 +36,14 @@ class Pull:
     def _safe_download(url, out):
         return HttpUtils.download(url, out)
 
+    def _check_changelog(self, module_id, file):
+        text = file.read_text()
+        if HttpUtils.is_html(text):
+            self._log.w(f"_check_changelog: [{module_id}] -> unsupported changelog type [the content is html text]")
+            return False
+        else:
+            return True
+
     def _get_file_url(self, module_id, file):
         module_folder = self.modules_folder.joinpath(module_id)
         url = f"{self._config.repo_url}{self.modules_folder.name}/{module_id}/{file.name}"
@@ -49,30 +57,25 @@ class Pull:
         if not isinstance(changelog, str) or changelog == "":
             return None
 
-        unsupported = False
-        changelog_file = None
         if changelog.startswith("http"):
-            if changelog.endswith("md"):
-                changelog_file = self.modules_folder.joinpath(module_id, f"{module_id}.md")
-                result = self._safe_download(changelog, changelog_file)
-                if result.is_failure:
-                    msg = Log.get_msg(result.error)
-                    self._log.e(f"_get_changelog_common: [{module_id}] -> {msg}")
-                    changelog_file = None
-            else:
-                unsupported = True
+            changelog_file = self.modules_folder.joinpath(module_id, f"{module_id}.md")
+            result = self._safe_download(changelog, changelog_file)
+            if result.is_failure:
+                msg = Log.get_msg(result.error)
+                self._log.e(f"_get_changelog_common: [{module_id}] -> {msg}")
+                changelog_file = None
         else:
-            if changelog.endswith("md") or changelog.endswith("log"):
-                changelog_file = self._local_folder.joinpath(changelog)
-                if not changelog_file.exists():
-                    msg = f"_get_changelog_common: [{module_id}] -> {changelog} is not in {self._local_folder}"
-                    self._log.i(msg)
-                    changelog_file = None
-            else:
-                unsupported = True
+            changelog_file = self._local_folder.joinpath(changelog)
+            if not changelog_file.exists():
+                msg = f"_get_changelog_common: [{module_id}] -> {changelog} is not in {self._local_folder}"
+                self._log.i(msg)
+                changelog_file = None
 
-        if unsupported:
-            self._log.w(f"_get_changelog_common: [{module_id}] -> unsupported changelog type [{changelog}]")
+        if changelog_file is not None:
+            is_target_type = self._check_changelog(module_id, changelog_file)
+            if not is_target_type:
+                os.remove(changelog_file)
+                changelog_file = None
 
         return changelog_file
 
