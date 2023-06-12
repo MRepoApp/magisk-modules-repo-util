@@ -79,6 +79,12 @@ class Pull:
     def _from_zip_common(self,  module_id, zip_file, changelog_file, *, delete_tmp=True):
         module_folder = self.modules_folder.joinpath(module_id)
 
+        def remove_file():
+            if delete_tmp:
+                os.remove(zip_file)
+            if delete_tmp and changelog_file is not None:
+                os.remove(changelog_file)
+
         zip_file_size = os.path.getsize(zip_file) / (1024 ** 2)
         if zip_file_size > self._max_size:
             module_folder.joinpath(LocalTracks.TAG_DISABLE).touch()
@@ -95,11 +101,9 @@ class Pull:
 
         result = get_online_module()
         if result.is_failure:
-            if delete_tmp:
-                os.remove(zip_file)
-
             msg = Log.get_msg(result.error)
             self._log.e(f"_from_zip_common: [{module_id}] -> {msg}")
+            remove_file()
             return None
         else:
             online_module: OnlineModule = result.value
@@ -110,8 +114,7 @@ class Pull:
         if not target_zip_file.exists() and len(target_files) == 0:
             self._copy_file(zip_file, target_zip_file, delete_tmp)
         else:
-            if delete_tmp:
-                os.remove(zip_file)
+            remove_file()
             return None
 
         target_changelog_file = module_folder.joinpath(online_module.changelog_filename)
