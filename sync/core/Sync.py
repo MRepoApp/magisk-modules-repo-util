@@ -200,6 +200,7 @@ class Sync:
                 continue
 
             online_module = LocalModule.from_file(zip_file).to_OnlineModule()
+            online_module.license = track.license
             online_module.states = AttrDict(
                 zipUrl=latest_item.zipUrl,
                 changelog=latest_item.changelog

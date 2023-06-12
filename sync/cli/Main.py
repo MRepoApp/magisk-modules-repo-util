@@ -221,8 +221,7 @@ class Main:
 
         sync = Sync(
             root_folder=root_folder,
-            config=config,
-            tracks=None
+            config=config
         )
         sync.create_local_tracks()
         sync.update_by_ids(
@@ -245,8 +244,7 @@ class Main:
 
         sync = Sync(
             root_folder=root_folder,
-            config=config,
-            tracks=None
+            config=config
         )
         sync.create_local_tracks()
 
