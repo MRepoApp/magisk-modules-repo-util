@@ -1,8 +1,8 @@
 from pathlib import Path
 from typing import Optional, Tuple
 
-from ..modifier import Result
 from ..model import TrackJson, ConfigJson, OnlineModule
+from ..modifier import Result
 from ..utils import Log
 
 

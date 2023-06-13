@@ -2,10 +2,10 @@ import os
 import shutil
 
 from .Config import Config
-from ..model import TrackJson, LocalModule, AttrDict, MagiskUpdateJson, OnlineModule
+from ..model import LocalModule, AttrDict, MagiskUpdateJson, OnlineModule
 from ..modifier import Result
-from ..utils import Log, HttpUtils, GitUtils
 from ..track import LocalTracks
+from ..utils import Log, HttpUtils, GitUtils
 
 
 class Pull:
