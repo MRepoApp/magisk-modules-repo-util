@@ -15,7 +15,6 @@ class Sync:
         self._root_folder = root_folder
         self._pull = Pull(root_folder, config)
 
-        self._is_updatable = False
         self._is_full_update = True
         self._json_folder = Config.get_json_folder(root_folder)
         self._modules_folder = self._pull.modules_folder
@@ -30,10 +29,6 @@ class Sync:
 
     def __del__(self):
         self._log.d("__del__")
-
-    def _set_updatable(self):
-        if not self.is_updatable:
-            self._is_updatable = True
 
     def _check_ids(self, track, online_module):
         if track.id == online_module.id:
@@ -163,7 +158,6 @@ class Sync:
             if online_module is None:
                 continue
 
-            self._set_updatable()
             self._log.i(f"update_by_ids: [{track.id}] -> update to {online_module.version_display}")
 
     def update_all(self, force, **kwargs):
@@ -215,9 +209,6 @@ class Sync:
         return modules_json
 
     def push_by_git(self, branch):
-        if not self.is_updatable:
-            return
-
         json_file = self._json_folder.joinpath(ModulesJson.filename())
         if not json_file.exists():
             self._log.e(f"push_by_git: {json_file.name} is not in {self._json_folder}")
@@ -233,7 +224,3 @@ class Sync:
         subprocess.run(["git", "add", "."], cwd=self._root_folder.as_posix())
         subprocess.run(["git", "commit", "-m", msg], cwd=self._root_folder.as_posix())
         subprocess.run(["git", "push", "-u", "origin", branch], cwd=self._root_folder.as_posix())
-
-    @property
-    def is_updatable(self):
-        return self._is_updatable
