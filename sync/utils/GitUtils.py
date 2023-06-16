@@ -3,8 +3,8 @@ import shutil
 import subprocess
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 from subprocess import CalledProcessError
+from typing import Optional
 
 from dateutil.parser import parse
 from requests import HTTPError

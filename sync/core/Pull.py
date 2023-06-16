@@ -2,10 +2,10 @@ import os
 import shutil
 
 from .Config import Config
-from ..model import TrackJson, LocalModule, AttrDict, MagiskUpdateJson, OnlineModule
+from ..model import LocalModule, AttrDict, MagiskUpdateJson, OnlineModule
 from ..modifier import Result
-from ..utils import Log, HttpUtils, GitUtils
 from ..track import LocalTracks
+from ..utils import Log, HttpUtils, GitUtils
 
 
 class Pull:
@@ -36,6 +36,14 @@ class Pull:
     def _safe_download(url, out):
         return HttpUtils.download(url, out)
 
+    def _check_changelog(self, module_id, file):
+        text = file.read_text()
+        if HttpUtils.is_html(text):
+            self._log.w(f"_check_changelog: [{module_id}] -> unsupported changelog type [the content is html text]")
+            return False
+        else:
+            return True
+
     def _get_file_url(self, module_id, file):
         module_folder = self.modules_folder.joinpath(module_id)
         url = f"{self._config.repo_url}{self.modules_folder.name}/{module_id}/{file.name}"
@@ -49,35 +57,36 @@ class Pull:
         if not isinstance(changelog, str) or changelog == "":
             return None
 
-        unsupported = False
-        changelog_file = None
         if changelog.startswith("http"):
-            if changelog.endswith("md"):
-                changelog_file = self.modules_folder.joinpath(module_id, f"{module_id}.md")
-                result = self._safe_download(changelog, changelog_file)
-                if result.is_failure:
-                    msg = Log.get_msg(result.error)
-                    self._log.e(f"_get_changelog_common: [{module_id}] -> {msg}")
-                    changelog_file = None
-            else:
-                unsupported = True
+            changelog_file = self.modules_folder.joinpath(module_id, f"{module_id}.md")
+            result = self._safe_download(changelog, changelog_file)
+            if result.is_failure:
+                msg = Log.get_msg(result.error)
+                self._log.e(f"_get_changelog_common: [{module_id}] -> {msg}")
+                changelog_file = None
         else:
-            if changelog.endswith("md") or changelog.endswith("log"):
-                changelog_file = self._local_folder.joinpath(changelog)
-                if not changelog_file.exists():
-                    msg = f"_get_changelog_common: [{module_id}] -> {changelog} is not in {self._local_folder}"
-                    self._log.i(msg)
-                    changelog_file = None
-            else:
-                unsupported = True
+            changelog_file = self._local_folder.joinpath(changelog)
+            if not changelog_file.exists():
+                msg = f"_get_changelog_common: [{module_id}] -> {changelog} is not in {self._local_folder}"
+                self._log.i(msg)
+                changelog_file = None
 
-        if unsupported:
-            self._log.w(f"_get_changelog_common: [{module_id}] -> unsupported changelog type [{changelog}]")
+        if changelog_file is not None:
+            is_target_type = self._check_changelog(module_id, changelog_file)
+            if not is_target_type:
+                os.remove(changelog_file)
+                changelog_file = None
 
         return changelog_file
 
     def _from_zip_common(self,  module_id, zip_file, changelog_file, *, delete_tmp=True):
         module_folder = self.modules_folder.joinpath(module_id)
+
+        def remove_file():
+            if delete_tmp:
+                os.remove(zip_file)
+            if delete_tmp and changelog_file is not None:
+                os.remove(changelog_file)
 
         zip_file_size = os.path.getsize(zip_file) / (1024 ** 2)
         if zip_file_size > self._max_size:
@@ -95,11 +104,9 @@ class Pull:
 
         result = get_online_module()
         if result.is_failure:
-            if delete_tmp:
-                os.remove(zip_file)
-
             msg = Log.get_msg(result.error)
             self._log.e(f"_from_zip_common: [{module_id}] -> {msg}")
+            remove_file()
             return None
         else:
             online_module: OnlineModule = result.value
@@ -110,8 +117,7 @@ class Pull:
         if not target_zip_file.exists() and len(target_files) == 0:
             self._copy_file(zip_file, target_zip_file, delete_tmp)
         else:
-            if delete_tmp:
-                os.remove(zip_file)
+            remove_file()
             return None
 
         target_changelog_file = module_folder.joinpath(online_module.changelog_filename)

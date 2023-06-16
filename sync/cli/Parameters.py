@@ -1,4 +1,3 @@
-from argparse import ArgumentParser as ArgumentParserBase
 # noinspection PyUnresolvedReferences,PyProtectedMember
 from argparse import (
     Action,
@@ -7,6 +6,7 @@ from argparse import (
     _HelpAction,
     _StoreAction
 )
+from argparse import ArgumentParser as ArgumentParserBase
 from pathlib import Path
 from typing import Sequence, Optional
 

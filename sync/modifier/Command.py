@@ -1,6 +1,7 @@
 import subprocess
 from pathlib import Path
-from typing import Callable, Any, Optional
+from typing import Callable, Optional
+
 from .Result import Result
 
 

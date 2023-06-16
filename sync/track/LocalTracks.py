@@ -73,8 +73,8 @@ class LocalTracks(BaseTracks):
             track.write(json_file)
         elif cover:
             old = TrackJson.load(json_file)
-            track.added = old.added
-            track.write(json_file)
+            old.update(track)
+            old.write(json_file)
 
     @classmethod
     def del_track(cls, module_id, modules_folder):
