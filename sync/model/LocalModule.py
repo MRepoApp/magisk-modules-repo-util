@@ -21,6 +21,8 @@ class LocalModule(AttrDict):
     def from_file(cls, file):
         zip_file = ZipFile(file, "r")
         try:
+            zip_file.read("META-INF/com/google/android/update-binary")
+            zip_file.read("META-INF/com/google/android/updater-script")
             props = zip_file.read("module.prop")
         except KeyError:
             os.remove(file)
