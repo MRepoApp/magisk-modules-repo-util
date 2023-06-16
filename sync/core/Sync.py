@@ -7,6 +7,7 @@ from .Pull import Pull
 from ..model import ModulesJson, UpdateJson, TrackJson, LocalModule, AttrDict
 from ..track import BaseTracks, LocalTracks, GithubTracks
 from ..utils import Log, GitUtils
+from ..__version__ import version, versionCode
 
 
 class Sync:
@@ -170,6 +171,10 @@ class Sync:
         modules_json = ModulesJson(
             name=self._config.repo_name,
             timestamp=timestamp,
+            metadata=AttrDict(
+                version=version,
+                versionCode=versionCode
+            ),
             modules=list()
         )
 
