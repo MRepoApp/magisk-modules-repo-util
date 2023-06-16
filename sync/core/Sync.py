@@ -31,18 +31,19 @@ class Sync:
     def __del__(self):
         self._log.d("__del__")
 
-    def _check_ids(self, track, online_module):
-        if track.id == online_module.id:
-            return
+    def _check_ids(self, track, target_id):
+        if track.id == target_id:
+            return True
 
-        msg = f"id is not same as in Module [{online_module.id}], it will be migrated"
+        msg = f"id is not same as in Module [{target_id}], it will be migrated"
         self._log.w(f"_check_ids: [{track.id}] -> {msg}")
 
         old_module_folder = self._modules_folder.joinpath(track.id)
-        new_module_folder = self._modules_folder.joinpath(online_module.id)
+        new_module_folder = self._modules_folder.joinpath(target_id)
         old_module_folder.rename(new_module_folder)
 
-        track.update(id=online_module.id)
+        track.update(id=target_id)
+        return False
 
     def _update_jsons(self, track, force):
         module_folder = self._modules_folder.joinpath(track.id)
@@ -56,7 +57,7 @@ class Sync:
         if online_module is None:
             return None
 
-        self._check_ids(track, online_module)
+        self._check_ids(track, online_module.id)
         module_folder = self._modules_folder.joinpath(track.id)
 
         update_json_file = module_folder.joinpath(UpdateJson.filename())
@@ -199,6 +200,10 @@ class Sync:
                 continue
 
             online_module = LocalModule.from_file(zip_file).to_OnlineModule()
+            if not self._check_ids(track, online_module.id):
+                track_json_file = self._modules_folder.joinpath(track.id, TrackJson.filename())
+                track.write(track_json_file)
+
             online_module.license = track.license
             online_module.states = AttrDict(
                 zipUrl=latest_item.zipUrl,
