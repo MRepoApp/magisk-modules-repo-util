@@ -1,16 +1,21 @@
 import os
-import shutil
 import subprocess
 from datetime import datetime
 
 from .Config import Config
 from .Pull import Pull
-from ..model import ModulesJson, UpdateJson, TrackJson, LocalModule, AttrDict, OnlineModule
+from ..__version__ import version, versionCode
+from ..model import (
+    ModulesJson,
+    UpdateJson,
+    TrackJson,
+    LocalModule,
+    AttrDict,
+    OnlineModule
+)
 from ..modifier import Result
-from ..error import MagiskModuleError
 from ..track import BaseTracks, LocalTracks, GithubTracks
 from ..utils import Log, GitUtils
-from ..__version__ import version, versionCode
 
 
 class Sync:

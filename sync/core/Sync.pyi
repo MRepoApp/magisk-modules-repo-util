@@ -2,7 +2,12 @@ from pathlib import Path
 from typing import Optional, List
 
 from .Pull import Pull
-from ..model import ModulesJson, ConfigJson, TrackJson, OnlineModule
+from ..model import (
+    ModulesJson,
+    ConfigJson,
+    TrackJson,
+    OnlineModule
+)
 from ..track import BaseTracks
 from ..utils import Log
 
