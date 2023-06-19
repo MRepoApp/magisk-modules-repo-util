@@ -1,5 +1,6 @@
 from .AttrDict import AttrDict
 from .JsonIO import JsonIO
+from ..error import ConfigError
 
 
 # noinspection PyAttributeOutsideInit
@@ -15,10 +16,16 @@ class ConfigJson(AttrDict, JsonIO):
         try:
             self.max_num = int(self.max_num)
         except ValueError:
-            pass
+            msg = f"unsupported type [{type(self.max_num).__name__}], max_num must be defined as int"
+            raise ConfigError(msg)
 
         if isinstance(self.show_log, str):
             self.show_log = self.show_log.lower() == "true"
+        elif isinstance(self.show_log, bool):
+            pass
+        else:
+            msg = f"unsupported type [{type(self.show_log).__name__}], show_log must be defined as bool"
+            raise ConfigError(msg)
 
     @classmethod
     def load(cls, file):
