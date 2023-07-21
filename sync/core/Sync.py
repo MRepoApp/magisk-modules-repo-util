@@ -4,10 +4,18 @@ from datetime import datetime
 
 from .Config import Config
 from .Pull import Pull
-from ..model import ModulesJson, UpdateJson, TrackJson, LocalModule, AttrDict
+from ..__version__ import version, versionCode
+from ..model import (
+    ModulesJson,
+    UpdateJson,
+    TrackJson,
+    LocalModule,
+    AttrDict,
+    OnlineModule
+)
+from ..modifier import Result
 from ..track import BaseTracks, LocalTracks, GithubTracks
 from ..utils import Log, GitUtils
-from ..__version__ import version, versionCode
 
 
 class Sync:
@@ -31,18 +39,24 @@ class Sync:
     def __del__(self):
         self._log.d("__del__")
 
-    def _check_ids(self, track, online_module):
-        if track.id == online_module.id:
-            return
+    def _check_ids(self, track, target_id):
+        if track.id == target_id:
+            return True
 
-        msg = f"id is not same as in Module [{online_module.id}], it will be migrated"
+        msg = f"id is not same as in module.prop[{target_id}], it will be migrated"
         self._log.w(f"_check_ids: [{track.id}] -> {msg}")
 
         old_module_folder = self._modules_folder.joinpath(track.id)
-        new_module_folder = self._modules_folder.joinpath(online_module.id)
-        old_module_folder.rename(new_module_folder)
+        new_module_folder = self._modules_folder.joinpath(target_id)
 
-        track.update(id=online_module.id)
+        if new_module_folder.exists():
+            msg = f"{target_id} already exists, remove the old directly without migration"
+            self._log.w(f"_check_ids: [{track.id}] -> {msg}")
+            return True
+
+        old_module_folder.rename(new_module_folder)
+        track.update(id=target_id)
+        return False
 
     def _update_jsons(self, track, force):
         module_folder = self._modules_folder.joinpath(track.id)
@@ -56,7 +70,7 @@ class Sync:
         if online_module is None:
             return None
 
-        self._check_ids(track, online_module)
+        self._check_ids(track, online_module.id)
         module_folder = self._modules_folder.joinpath(track.id)
 
         update_json_file = module_folder.joinpath(UpdateJson.filename())
@@ -198,7 +212,22 @@ class Sync:
             if not zip_file.exists():
                 continue
 
-            online_module = LocalModule.from_file(zip_file).to_OnlineModule()
+            @Result.catching()
+            def get_online_module():
+                return LocalModule.from_file(zip_file).to_OnlineModule()
+
+            result = get_online_module()
+            if result.is_failure:
+                msg = Log.get_msg(result.error)
+                self._log.e(f"create_modules_json: [{track.id}] -> {msg}")
+                continue
+            else:
+                online_module: OnlineModule = result.value
+
+            if not self._check_ids(track, online_module.id):
+                track_json_file = module_folder.joinpath(TrackJson.filename())
+                track.write(track_json_file)
+
             online_module.license = track.license
             online_module.states = AttrDict(
                 zipUrl=latest_item.zipUrl,

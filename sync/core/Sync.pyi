@@ -2,7 +2,12 @@ from pathlib import Path
 from typing import Optional, List
 
 from .Pull import Pull
-from ..model import ModulesJson, ConfigJson, TrackJson, OnlineModule
+from ..model import (
+    ModulesJson,
+    ConfigJson,
+    TrackJson,
+    OnlineModule
+)
 from ..track import BaseTracks
 from ..utils import Log
 
@@ -19,7 +24,7 @@ class Sync:
     _tracks: BaseTracks
 
     def  __init__(self, root_folder: Path, config: ConfigJson, tracks: Optional[BaseTracks] = ...): ...
-    def _check_ids(self, track: TrackJson, online_module: OnlineModule): ...
+    def _check_ids(self, track: TrackJson, target_id: str) -> bool: ...
     def _update_jsons(self, track: TrackJson, force: bool) -> Optional[OnlineModule]: ...
     def _check_tracks(self, obj: BaseTracks, cls: type): ...
     def create_github_tracks(self, api_token: str) -> BaseTracks: ...

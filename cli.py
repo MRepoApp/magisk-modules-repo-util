@@ -6,12 +6,12 @@ from pathlib import Path
 from sync.cli import Main
 
 if __name__ == "__main__":
-    root_folder = Path(__file__).resolve().parent.parent
+    cwd_folder = Path(__name__).resolve().parent
 
     try:
         github_token = os.environ["GITHUB_TOKEN"]
     except KeyError:
         github_token = None
 
-    Main.set_default_args(root_folder=root_folder, github_token=github_token)
+    Main.set_default_args(root_folder=cwd_folder, github_token=github_token)
     sys.exit(Main.exec())

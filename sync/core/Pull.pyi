@@ -1,7 +1,11 @@
 from pathlib import Path
 from typing import Optional, Tuple
 
-from ..model import TrackJson, ConfigJson, OnlineModule
+from ..model import (
+    TrackJson,
+    ConfigJson,
+    OnlineModule
+)
 from ..modifier import Result
 from ..utils import Log
 
