@@ -5,17 +5,22 @@
 
 ## Getting Started
 ### Initialize repository
-You should create a folder, or a git repository and clone it, for example `your-repo`, and clone util by running
+You should create a folder, or a git repository and clone it, for example `your-repo`, and clone util
 ```shell
 $ git clone -b main https://github.com/ya0211/magisk-modules-repo-util.git util
 ```
-or add it as a submodule of the git repository, use
+or add it as a submodule of the git repository
 ```shell
 $ git submodule add https://github.com/ya0211/magisk-modules-repo-util.git util
 ```
 
+### Install dependencies
+```shell
+$ python3 -m pip install -r requirements.txt
+```
+
 ### Create config.json
-You can write it to `your-repo/config/config.json` by yourself, or use
+You can write it to `your-repo/config/config.json` by yourself, or
 ```shell
 $ cli.py config --stdin << EOF
 {
@@ -33,7 +38,7 @@ $ cli.py config --write repo_name="Your Magisk Repo" repo_url="https://you.githu
 ```
 
 ### Create track.json
-You can write it to `your-repo/modules/{id}/track.json` by yourself, or use
+You can write it to `your-repo/modules/{id}/track.json` by yourself, or
 ```shell
 $ cli.py module --stdin << EOF
 {
@@ -47,13 +52,13 @@ or
 ```shell
 $ cli.py module --add id="zygisk_lsposed" update_to="https://lsposed.github.io/LSPosed/release/zygisk.json" license="GPL-3.0"
 ```
-If you want to generate track.json from github repositories, use
+If you want to generate track.json from repositories on github
 ```shell
 $ cli.py github --user-name <github-user-name> --api-token=<github-api-token>
 ```
-> About how to create an api token, you can refer to [Managing your personal access tokens](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens).
+> **_TIP_**: [click here to create a new api token](https://github.com/settings/personal-access-tokens/new).
 
-### Start Sync
+### Start sync
 ```shell
 $ cli.py sync 
 ```
