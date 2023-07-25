@@ -1,0 +1,128 @@
+from datetime import datetime
+
+from .Config import Config
+from .Sync import Sync
+from ..__version__ import version, versionCode
+from ..model import (
+    AttrDict,
+    ModulesJson,
+    UpdateJson,
+    LocalModule,
+    TrackJson
+)
+from ..modifier import Result
+from ..track import LocalTracks
+from ..utils import Log
+
+
+class Index:
+    version_codes = [0, 1]
+    latest_version_code = version_codes[-1]
+
+    def __init__(self, root_folder, config):
+        self._log = Log("Index", config.log_dir, config.show_log)
+        self._root_folder = root_folder
+
+        self._json_folder = Config.get_json_folder(root_folder)
+        self._modules_folder = Config.get_modules_folder(root_folder)
+        self._config = config
+
+        self._tracks = LocalTracks(
+            modules_folder=self._modules_folder,
+            config=self._config
+        )
+
+        self.json_file = self._json_folder.joinpath(ModulesJson.filename())
+
+        # noinspection PyTypeChecker
+        self.modules_json = None
+
+    def _check_ids(self, track, target_id):
+        func = getattr(Sync, "_check_ids")
+        return func(self, track, target_id)
+
+    def _add_modules_json_0(self, track, update_json, online_module):
+        if self.modules_json is None:
+            self.modules_json = ModulesJson(
+                name=self._config.repo_name,
+                timestamp=datetime.now().timestamp(),
+                metadata=AttrDict(
+                    version=version,
+                    versionCode=versionCode
+                ),
+                modules=list()
+            )
+
+        latest_item = update_json.versions[-1]
+
+        online_module.license = track.license
+        online_module.states = AttrDict(
+            zipUrl=latest_item.zipUrl,
+            changelog=latest_item.changelog
+        )
+
+        self.modules_json.modules.append(online_module)
+
+    def _add_modules_json_1(self, track, update_json, online_module):
+        pass
+
+    def _add_modules_json(self, track, update_json, online_module, version_code):
+        if version_code not in self.version_codes:
+            raise RuntimeError(f"unsupported version code {version_code}")
+
+        func = getattr(self, f"_add_modules_json_{version_code}")
+        func(
+            track=track,
+            update_json=update_json,
+            online_module=online_module,
+        )
+
+    def get_online_module(self, module_id, zip_file):
+        @Result.catching()
+        def get_online_module():
+            return LocalModule.from_file(zip_file).to_OnlineModule()
+
+        result = get_online_module()
+        if result.is_failure:
+            msg = Log.get_msg(result.error)
+            self._log.e(f"get_online_module: [{module_id}] -> {msg}")
+            return None
+
+        else:
+            return result.value
+
+    def __call__(self, version_code, to_file):
+        for track in self._tracks.get_tracks():
+            module_folder = self._modules_folder.joinpath(track.id)
+            update_json_file = module_folder.joinpath(UpdateJson.filename())
+            if not update_json_file.exists():
+                continue
+
+            update_json = UpdateJson.load(update_json_file)
+            latest_item = update_json.versions[-1]
+
+            file_name = latest_item.zipUrl.split("/")[-1]
+            zip_file = module_folder.joinpath(file_name)
+            if not zip_file.exists():
+                continue
+
+            online_module = self.get_online_module(track.id, zip_file)
+            if online_module is None:
+                continue
+
+            if not self._check_ids(track, online_module.id):
+                track_json_file = module_folder.joinpath(TrackJson.filename())
+                track.write(track_json_file)
+
+            self._add_modules_json(
+                track=track,
+                update_json=update_json,
+                online_module=online_module,
+                version_code=version_code
+            )
+
+        self.modules_json.modules.sort(key=lambda v: v.id)
+        if to_file:
+            self.modules_json.write(self.json_file)
+
+        return self.modules_json

@@ -3,7 +3,6 @@ from typing import Optional, List
 
 from .Pull import Pull
 from ..model import (
-    ModulesJson,
     ConfigJson,
     TrackJson,
     OnlineModule
@@ -17,7 +16,6 @@ class Sync:
     _root_folder: Path
     _pull: Pull
 
-    _is_full_update: bool
     _json_folder: Path
     _modules_folder: Path
     _config: ConfigJson
@@ -32,5 +30,4 @@ class Sync:
     def create_tracks(self, **kwargs) -> BaseTracks: ...
     def update_by_ids(self, module_ids: Optional[List[str]], force: bool, **kwargs): ...
     def update_all(self, force: bool, **kwargs): ...
-    def create_modules_json(self, to_file: bool) -> ModulesJson: ...
     def push_by_git(self, branch: str): ...

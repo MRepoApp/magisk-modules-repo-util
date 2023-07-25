@@ -4,16 +4,11 @@ from datetime import datetime
 
 from .Config import Config
 from .Pull import Pull
-from ..__version__ import version, versionCode
 from ..model import (
     ModulesJson,
     UpdateJson,
-    TrackJson,
-    LocalModule,
-    AttrDict,
-    OnlineModule
+    TrackJson
 )
-from ..modifier import Result
 from ..track import BaseTracks, LocalTracks, GithubTracks
 from ..utils import Log, GitUtils
 
@@ -24,7 +19,6 @@ class Sync:
         self._root_folder = root_folder
         self._pull = Pull(root_folder, config)
 
-        self._is_full_update = True
         self._json_folder = Config.get_json_folder(root_folder)
         self._modules_folder = self._pull.modules_folder
         self._config = config
@@ -120,7 +114,7 @@ class Sync:
 
     def _check_tracks(self, obj, cls):
         if type(obj) is BaseTracks:
-            msg = "Tracks interface has not been created, please use 'create_tracks' to create one"
+            msg = "tracks interface has not been created, please use 'create_tracks' to create one"
             self._log.e(f"_check_tracks: {msg}")
             raise RuntimeError(msg)
 
@@ -151,8 +145,6 @@ class Sync:
             return self.create_local_tracks()
 
     def update_by_ids(self, module_ids, force, **kwargs):
-        self._is_full_update = module_ids is None
-
         user_name = kwargs.get("user_name", None)
         if user_name is not None:
             if self._check_tracks(self._tracks, GithubTracks):
@@ -177,70 +169,6 @@ class Sync:
 
     def update_all(self, force, **kwargs):
         self.update_by_ids(None, force, **kwargs)
-
-    def create_modules_json(self, to_file):
-        timestamp = datetime.now().timestamp()
-        json_file = self._json_folder.joinpath(ModulesJson.filename())
-
-        modules_json = ModulesJson(
-            name=self._config.repo_name,
-            timestamp=timestamp,
-            metadata=AttrDict(
-                version=version,
-                versionCode=versionCode
-            ),
-            modules=list()
-        )
-
-        if not self._check_tracks(self._tracks, LocalTracks):
-            self.create_local_tracks()
-
-        if not self._is_full_update or len(self._tracks.tracks) == 0:
-            self._tracks.get_tracks()
-
-        for track in self._tracks.tracks:
-            module_folder = self._modules_folder.joinpath(track.id)
-            update_json_file = module_folder.joinpath(UpdateJson.filename())
-            if not update_json_file.exists():
-                continue
-
-            update_json = UpdateJson.load(update_json_file)
-            latest_item = update_json.versions[-1]
-
-            file_name = latest_item.zipUrl.split("/")[-1]
-            zip_file = module_folder.joinpath(file_name)
-            if not zip_file.exists():
-                continue
-
-            @Result.catching()
-            def get_online_module():
-                return LocalModule.from_file(zip_file).to_OnlineModule()
-
-            result = get_online_module()
-            if result.is_failure:
-                msg = Log.get_msg(result.error)
-                self._log.e(f"create_modules_json: [{track.id}] -> {msg}")
-                continue
-            else:
-                online_module: OnlineModule = result.value
-
-            if not self._check_ids(track, online_module.id):
-                track_json_file = module_folder.joinpath(TrackJson.filename())
-                track.write(track_json_file)
-
-            online_module.license = track.license
-            online_module.states = AttrDict(
-                zipUrl=latest_item.zipUrl,
-                changelog=latest_item.changelog
-            )
-
-            modules_json.modules.append(online_module)
-
-        modules_json.modules.sort(key=lambda v: v.id)
-        if to_file:
-            modules_json.write(json_file)
-
-        return modules_json
 
     def push_by_git(self, branch):
         json_file = self._json_folder.joinpath(ModulesJson.filename())

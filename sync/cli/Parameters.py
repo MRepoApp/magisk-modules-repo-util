@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Sequence, Optional
 
 from ..__version__ import version, versionCode
+from ..core import Index
 from ..model import AttrDict
 from ..utils import GitUtils
 
@@ -80,7 +81,7 @@ class Parameters:
             metavar="KEY=VALUE",
             action=AttrDictAction,
             nargs="+",
-            help="Write value(s) to config.json"
+            help="Write value(s) to config.json."
         )
         p.add_argument(
             "--stdin",
@@ -210,6 +211,14 @@ class Parameters:
             action="store_true",
             help="Update modules to the latest version."
         )
+        p.add_argument(
+            "--code",
+            dest="version_code",
+            metavar="VERSION_CODE",
+            type=int,
+            default=Index.latest_version_code,
+            help="Version code of the modules.json, default: {0}.".format('%(default)s')
+        )
 
         cls.add_parser_git(p)
         env = cls.add_parser_env(p, add_quiet=True)
@@ -234,7 +243,7 @@ class Parameters:
             "-f",
             "--force-update",
             action="store_true",
-            help="Remove all versions and update modules"
+            help="Remove all versions and update modules."
         )
         p.add_argument(
             "-u",
@@ -244,6 +253,14 @@ class Parameters:
             nargs="+",
             default=None,
             help="Update modules to the latest version. When this parameter is not set, the default is all."
+        )
+        p.add_argument(
+            "--code",
+            dest="version_code",
+            metavar="VERSION_CODE",
+            type=int,
+            default=Index.latest_version_code,
+            help="Version code of the modules.json, default: {0}.".format('%(default)s')
         )
 
         cls.add_parser_git(p)
@@ -257,6 +274,14 @@ class Parameters:
         )
 
         p.add_argument(
+            "--code",
+            dest="version_code",
+            metavar="VERSION_CODE",
+            type=int,
+            default=Index.latest_version_code,
+            help="Version code of the modules.json, default: {0}.".format('%(default)s')
+        )
+        p.add_argument(
             "--stdout",
             action="store_true",
             help="Show the modules.json piped through stdout."
@@ -267,6 +292,7 @@ class Parameters:
     @classmethod
     def add_parser_env(cls, p, add_quiet=False):
         env = p.add_argument_group("env")
+
         env.add_argument(
             "-p",
             "--prefix",
@@ -274,7 +300,7 @@ class Parameters:
             metavar="ROOT_FOLDER",
             type=str,
             default=cls._root_folder.as_posix(),
-            help="Full path to repository location, default: {0}.".format('%(default)s')
+            help="Full path to repository location, current: {0}.".format('%(default)s')
         )
         if add_quiet:
             cls.add_parser_quiet(env)
@@ -284,6 +310,7 @@ class Parameters:
     @classmethod
     def add_parser_git(cls, p):
         git = p.add_argument_group("git")
+
         git.add_argument(
             "--push",
             action="store_true",
@@ -295,7 +322,7 @@ class Parameters:
             metavar="GIT_BRANCH",
             type=str,
             default=get_current_branch(cls._root_folder),
-            help="Define the branch to push, default: {0}.".format('%(default)s')
+            help="Define the branch to push, current: {0}.".format('%(default)s')
         )
         git.add_argument(
             "--max-size",

@@ -6,7 +6,7 @@ from pathlib import Path
 
 from .Parameters import Parameters
 from .SafeArgs import SafeArgs
-from ..core import Config, Pull, Sync
+from ..core import Config, Index, Pull, Sync
 from ..model import ConfigJson, TrackJson
 from ..track import LocalTracks, GithubTracks
 from ..utils import Log
@@ -179,6 +179,7 @@ class Main:
         Pull.set_max_size(cls._args.max_size)
 
         config = Config(root_folder)
+
         tracks = GithubTracks(
             api_token=cls._args.api_token,
             modules_folder=modules_folder,
@@ -197,7 +198,9 @@ class Main:
                 user_name=cls._args.user_name,
                 cover=cls._args.cover
             )
-            sync.create_modules_json(True)
+
+            index = Index(root_folder=root_folder, config=config)
+            index(version_code=cls._args.version_code, to_file=True)
 
             if cls._args.push:
                 sync.push_by_git(cls._args.git_branch)
@@ -228,7 +231,9 @@ class Main:
             module_ids=cls._args.module_ids,
             force=cls._args.force_update
         )
-        sync.create_modules_json(True)
+
+        index = Index(root_folder=root_folder, config=config)
+        index(version_code=cls._args.version_code, to_file=True)
 
         if cls._args.push:
             sync.push_by_git(cls._args.git_branch)
@@ -242,14 +247,10 @@ class Main:
 
         config = Config(root_folder)
 
-        sync = Sync(
-            root_folder=root_folder,
-            config=config
-        )
-        sync.create_local_tracks()
+        index = Index(root_folder=root_folder, config=config)
+        index(version_code=cls._args.version_code, to_file=not cls._args.stdout)
 
-        modules_json = sync.create_modules_json(not cls._args.stdout)
         if cls._args.stdout:
-            json.dump(modules_json, fp=sys.stdout, indent=2)
+            json.dump(index.modules_json, fp=sys.stdout, indent=2)
 
         return cls.CODE_SUCCESS
