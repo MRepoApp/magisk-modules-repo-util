@@ -158,15 +158,29 @@ class Main:
         return cls.CODE_SUCCESS
 
     @classmethod
+    def _format_text(cls, text: str, _len: int, left: bool = True):
+        if len(text) < _len:
+            if left:
+                return text.ljust(_len)
+            else:
+                return text.rjust(_len)
+        else:
+            return text[:_len - 3] + "..."
+
+    @classmethod
     def _print_modules_list(cls, modules_folder: Path, tracks: list):
         print("# tracks in repository at {}:".format(modules_folder))
         print("#")
         print("# {:<28} {:<15} {:<15} {}".format(
-            "ID", "Add Time", "Last Update", "Versions"
+            "ID", "Add Date", "Last Update", "Versions"
         ))
 
         for track in tracks:
-            print("{:<30}".format(track.id), end=" ")
+            if track.versions is None:
+                track.last_update = 0
+                track.versions = 0
+
+            print("{:<30}".format(cls._format_text(track.id, 30, left=True)), end=" ")
             print("{:<15}".format(str(datetime.fromtimestamp(track.added).date())), end=" ")
             print("{:<15}".format(str(datetime.fromtimestamp(track.last_update).date())), end=" ")
             print("{:^10}".format(track.versions))
