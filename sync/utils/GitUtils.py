@@ -34,13 +34,15 @@ class GitUtils:
     @classmethod
     def current_branch(cls) -> Optional[str]:
         result = cls.branch_all()
-        if result is not None:
-            for out in result.splitlines():
-                if out.startswith("*"):
-                    out = out.strip().split(maxsplit=1)
-                    return out[-1]
+        if result is None:
+            return None
 
-        return None
+        for out in result.splitlines():
+            if not out.startswith("*"):
+                continue
+
+            out = out.strip().split(maxsplit=1)
+            return out[-1]
 
     @classmethod
     @Command.exec()
