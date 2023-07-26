@@ -95,7 +95,11 @@ class Sync:
 
         update_json.versions.append(version_item)
 
-        if len(update_json.versions) > self._config.max_num:
+        max_num = self._config.max_num
+        if track.max_num is not None:
+            max_num = track.max_num
+
+        if len(update_json.versions) > max_num:
             old_item = update_json.versions.pop(0)
             for file in module_folder.glob(f"*{old_item.versionCode}*"):
                 if not file.is_file():
