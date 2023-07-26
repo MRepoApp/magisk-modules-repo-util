@@ -9,35 +9,38 @@ from typing import Optional
 from dateutil.parser import parse
 from requests import HTTPError
 
-from ..modifier import Command
-
 
 class GitUtils:
-    @classmethod
-    def set_cwd_folder(cls, cwd: Optional[Path] = None):
-        Command.set_cwd_folder(cwd)
+    _cwd_folder = None
 
     @classmethod
-    @Command.exec()
-    def version(cls) -> Optional[str]:
-        return "git --version"
+    def set_cwd_folder(cls, cwd: Optional[Path] = None):
+        cls._cwd_folder = cwd
+
+    @classmethod
+    def exec(cls, cmd: str) -> str:
+        return subprocess.run(
+            args=cmd.split(" "),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            cwd=cls._cwd_folder
+        ).stdout.decode("utf-8").strip()
+
+    @classmethod
+    def version(cls) -> str:
+        return cls.exec("git --version")
 
     @classmethod
     def is_enable(cls) -> bool:
         return cls.version() is not None
 
     @classmethod
-    @Command.exec()
-    def branch_all(cls) -> Optional[str]:
-        return "git branch --all"
+    def branch_all(cls) -> str:
+        return cls.exec("git branch --all")
 
     @classmethod
-    def current_branch(cls) -> Optional[str]:
-        result = cls.branch_all()
-        if result is None:
-            return None
-
-        for out in result.splitlines():
+    def current_branch(cls) -> str:
+        for out in cls.branch_all().splitlines():
             if not out.startswith("*"):
                 continue
 
@@ -45,14 +48,12 @@ class GitUtils:
             return out[-1]
 
     @classmethod
-    @Command.exec()
-    def commit_id(cls) -> Optional[str]:
-        return "git rev-parse --short HEAD"
+    def commit_id(cls) -> str:
+        return cls.exec("git rev-parse --short HEAD")
 
     @classmethod
-    @Command.exec()
-    def commit_count(cls) -> Optional[str]:
-        return "git rev-list --count HEAD"
+    def commit_count(cls) -> int:
+        return int(cls.exec("git rev-list --count HEAD"))
 
     @classmethod
     def clone_and_zip(cls, url: str, out: Path) -> float:
