@@ -2,6 +2,8 @@ from pathlib import Path
 
 from .utils import GitUtils
 
+GitUtils.set_cwd_folder(Path(__file__).resolve().parent)
+
 
 def get_baseVersion():
     return "1.0.0"
@@ -11,29 +13,39 @@ def get_baseVersionCode():
     return 100
 
 
+def is_devVersion():
+    if not GitUtils.is_enable():
+        return False
+
+    return not GitUtils.has_tag(f"v{get_baseVersion()}")
+
+
 def get_version():
-    sha = GitUtils.commit_id()
-    if sha is not None:
-        return f"{get_baseVersion()}.{sha}"
+    if GitUtils.is_enable():
+        suffix = f".{GitUtils.commit_id()}"
+        if is_devVersion():
+            suffix += ".dev"
     else:
-        return get_baseVersion()
+        suffix = ""
+
+    return get_baseVersion() + suffix
 
 
 def get_versionCode():
-    count = GitUtils.commit_count()
-    if count is not None:
-        return int(count) + get_baseVersionCode()
+    if GitUtils.is_enable():
+        count = int(GitUtils.commit_count())
     else:
-        return get_baseVersionCode()
+        count = 0
 
+    return get_baseVersionCode() + count
+
+
+version = get_version()
+versionCode = get_versionCode()
+__version__ = f"{version} (${versionCode})"
 
 __all__ = [
     "version",
     "versionCode",
     "__version__"
 ]
-
-GitUtils.set_cwd_folder(Path(__file__).resolve().parent)
-version = get_version()
-versionCode = get_versionCode()
-__version__ = f"{get_version()} (${get_versionCode()})"

@@ -56,6 +56,10 @@ class GitUtils:
         return int(cls.exec("git rev-list --count HEAD"))
 
     @classmethod
+    def has_tag(cls, name: str) -> bool:
+        return cls.exec(f"git tag -l {name}") != ""
+
+    @classmethod
     def clone_and_zip(cls, url: str, out: Path) -> float:
         repo_dir = out.with_suffix("")
         if not cls.is_enable():
