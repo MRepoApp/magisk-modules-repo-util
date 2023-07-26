@@ -1,14 +1,12 @@
 from datetime import datetime
 
 from .Config import Config
-from .Sync import Sync
 from ..__version__ import version, versionCode
 from ..model import (
     AttrDict,
     ModulesJson,
     UpdateJson,
-    LocalModule,
-    TrackJson
+    LocalModule
 )
 from ..modifier import Result
 from ..track import LocalTracks
@@ -23,8 +21,8 @@ class Index:
         self._log = Log("Index", config.log_dir, config.show_log)
 
         self._modules_folder = Config.get_modules_folder(root_folder)
+        self._tracks = LocalTracks(self._modules_folder, config)
         self._config = config
-        self._tracks = LocalTracks(self._modules_folder, self._config)
 
         json_folder = Config.get_json_folder(root_folder)
         self.json_file = json_folder.joinpath(ModulesJson.filename())
@@ -32,9 +30,7 @@ class Index:
         # noinspection PyTypeChecker
         self.modules_json = None
 
-    def _check_ids(self, track, target_id):
-        func = getattr(Sync, "_check_ids")
-        return func(self, track, target_id)
+        json_folder.mkdir(exist_ok=True)
 
     def _add_modules_json_0(self, track, update_json, online_module):
         if self.modules_json is None:
@@ -123,10 +119,6 @@ class Index:
             online_module = self.get_online_module(track.id, zip_file)
             if online_module is None:
                 continue
-
-            if not self._check_ids(track, online_module.id):
-                track_json_file = module_folder.joinpath(TrackJson.filename())
-                track.write(track_json_file)
 
             self._add_modules_json(
                 track=track,

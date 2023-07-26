@@ -4,7 +4,8 @@ from argparse import (
     RawDescriptionHelpFormatter,
     _CountAction,
     _HelpAction,
-    _StoreAction
+    _StoreAction,
+
 )
 from argparse import ArgumentParser as ArgumentParserBase
 from pathlib import Path
@@ -19,12 +20,14 @@ from ..utils import GitUtils
 class Parameters:
     _root_folder: Path
     _github_token: Optional[str]
+    _choices: dict
 
     CONFIG = "config"
     MODULE = "module"
     GITHUB = "github"
     SYNC = "sync"
     INDEX = "index"
+    MIGRATE = "migrate"
 
     @classmethod
     def set_root_folder(cls, root: Path):
@@ -35,11 +38,14 @@ class Parameters:
         cls._github_token = token
 
     @classmethod
+    def print_cmd_help(cls, cmd: Optional[str]):
+        cls._choices[cmd].print_help()
+
+    @classmethod
     def generate_parser(cls):
         p = ArgumentParser(
             description="Magisk Modules Repo Util"
         )
-
         p.add_argument(
             "-v",
             "--version",
@@ -65,6 +71,9 @@ class Parameters:
         cls.configure_parser_github(sub_parsers)
         cls.configure_parser_sync(sub_parsers)
         cls.configure_parser_index(sub_parsers)
+        cls.configure_parser_migrate(sub_parsers)
+
+        cls._choices = sub_parsers.choices
 
         return p
 
@@ -72,7 +81,7 @@ class Parameters:
     def configure_parser_config(cls, sub_parsers):
         p = sub_parsers.add_parser(
             cls.CONFIG,
-            help="Modify config values of repository."
+            help="Modify config of repository."
         )
         p.add_argument(
             "-w",
@@ -81,17 +90,17 @@ class Parameters:
             metavar="KEY=VALUE",
             action=AttrDictAction,
             nargs="+",
-            help="Write value(s) to config.json."
+            help="Write values to the config."
         )
         p.add_argument(
             "--stdin",
             action="store_true",
-            help="Write config given in json format piped through stdin."
+            help="Write to the config piped through stdin."
         )
         p.add_argument(
             "--stdout",
             action="store_true",
-            help="Show the config in json format piped through stdout."
+            help="Show the config piped through stdout."
         )
 
         cls.add_parser_env(p)
@@ -102,12 +111,11 @@ class Parameters:
             cls.MODULE,
             help="Magisk module tracks utility."
         )
-
         p.add_argument(
             "-l",
             "--list",
             action="store_true",
-            help="List module tracks in repository."
+            help="List tracks in repository."
         )
         p.add_argument(
             "-a",
@@ -116,7 +124,7 @@ class Parameters:
             metavar="KEY=VALUE",
             action=AttrDictAction,
             nargs="+",
-            help="Add a module to tracks."
+            help="Add a track to repository."
         )
         p.add_argument(
             "-r",
@@ -125,12 +133,12 @@ class Parameters:
             metavar="MODULE_ID",
             nargs="+",
             default=None,
-            help="Remove module(s) for tracks."
+            help="Remove tracks from repository."
         )
         p.add_argument(
             "--stdin",
             action="store_true",
-            help="Write track given in json format piped through stdin."
+            help="Add a track piped through stdin."
         )
         p.add_argument(
             "--keys",
@@ -145,7 +153,7 @@ class Parameters:
             metavar="MODULE_ID",
             type=str,
             default=None,
-            help="Id of the specified module to modify."
+            help="Id of the module to modify."
         )
         modify.add_argument(
             "--update",
@@ -153,7 +161,7 @@ class Parameters:
             metavar="KEY=VALUE",
             action=AttrDictAction,
             nargs="+",
-            help="Update value(s) to the track."
+            help="Update values to the track."
         )
         modify.add_argument(
             "--remove-key",
@@ -161,7 +169,7 @@ class Parameters:
             metavar="KEY",
             nargs="+",
             default=None,
-            help="Remove key(s) (and all its value) in the track."
+            help="Remove keys (and all its values) in the track."
         )
         modify.add_argument(
             "--enable-update",
@@ -176,7 +184,7 @@ class Parameters:
         modify.add_argument(
             "--stdout",
             action="store_true",
-            help="Show the track in json format piped through stdout."
+            help="Show the track piped through stdout."
         )
 
         cls.add_parser_env(p)
@@ -185,9 +193,8 @@ class Parameters:
     def configure_parser_github(cls, sub_parsers):
         p = sub_parsers.add_parser(
             cls.GITHUB,
-            help="Generate track(s) from github."
+            help="Generate tracks from GitHub."
         )
-
         p.add_argument(
             "-u",
             "--user-name",
@@ -204,25 +211,26 @@ class Parameters:
             metavar="REPO_NAME",
             nargs="+",
             default=None,
-            help="Name(s) of repository. When this parameter is not set, the default is all."
+            help="Names of repository. When this parameter is not set, the default is all."
+        )
+        p.add_argument(
+            "-v",
+            "--version",
+            dest="version_code",
+            metavar="VERSION_CODE",
+            type=int,
+            default=Index.latest_version_code,
+            help="Version of the modules.json, default: {0}.".format('%(default)s')
         )
         p.add_argument(
             "--cover",
             action="store_true",
-            help="Overwrite existing track(s), but the added time will not be overwritten."
+            help="Overwrite existing tracks, but the added time will not be overwritten."
         )
         p.add_argument(
             "--update",
             action="store_true",
             help="Update modules to the latest version."
-        )
-        p.add_argument(
-            "--code",
-            dest="version_code",
-            metavar="VERSION_CODE",
-            type=int,
-            default=Index.latest_version_code,
-            help="Version code of the modules.json, default: {0}.".format('%(default)s')
         )
 
         cls.add_parser_git(p)
@@ -243,31 +251,30 @@ class Parameters:
             cls.SYNC,
             help="Sync modules and push to repository."
         )
-
         p.add_argument(
             "-f",
-            "--force-update",
+            "--force",
             action="store_true",
-            help="Remove all versions and update modules."
+            help="Remove all existing versions of module when updating."
         )
         p.add_argument(
-            "-u",
-            "--update",
+            "-i",
+            "--id",
             dest="module_ids",
             metavar="MODULE_ID",
             nargs="+",
             default=None,
-            help="Update modules to the latest version. When this parameter is not set, the default is all."
+            help="Ids of modules to update. When this parameter is not set, the default is all."
         )
         p.add_argument(
-            "--code",
+            "-v",
+            "--version",
             dest="version_code",
             metavar="VERSION_CODE",
             type=int,
             default=Index.latest_version_code,
-            help="Version code of the modules.json, default: {0}.".format('%(default)s')
+            help="Version of the modules.json, default: {0}.".format('%(default)s')
         )
-
         cls.add_parser_git(p)
         cls.add_parser_env(p, add_quiet=True)
 
@@ -277,14 +284,14 @@ class Parameters:
             cls.INDEX,
             help="Generate modules.json from local."
         )
-
         p.add_argument(
-            "--code",
+            "-v",
+            "--version",
             dest="version_code",
             metavar="VERSION_CODE",
             type=int,
             default=Index.latest_version_code,
-            help="Version code of the modules.json, default: {0}.".format('%(default)s')
+            help="Version of the modules.json, default: {0}.".format('%(default)s')
         )
         p.add_argument(
             "--stdout",
@@ -295,9 +302,38 @@ class Parameters:
         cls.add_parser_env(p)
 
     @classmethod
+    def configure_parser_migrate(cls, sub_parsers):
+        p = sub_parsers.add_parser(
+            cls.MIGRATE,
+            help="Check content in json and migrate."
+        )
+        p.add_argument(
+            "-i",
+            "--id",
+            dest="module_ids",
+            metavar="MODULE_ID",
+            nargs="+",
+            default=None,
+            help="Ids of modules to checkout or clear. When this parameter is not set, the default is all."
+        )
+        p.add_argument(
+            "-c",
+            "--check-id",
+            action="store_true",
+            help="Checkout the ids of modules in all json."
+        )
+        p.add_argument(
+            "-C",
+            "--clear-null",
+            action="store_true",
+            help="Clear null values in all json."
+        )
+
+        cls.add_parser_env(p, add_quiet=True)
+
+    @classmethod
     def add_parser_env(cls, p, add_quiet=False):
         env = p.add_argument_group("env")
-
         env.add_argument(
             "-p",
             "--prefix",
@@ -315,7 +351,6 @@ class Parameters:
     @classmethod
     def add_parser_git(cls, p):
         git = p.add_argument_group("git")
-
         git.add_argument(
             "--push",
             action="store_true",

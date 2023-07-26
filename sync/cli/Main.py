@@ -6,7 +6,13 @@ from pathlib import Path
 
 from .Parameters import Parameters
 from .SafeArgs import SafeArgs
-from ..core import Config, Index, Pull, Sync
+from ..core import (
+    Config,
+    Index,
+    Migrate,
+    Pull,
+    Sync
+)
 from ..model import ConfigJson, TrackJson
 from ..track import LocalTracks, GithubTracks
 from ..utils import Log
@@ -30,9 +36,13 @@ class Main:
     def exec(cls) -> int:
         parser = Parameters.generate_parser()
         cls._args = SafeArgs(parser.parse_args())
+
         code = cls._check_args()
         if code == cls.CODE_FAILURE:
-            parser.print_help()
+            if cls._args.cmd is None:
+                parser.print_help()
+            else:
+                Parameters.print_cmd_help(cls._args.cmd)
 
         return code
 
@@ -50,16 +60,18 @@ class Main:
             return cls.sync()
         elif cls._args.cmd == Parameters.INDEX:
             return cls.index()
+        elif cls._args.cmd == Parameters.MIGRATE:
+            return cls.migrate()
 
     @classmethod
     def config(cls) -> int:
         root_folder = Path(cls._args.root_folder).resolve()
         config_folder = Config.get_config_folder(root_folder)
-        os.makedirs(config_folder, exist_ok=True)
-
         json_file = config_folder.joinpath(ConfigJson.filename())
 
         if cls._args.config_json is not None:
+            config_folder.mkdir(exist_ok=True)
+
             if json_file.exists():
                 config = ConfigJson.load(json_file)
             else:
@@ -70,6 +82,8 @@ class Main:
             config.write(json_file)
 
         elif cls._args.stdin:
+            config_folder.mkdir(exist_ok=True)
+
             config = ConfigJson(json.load(fp=sys.stdin))
             config.check_type()
             config.write(json_file)
@@ -77,6 +91,8 @@ class Main:
         elif cls._args.stdout and json_file.exists():
             config = ConfigJson.load(json_file)
             json.dump(config, fp=sys.stdout, indent=2)
+        else:
+            return cls.CODE_FAILURE
 
         return cls.CODE_SUCCESS
 
@@ -85,22 +101,20 @@ class Main:
         root_folder = Path(cls._args.root_folder).resolve()
         modules_folder = Config.get_modules_folder(root_folder)
         Log.set_enable_stdout(False)
-        os.makedirs(modules_folder, exist_ok=True)
 
         if cls._args.list:
             config = Config(root_folder)
 
-            tracks = LocalTracks(
-                modules_folder=modules_folder,
-                config=config
-            )
+            tracks = LocalTracks(modules_folder=modules_folder, config=config)
 
             cls._print_modules_list(
                 modules_folder=modules_folder,
-                tracks=tracks.get_tracks(module_ids=None)
+                tracks=tracks.get_tracks()
             )
 
         elif cls._args.track_json is not None:
+            modules_folder.mkdir(exist_ok=True)
+
             track = TrackJson(cls._args.track_json)
             LocalTracks.add_track(
                 track=track,
@@ -118,7 +132,7 @@ class Main:
         elif cls._args.stdin:
             track = TrackJson(json.load(fp=sys.stdin))
             module_folder = modules_folder.joinpath(track.id)
-            os.makedirs(module_folder, exist_ok=True)
+            module_folder.mkdir(parents=True, exist_ok=True)
 
             json_file = module_folder.joinpath(TrackJson.filename())
             track.write(json_file)
@@ -148,7 +162,7 @@ class Main:
 
             elif cls._args.enable_update and module_folder.exists():
                 if tag_disable.exists():
-                    os.remove(tag_disable)
+                    tag_disable.unlink()
 
             elif cls._args.disable_update and module_folder.exists():
                 if not tag_disable.exists():
@@ -157,6 +171,9 @@ class Main:
             elif cls._args.stdout and json_file.exists():
                 track = TrackJson.load(json_file)
                 json.dump(track, fp=sys.stdout, indent=2)
+
+        else:
+            return cls.CODE_FAILURE
 
         return cls.CODE_SUCCESS
 
@@ -239,10 +256,7 @@ class Main:
 
         config = Config(root_folder)
 
-        sync = Sync(
-            root_folder=root_folder,
-            config=config
-        )
+        sync = Sync(root_folder=root_folder, config=config)
         sync.create_local_tracks()
         sync.update_by_ids(
             module_ids=cls._args.module_ids,
@@ -269,5 +283,24 @@ class Main:
 
         if cls._args.stdout:
             json.dump(index.modules_json, fp=sys.stdout, indent=2)
+
+        return cls.CODE_SUCCESS
+
+    @classmethod
+    def migrate(cls) -> int:
+        root_folder = Path(cls._args.root_folder).resolve()
+        Log.set_enable_stdout(not cls._args.quiet)
+
+        if not (cls._args.check_id or cls._args.clear_null):
+            return cls.CODE_FAILURE
+        else:
+            config = Config(root_folder)
+            migrate = Migrate(root_folder=root_folder, config=config)
+
+        if cls._args.check_id:
+            migrate.check_ids(module_ids=cls._args.module_ids)
+
+        if cls._args.clear_null:
+            migrate.clear_null_values(module_ids=cls._args.module_ids)
 
         return cls.CODE_SUCCESS

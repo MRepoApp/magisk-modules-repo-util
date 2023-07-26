@@ -33,25 +33,6 @@ class Sync:
     def __del__(self):
         self._log.d("__del__")
 
-    def _check_ids(self, track, target_id):
-        if track.id == target_id:
-            return True
-
-        msg = f"id is not same as in module.prop[{target_id}], it will be migrated"
-        self._log.w(f"_check_ids: [{track.id}] -> {msg}")
-
-        old_module_folder = self._modules_folder.joinpath(track.id)
-        new_module_folder = self._modules_folder.joinpath(target_id)
-
-        if new_module_folder.exists():
-            msg = f"{target_id} already exists, remove the old directly without migration"
-            self._log.w(f"_check_ids: [{track.id}] -> {msg}")
-            return True
-
-        old_module_folder.rename(new_module_folder)
-        track.update(id=target_id)
-        return False
-
     def _update_jsons(self, track, force):
         module_folder = self._modules_folder.joinpath(track.id)
 
@@ -64,15 +45,12 @@ class Sync:
         if online_module is None:
             return None
 
-        self._check_ids(track, online_module.id)
-        module_folder = self._modules_folder.joinpath(track.id)
-
         update_json_file = module_folder.joinpath(UpdateJson.filename())
         track_json_file = module_folder.joinpath(TrackJson.filename())
 
         if force:
             for file in module_folder.glob("*"):
-                if file != track_json_file.name:
+                if file.name != TrackJson.filename():
                     os.remove(file)
 
         if update_json_file.exists():
@@ -148,7 +126,7 @@ class Sync:
         else:
             return self.create_local_tracks()
 
-    def update_by_ids(self, module_ids, force, **kwargs):
+    def update_by_ids(self, module_ids=None, force=False, **kwargs):
         user_name = kwargs.get("user_name", None)
         if user_name is not None:
             if self._check_tracks(self._tracks, GithubTracks):
@@ -170,9 +148,6 @@ class Sync:
                 continue
 
             self._log.i(f"update_by_ids: [{track.id}] -> update to {online_module.version_display}")
-
-    def update_all(self, force, **kwargs):
-        self.update_by_ids(module_ids=None, force=force, **kwargs)
 
     def push_by_git(self, branch):
         json_file = self._json_folder.joinpath(ModulesJson.filename())
