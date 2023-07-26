@@ -132,6 +132,11 @@ class Parameters:
             action="store_true",
             help="Write track given in json format piped through stdin."
         )
+        p.add_argument(
+            "--keys",
+            action="store_true",
+            help="Show the fields available in track."
+        )
 
         modify = p.add_argument_group("modify")
         modify.add_argument(
@@ -330,7 +335,7 @@ class Parameters:
             metavar="MAX_SIZE",
             type=float,
             default=50.0,
-            help="Limit the size of module file, default: {0} MB.".format('%(default)s.')
+            help="Limit the size of module file, default: {0} MB.".format('%(default)s')
         )
 
         return git

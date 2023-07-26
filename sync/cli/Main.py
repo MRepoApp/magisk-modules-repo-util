@@ -123,6 +123,9 @@ class Main:
             json_file = module_folder.joinpath(TrackJson.filename())
             track.write(json_file)
 
+        elif cls._args.keys:
+            print(TrackJson.expected_fields())
+
         elif cls._args.target_id is not None:
             module_folder = modules_folder.joinpath(cls._args.target_id)
             json_file = module_folder.joinpath(TrackJson.filename())
