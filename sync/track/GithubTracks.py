@@ -1,4 +1,5 @@
-from github import Github, UnknownObjectException
+import requests
+from github import Github, Auth, UnknownObjectException
 from github.Repository import Repository
 
 from .BaseTracks import BaseTracks
@@ -6,7 +7,7 @@ from .LocalTracks import LocalTracks
 from ..error import MagiskModuleError
 from ..model import TrackJson
 from ..modifier import Result
-from ..utils.Log import Log
+from ..utils import Log, StrUtils
 
 
 class GithubTracks(BaseTracks):
@@ -14,7 +15,8 @@ class GithubTracks(BaseTracks):
         self._log = Log("GithubTracks", config.log_dir, config.show_log)
         self._modules_folder = modules_folder
 
-        self._github = Github(login_or_token=api_token)
+        self._api_token = api_token
+        self._github = Github(auth=Auth.Token(api_token))
         self._tracks = list()
 
         self._modules_folder.mkdir(exist_ok=True)
@@ -35,11 +37,26 @@ class GithubTracks(BaseTracks):
             update_to = repo.clone_url
             changelog = self.get_changelog(repo)
 
+        if repo.has_issues:
+            tracker = f"{repo.html_url}/issues"
+        else:
+            tracker = ""
+
+        donate_urls = self.get_sponsor_url(self._api_token, repo)
+        if len(donate_urls) == 0:
+            donate = ""
+        else:
+            donate = donate_urls[0]
+
         return TrackJson(
             id=repo.name,
             update_to=update_to,
             license=self.get_license(repo),
-            changelog=changelog
+            changelog=changelog,
+            website=self.get_homepage_url(self._api_token, repo),
+            source=repo.clone_url,
+            tracker=tracker,
+            donate=donate
         )
 
     def _get_from_repo(self, repo, cover):
@@ -90,6 +107,14 @@ class GithubTracks(BaseTracks):
         self._log.i(f"get_tracks: size = {self.size}")
         return self._tracks
 
+    @property
+    def size(self):
+        return self._tracks.__len__()
+
+    @property
+    def tracks(self):
+        return self._tracks
+
     @classmethod
     def get_license(cls, repo):
         try:
@@ -120,10 +145,58 @@ class GithubTracks(BaseTracks):
         except UnknownObjectException:
             return False
 
-    @property
-    def size(self):
-        return self._tracks.__len__()
+    @classmethod
+    def _graphql_query(cls, api_token, query):
+        query = {"query": query}
 
-    @property
-    def tracks(self):
-        return self._tracks
+        response = requests.post(
+            url="https://api.github.com/graphql",
+            headers={
+                "Authorization": f"bearer {api_token}",
+                "Content-Type": "application/json",
+            },
+            json=query
+        )
+
+        if response.ok:
+            return response.json()
+        else:
+            return None
+
+    @classmethod
+    def get_sponsor_url(cls, api_token, repo):
+        params = "owner: \"{}\", name: \"{}\"".format(repo.owner.login, repo.name)
+        query = "query { repository(%s) { fundingLinks { platform url } } }" % params
+        result = cls._graphql_query(api_token, query)
+        if result is None:
+            return list()
+
+        links = list()
+        data = result["data"]
+        repository = data["repository"]
+        funding_links = repository["fundingLinks"]
+
+        for item in funding_links:
+            if item["platform"] == "GITHUB":
+                name = item["url"].split("/")[-1]
+                links.append(f"https://github.com/sponsors/{name}")
+            else:
+                links.append(item["url"])
+
+        return links
+
+    @classmethod
+    def get_homepage_url(cls, api_token, repo):
+        params = "owner: \"{}\", name: \"{}\"".format(repo.owner.login, repo.name)
+        query = "query { repository(%s) { homepageUrl } }" % params
+        result = cls._graphql_query(api_token, query)
+        if result is None:
+            return repo.html_url
+
+        data = result["data"]
+        repository = data["repository"]
+        homepage_url = repository["homepageUrl"]
+        if StrUtils.isNotNone(homepage_url):
+            return homepage_url
+        else:
+            return repo.html_url
