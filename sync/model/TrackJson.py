@@ -3,6 +3,17 @@ from .JsonIO import JsonIO
 
 
 class TrackJson(AttrDict, JsonIO):
+    def json(self):
+        return AttrDict(
+            updateTo=self.update_to,
+            license=self.license or "",
+            website=self.website or "",
+            source=self.source or "",
+            tracker=self.tracker or "",
+            donate=self.donate or "",
+            added=self.added
+        )
+
     # noinspection PyTypeChecker
     def write(self, file):
         new = AttrDict()

@@ -44,7 +44,6 @@ class OnlineModule(AttrDict):
 
     @classmethod
     def from_dict(cls, obj: dict):
-        obj["states"] = AttrDict(obj["states"])
         return OnlineModule(obj)
 
 

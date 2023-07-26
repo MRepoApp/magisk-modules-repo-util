@@ -14,7 +14,9 @@ class OnlineModule(AttrDict):
     name: str
     author: str
     description: str
-    states: AttrDict # TODO: Rename to metadata in version 2.0
+    latest: AttrDict
+    versions: List[VersionItem]
+    track: AttrDict
 
     def __eq__(self, other) -> bool: ...
     @property
@@ -32,7 +34,6 @@ class OnlineModule(AttrDict):
 
 class ModulesJson(AttrDict, JsonIO):
     name: str
-    timestamp: float # TODO: Move to metadata in version 2.0
     metadata: AttrDict
     modules: List[OnlineModule]
 

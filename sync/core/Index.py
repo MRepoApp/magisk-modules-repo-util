@@ -64,7 +64,26 @@ class Index:
         self.modules_json.modules.append(online_module)
 
     def _add_modules_json_1(self, track, update_json, online_module):
-        pass
+        if self.modules_json is None:
+            self.modules_json = ModulesJson(
+                name=self._config.repo_name,
+                metadata=AttrDict(
+                    version=1,
+                    timestamp=datetime.now().timestamp()
+                ),
+                modules=list()
+            )
+
+        latest_item = update_json.versions[-1]
+
+        online_module.latest = AttrDict(
+            zipUrl=latest_item.zipUrl,
+            changelog=latest_item.changelog
+        )
+        online_module.versions = update_json.versions
+        online_module.track = track.json()
+
+        self.modules_json.modules.append(online_module)
 
     def _add_modules_json(self, track, update_json, online_module, version_code):
         if version_code not in self.version_codes:
