@@ -50,7 +50,7 @@ class Index:
 
         latest_item = update_json.versions[-1]
 
-        online_module.license = track.license
+        online_module.license = track.license or ""
         online_module.states = AttrDict(
             zipUrl=latest_item.zipUrl,
             changelog=latest_item.changelog
