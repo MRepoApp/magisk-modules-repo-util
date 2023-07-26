@@ -38,8 +38,8 @@ class OnlineModule(AttrDict):
             timestamp=timestamp,
             version=self.version,
             versionCode=self.versionCode,
-            zipUrl=self.states.zipUrl,
-            changelog=self.states.changelog
+            zipUrl=self.latest.zipUrl,
+            changelog=self.latest.changelog
         )
 
     @classmethod

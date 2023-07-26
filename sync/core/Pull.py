@@ -131,7 +131,7 @@ class Pull:
             self._copy_file(changelog_file, target_changelog_file, delete_tmp)
             changelog_url = self._get_file_url(module_id, target_changelog_file)
 
-        online_module.states = AttrDict(
+        online_module.latest = AttrDict(
             zipUrl=self._get_file_url(module_id, target_zip_file),
             changelog=changelog_url
         )
