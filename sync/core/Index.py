@@ -21,18 +21,13 @@ class Index:
 
     def __init__(self, root_folder, config):
         self._log = Log("Index", config.log_dir, config.show_log)
-        self._root_folder = root_folder
 
-        self._json_folder = Config.get_json_folder(root_folder)
         self._modules_folder = Config.get_modules_folder(root_folder)
         self._config = config
+        self._tracks = LocalTracks(self._modules_folder, self._config)
 
-        self._tracks = LocalTracks(
-            modules_folder=self._modules_folder,
-            config=self._config
-        )
-
-        self.json_file = self._json_folder.joinpath(ModulesJson.filename())
+        json_folder = Config.get_json_folder(root_folder)
+        self.json_file = json_folder.joinpath(ModulesJson.filename())
 
         # noinspection PyTypeChecker
         self.modules_json = None

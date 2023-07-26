@@ -15,13 +15,13 @@ from ..utils import Log
 class Index:
     _log: Log
 
-    _json_folder: Path
     _modules_folder: Path
     _config: ConfigJson
     _tracks: BaseTracks
 
     json_file: Path
     modules_json: ModulesJson
+
     version_codes: List[int]
     latest_version_code: int
 
