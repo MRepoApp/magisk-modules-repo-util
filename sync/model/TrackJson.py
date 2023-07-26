@@ -18,7 +18,8 @@ class TrackJson(AttrDict, JsonIO):
     def write(self, file):
         new = AttrDict()
         for key in self.expected_fields():
-            if key in self.__dict__:
+            value = self.get(key) or ""
+            if value != "":
                 new[key] = self.get(key)
 
         JsonIO.write(new, file)
