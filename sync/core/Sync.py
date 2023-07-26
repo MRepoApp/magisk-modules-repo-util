@@ -20,7 +20,7 @@ class Sync:
         self._pull = Pull(root_folder, config)
 
         self._json_folder = Config.get_json_folder(root_folder)
-        self._modules_folder = self._pull.modules_folder
+        self._modules_folder = Config.get_modules_folder(root_folder)
         self._config = config
 
         if tracks is None:
@@ -172,7 +172,7 @@ class Sync:
             self._log.i(f"update_by_ids: [{track.id}] -> update to {online_module.version_display}")
 
     def update_all(self, force, **kwargs):
-        self.update_by_ids(None, force, **kwargs)
+        self.update_by_ids(module_ids=None, force=force, **kwargs)
 
     def push_by_git(self, branch):
         json_file = self._json_folder.joinpath(ModulesJson.filename())

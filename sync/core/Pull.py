@@ -18,12 +18,12 @@ class Pull:
 
     def __init__(self, root_folder, config):
         self._log = Log("Pull", config.log_dir, config.show_log)
-        self._local_folder = root_folder.joinpath("local")
 
+        self._local_folder = root_folder.joinpath("local")
+        self._modules_folder = Config.get_modules_folder(root_folder)
         self._config = config
 
-        self.modules_folder = Config.get_modules_folder(root_folder)
-        self.modules_folder.mkdir(exist_ok=True)
+        self._modules_folder.mkdir(exist_ok=True)
 
         self._log.d("__init__")
 
@@ -50,8 +50,8 @@ class Pull:
             return True
 
     def _get_file_url(self, module_id, file):
-        module_folder = self.modules_folder.joinpath(module_id)
-        url = f"{self._config.repo_url}{self.modules_folder.name}/{module_id}/{file.name}"
+        module_folder = self._modules_folder.joinpath(module_id)
+        url = f"{self._config.repo_url}{self._modules_folder.name}/{module_id}/{file.name}"
 
         if not (file.is_relative_to(module_folder) and file.exists()):
             raise FileNotFoundError(f"{file} is not in {module_folder}")
@@ -63,7 +63,7 @@ class Pull:
             return None
 
         if changelog.startswith("http"):
-            changelog_file = self.modules_folder.joinpath(module_id, f"{module_id}.md")
+            changelog_file = self._modules_folder.joinpath(module_id, f"{module_id}.md")
             result = self._safe_download(changelog, changelog_file)
             if result.is_failure:
                 msg = Log.get_msg(result.error)
@@ -85,7 +85,7 @@ class Pull:
         return changelog_file
 
     def _from_zip_common(self,  module_id, zip_file, changelog_file, *, delete_tmp=True):
-        module_folder = self.modules_folder.joinpath(module_id)
+        module_folder = self._modules_folder.joinpath(module_id)
 
         def remove_file():
             if delete_tmp:
@@ -139,7 +139,7 @@ class Pull:
         return online_module
 
     def from_json(self, track, *, local):
-        module_folder = self.modules_folder.joinpath(track.id)
+        module_folder = self._modules_folder.joinpath(track.id)
         if local:
             track.update_to = self._local_folder.joinpath(track.update_to)
 
@@ -161,7 +161,7 @@ class Pull:
         if target_zip_file.exists() or len(target_files) != 0:
             return None, 0.0
 
-        zip_file = self.modules_folder.joinpath(track.id, f"{track.id}.zip")
+        zip_file = self._modules_folder.joinpath(track.id, f"{track.id}.zip")
 
         result = self._safe_download(update_json.zipUrl, zip_file)
         if result.is_failure:
@@ -176,7 +176,7 @@ class Pull:
         return online_module, last_modified
 
     def from_url(self, track):
-        zip_file = self.modules_folder.joinpath(track.id, f"{track.id}.zip")
+        zip_file = self._modules_folder.joinpath(track.id, f"{track.id}.zip")
 
         result = self._safe_download(track.update_to, zip_file)
         if result.is_failure:
@@ -191,7 +191,7 @@ class Pull:
         return online_module, last_modified
 
     def from_git(self, track):
-        zip_file = self.modules_folder.joinpath(track.id, f"{track.id}.zip")
+        zip_file = self._modules_folder.joinpath(track.id, f"{track.id}.zip")
 
         @Result.catching()
         def git():

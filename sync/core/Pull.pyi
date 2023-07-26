@@ -11,14 +11,13 @@ from ..utils import Log
 
 
 class Pull:
-    _max_size: float
-
     _log: Log
-    _local_folder: Path
 
+    _local_folder: Path
+    _modules_folder: Path
     _config: ConfigJson
 
-    modules_folder: Path
+    _max_size: float
 
     def __init__(self, root_folder: Path, config: ConfigJson): ...
     @staticmethod
