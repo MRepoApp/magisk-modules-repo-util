@@ -22,15 +22,15 @@ class Migrate:
         if track.id == target_id:
             return True
 
-        msg = f"id is not same as in module.prop[{target_id}]"
-        self._log.d(f"_check_ids: [{track.id}] -> {msg}")
+        msg = f"id is not same as in module.prop [{target_id}]"
+        self._log.d(f"_check_folder: [{track.id}] -> {msg}")
 
         old_module_folder = self._modules_folder.joinpath(track.id)
         new_module_folder = self._modules_folder.joinpath(target_id)
 
         if new_module_folder.exists():
             msg = f"{target_id} already exists, remove the old directly"
-            self._log.d(f"_check_ids: [{track.id}] -> {msg}")
+            self._log.d(f"_check_folder: [{track.id}] -> {msg}")
             return True
 
         old_module_folder.rename(new_module_folder)

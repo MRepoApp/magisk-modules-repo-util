@@ -25,11 +25,6 @@ class Pull:
 
         self._modules_folder.mkdir(exist_ok=True)
 
-        self._log.d("__init__")
-
-    def __del__(self):
-        self._log.d("__del__")
-
     @staticmethod
     def _copy_file(old, new, delete_old=True):
         shutil.copy(old, new)
@@ -38,13 +33,13 @@ class Pull:
 
     @staticmethod
     @Result.catching()
-    def _safe_download(url, out):
+    def _download(url, out):
         return HttpUtils.download(url, out)
 
     def _check_changelog(self, module_id, file):
         text = file.read_text()
         if HttpUtils.is_html(text):
-            self._log.w(f"_check_changelog: [{module_id}] -> unsupported changelog type [the content is html text]")
+            self._log.w(f"_check_changelog: [{module_id}] -> unsupported changelog type [html text]")
             return False
         else:
             return True
@@ -64,7 +59,7 @@ class Pull:
 
         if changelog.startswith("http"):
             changelog_file = self._modules_folder.joinpath(module_id, f"{module_id}.md")
-            result = self._safe_download(changelog, changelog_file)
+            result = self._download(changelog, changelog_file)
             if result.is_failure:
                 msg = Log.get_msg(result.error)
                 self._log.e(f"_get_changelog_common: [{module_id}] -> {msg}")
@@ -72,13 +67,12 @@ class Pull:
         else:
             changelog_file = self._local_folder.joinpath(changelog)
             if not changelog_file.exists():
-                msg = f"_get_changelog_common: [{module_id}] -> {changelog} is not in {self._local_folder}"
-                self._log.i(msg)
+                msg = f"{changelog} is not in {self._local_folder}"
+                self._log.d(f"_get_changelog_common: [{module_id}] -> {msg}")
                 changelog_file = None
 
         if changelog_file is not None:
-            is_target_type = self._check_changelog(module_id, changelog_file)
-            if not is_target_type:
+            if not self._check_changelog(module_id, changelog_file):
                 os.remove(changelog_file)
                 changelog_file = None
 
@@ -99,7 +93,7 @@ class Pull:
             if delete_tmp:
                 os.remove(zip_file)
 
-            msg = f"file size exceeds limit ({self._max_size} MB), update check disabled"
+            msg = f"file size too large ({self._max_size} MB), update check will be disabled"
             self._log.w(f"_from_zip_common: [{module_id}] -> {msg}")
             return None
 
@@ -144,10 +138,10 @@ class Pull:
             track.update_to = self._local_folder.joinpath(track.update_to)
 
         @Result.catching()
-        def load():
+        def load_json():
             return MagiskUpdateJson.load(track.update_to)
 
-        result = load()
+        result = load_json()
         if result.is_failure:
             msg = Log.get_msg(result.error)
             self._log.e(f"from_json: [{track.id}] -> {msg}")
@@ -163,7 +157,7 @@ class Pull:
 
         zip_file = self._modules_folder.joinpath(track.id, f"{track.id}.zip")
 
-        result = self._safe_download(update_json.zipUrl, zip_file)
+        result = self._download(update_json.zipUrl, zip_file)
         if result.is_failure:
             msg = Log.get_msg(result.error)
             self._log.e(f"from_json: [{track.id}] -> {msg}")
@@ -178,7 +172,7 @@ class Pull:
     def from_url(self, track):
         zip_file = self._modules_folder.joinpath(track.id, f"{track.id}.zip")
 
-        result = self._safe_download(track.update_to, zip_file)
+        result = self._download(track.update_to, zip_file)
         if result.is_failure:
             msg = Log.get_msg(result.error)
             self._log.e(f"from_url: [{track.id}] -> {msg}")
@@ -194,10 +188,10 @@ class Pull:
         zip_file = self._modules_folder.joinpath(track.id, f"{track.id}.zip")
 
         @Result.catching()
-        def git():
+        def git_clone():
             return GitUtils.clone_and_zip(track.update_to, zip_file)
 
-        result = git()
+        result = git_clone()
         if result.is_failure:
             msg = Log.get_msg(result.error)
             self._log.e(f"from_git: [{track.id}] -> {msg}")
@@ -214,7 +208,8 @@ class Pull:
         last_modified = os.path.getmtime(zip_file)
 
         if not zip_file.exists():
-            self._log.i(f"from_zip: [{track.id}] -> {track.update_to} is not in {self._local_folder}")
+            msg = f"{track.update_to} is not in {self._local_folder}"
+            self._log.i(f"from_zip: [{track.id}] -> {msg}")
             return None, 0.0
 
         changelog = self._get_changelog_common(track.id, track.changelog)
@@ -227,23 +222,23 @@ class Pull:
 
         if track.update_to.startswith("http"):
             if track.update_to.endswith("json"):
-                self._log.d(f"from_track: [{track.id}] -> from online json")
+                self._log.i(f"from_track: [{track.id}] -> from online json")
                 return self.from_json(track, local=False)
             elif track.update_to.endswith("zip"):
-                self._log.d(f"from_track: [{track.id}] -> from online zip")
+                self._log.i(f"from_track: [{track.id}] -> from online zip")
                 return self.from_url(track)
             elif track.update_to.endswith("git"):
-                self._log.d(f"from_track: [{track.id}] -> from git")
+                self._log.i(f"from_track: [{track.id}] -> from git")
                 return self.from_git(track)
         else:
             if track.update_to.endswith("json"):
-                self._log.d(f"from_track: [{track.id}] -> from local json")
+                self._log.i(f"from_track: [{track.id}] -> from local json")
                 return self.from_json(track, local=True)
             elif track.update_to.endswith("zip"):
-                self._log.d(f"from_track: [{track.id}] -> from local zip")
+                self._log.i(f"from_track: [{track.id}] -> from local zip")
                 return self.from_zip(track)
 
-        self._log.e(f"from_track: [{track.id}] -> unsupported update_to type [{track.update_to}]")
+        self._log.e(f"from_track: [{track.id}] -> unsupported type [{track.update_to}]")
         return None, 0.0
 
     @classmethod

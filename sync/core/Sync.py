@@ -28,11 +28,6 @@ class Sync:
         else:
             self._tracks = tracks
 
-        self._log.d("__init__")
-
-    def __del__(self):
-        self._log.d("__del__")
-
     def _update_jsons(self, track, force):
         module_folder = self._modules_folder.joinpath(track.id)
 
@@ -68,7 +63,7 @@ class Sync:
         if len(update_json.versions) > 0:
             same_version = update_json.versions[-1].versionCode == version_item.versionCode
             if same_version:
-                self._log.w(f"_update_jsons: [{track.id}] -> {version_item.version_display} already exists")
+                self._log.d(f"_update_jsons: [{track.id}] -> {version_item.version_display} already exists")
                 return None
 
         update_json.versions.append(version_item)
@@ -94,16 +89,15 @@ class Sync:
 
         return online_module
 
-    def _check_tracks(self, obj, cls):
+    @staticmethod
+    def _check_tracks(obj, cls):
         if type(obj) is BaseTracks:
-            msg = "tracks interface has not been created, please use 'create_tracks' to create one"
-            self._log.e(f"_check_tracks: {msg}")
-            raise RuntimeError(msg)
+            raise RuntimeError("tracks interface has not been created")
 
         return isinstance(obj, cls)
 
     def create_github_tracks(self, api_token):
-        self._log.i("create_github_tracks")
+        self._log.d("create_github_tracks")
         self._tracks = GithubTracks(
             api_token=api_token,
             modules_folder=self._modules_folder,
@@ -112,7 +106,7 @@ class Sync:
         return self._tracks
 
     def create_local_tracks(self):
-        self._log.i("create_local_tracks")
+        self._log.d("create_local_tracks")
         self._tracks = LocalTracks(
             modules_folder=self._modules_folder,
             config=self._config
@@ -137,7 +131,6 @@ class Sync:
                 )
             else:
                 msg = f"unsupported tracks interface type [{type(self._tracks).__name__}]"
-                self._log.e(f"update_by_ids: {msg}")
                 raise RuntimeError(msg)
         else:
             tracks = self._tracks.get_tracks(module_ids)

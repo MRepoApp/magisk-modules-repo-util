@@ -20,10 +20,6 @@ class GithubTracks(BaseTracks):
         self._tracks = list()
 
         self._modules_folder.mkdir(exist_ok=True)
-        self._log.d("__init__")
-
-    def __del__(self):
-        self._log.d("__del__")
 
     @Result.catching()
     def _get_from_repo_common(self, repo: Repository):

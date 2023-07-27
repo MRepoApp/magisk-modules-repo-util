@@ -22,7 +22,6 @@ class Config(ConfigJson):
         self.check_type()
 
         self._log = Log("Config", self.log_dir, self.show_log)
-        self._log.d("__init__")
 
         for key in obj.keys():
             self._log.d(f"[{key}]: {self.get(key)}")
