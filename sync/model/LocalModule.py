@@ -1,4 +1,3 @@
-import os
 from zipfile import ZipFile
 
 from .AttrDict import AttrDict
@@ -25,7 +24,7 @@ class LocalModule(AttrDict):
             zip_file.read("META-INF/com/google/android/updater-script")
             props = zip_file.read("module.prop")
         except KeyError:
-            os.remove(file)
+            file.unlink()
             raise MagiskModuleError(f"{file.name} is not a magisk module")
 
         obj = AttrDict()
@@ -49,7 +48,11 @@ class LocalModule(AttrDict):
         except TypeError:
             raise MagiskModuleError("versionCode does not exist in module.prop")
 
-        return LocalModule(obj)
+        local_module = LocalModule()
+        for key in cls.expected_fields():
+            local_module[key] = obj.get(key)
+
+        return local_module
 
     @classmethod
     def expected_fields(cls):
