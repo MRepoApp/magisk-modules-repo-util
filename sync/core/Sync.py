@@ -54,11 +54,11 @@ class Sync:
         else:
             update_json = UpdateJson(
                 id=track.id,
+                timestamp=timestamp,
                 versions=list()
             )
 
         version_item = online_module.to_VersionItem(timestamp)
-        update_json.timestamp = timestamp
 
         if len(update_json.versions) > 0:
             same_version = update_json.versions[-1].versionCode == version_item.versionCode

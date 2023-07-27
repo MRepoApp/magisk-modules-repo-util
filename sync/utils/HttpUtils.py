@@ -1,5 +1,4 @@
 import json
-import os
 import re
 from datetime import datetime
 from pathlib import Path
@@ -37,6 +36,8 @@ class HttpUtils:
 
     @classmethod
     def download(cls, url: str, out: Path) -> float:
+        out.parent.mkdir(parents=True, exist_ok=True)
+
         response = requests.get(url, stream=True)
         if response.ok:
             block_size = 1024
@@ -50,7 +51,7 @@ class HttpUtils:
             else:
                 return datetime.now().timestamp()
         else:
-            os.remove(out)
+            out.unlink(missing_ok=True)
 
             if cls.is_html(response.text):
                 msg = "404 not found"

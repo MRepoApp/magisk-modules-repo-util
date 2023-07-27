@@ -17,8 +17,6 @@ class LocalTracks(BaseTracks):
 
         self._tracks: List[TrackJson] = list()
 
-        self._modules_folder.mkdir(exist_ok=True)
-
     @Result.catching()
     def _get_from_file(self, file):
         return TrackJson.load(file)
@@ -61,8 +59,8 @@ class LocalTracks(BaseTracks):
 
     @classmethod
     def add_track(cls, track, modules_folder, cover=True):
-        json_file = modules_folder.joinpath(track.id, TrackJson.filename())
-        json_file.parent.mkdir(exist_ok=True)
+        module_folder = modules_folder.joinpath(track.id)
+        json_file = module_folder.joinpath(TrackJson.filename())
 
         if not json_file.exists():
             track.added = datetime.now().timestamp()
@@ -74,11 +72,13 @@ class LocalTracks(BaseTracks):
 
     @classmethod
     def del_track(cls, module_id, modules_folder):
-        shutil.rmtree(modules_folder.joinpath(module_id), ignore_errors=True)
+        module_folder = modules_folder.joinpath(module_id)
+        shutil.rmtree(module_folder, ignore_errors=True)
 
     @classmethod
     def update_track(cls, track, modules_folder):
-        json_file = modules_folder.joinpath(track.id, TrackJson.filename())
+        module_folder = modules_folder.joinpath(track.id)
+        json_file = module_folder.joinpath(TrackJson.filename())
 
         if not json_file.exists():
             return

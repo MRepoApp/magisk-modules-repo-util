@@ -6,6 +6,8 @@ from .AttrDict import AttrDict
 
 class JsonIO:
     def write(self, file):
+        file.parent.mkdir(parents=True, exist_ok=True)
+
         with open(file, 'w') as f:
             json.dump(self, f, indent=2)
 

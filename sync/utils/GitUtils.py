@@ -61,6 +61,8 @@ class GitUtils:
 
     @classmethod
     def clone_and_zip(cls, url: str, out: Path) -> float:
+        out.parent.mkdir(parents=True, exist_ok=True)
+
         repo_dir = out.with_suffix("")
         if not cls.is_enable():
             raise RuntimeError("git command not found")

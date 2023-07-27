@@ -70,8 +70,6 @@ class Main:
         json_file = config_folder.joinpath(ConfigJson.filename())
 
         if cls._args.config_json is not None:
-            config_folder.mkdir(exist_ok=True)
-
             if json_file.exists():
                 config = ConfigJson.load(json_file)
             else:
@@ -82,8 +80,6 @@ class Main:
             config.write(json_file)
 
         elif cls._args.stdin:
-            config_folder.mkdir(exist_ok=True)
-
             config = ConfigJson(json.load(fp=sys.stdin))
             config.check_type()
             config.write(json_file)
@@ -113,8 +109,6 @@ class Main:
             )
 
         elif cls._args.track_json is not None:
-            modules_folder.mkdir(exist_ok=True)
-
             track = TrackJson(cls._args.track_json)
             LocalTracks.add_track(
                 track=track,
@@ -132,7 +126,6 @@ class Main:
         elif cls._args.stdin:
             track = TrackJson(json.load(fp=sys.stdin))
             module_folder = modules_folder.joinpath(track.id)
-            module_folder.mkdir(parents=True, exist_ok=True)
 
             json_file = module_folder.joinpath(TrackJson.filename())
             track.write(json_file)

@@ -19,8 +19,6 @@ class GithubTracks(BaseTracks):
         self._github = Github(auth=Auth.Token(api_token))
         self._tracks = list()
 
-        self._modules_folder.mkdir(exist_ok=True)
-
     @Result.catching()
     def _get_from_repo_common(self, repo: Repository):
         if not self.is_module_repo(repo):

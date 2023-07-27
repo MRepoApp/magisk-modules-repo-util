@@ -23,8 +23,6 @@ class Pull:
         self._modules_folder = Config.get_modules_folder(root_folder)
         self._config = config
 
-        self._modules_folder.mkdir(exist_ok=True)
-
     @staticmethod
     def _copy_file(old, new, delete_old=True):
         shutil.copy(old, new)

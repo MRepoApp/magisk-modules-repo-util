@@ -30,8 +30,6 @@ class Index:
         # noinspection PyTypeChecker
         self.modules_json = None
 
-        json_folder.mkdir(exist_ok=True)
-
     def _add_modules_json_0(self, track, update_json, online_module):
         if self.modules_json is None:
             self.modules_json = ModulesJson(
