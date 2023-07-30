@@ -142,15 +142,11 @@ class Sync:
 
     def push_by_git(self, branch):
         json_file = self._json_folder.joinpath(ModulesJson.filename())
-        if not json_file.exists():
-            self._log.e(f"push_by_git: {json_file.name} is not in {self._json_folder}")
-            return
-
         if not GitUtils.is_enable():
             self._log.e("push_by_git: git command not found")
             return
 
-        timestamp = ModulesJson.load(json_file).timestamp
+        timestamp = json_file.stat().st_mtime
         msg = f"Update by CLI ({datetime.fromtimestamp(timestamp)})"
 
         subprocess.run(["git", "add", "."], cwd=self._root_folder.as_posix())
