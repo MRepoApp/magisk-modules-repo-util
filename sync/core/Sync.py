@@ -97,7 +97,6 @@ class Sync:
         return isinstance(obj, cls)
 
     def create_github_tracks(self, api_token):
-        self._log.d("create_github_tracks")
         self._tracks = GithubTracks(
             api_token=api_token,
             modules_folder=self._modules_folder,
@@ -106,7 +105,6 @@ class Sync:
         return self._tracks
 
     def create_local_tracks(self):
-        self._log.d("create_local_tracks")
         self._tracks = LocalTracks(
             modules_folder=self._modules_folder,
             config=self._config
@@ -120,7 +118,7 @@ class Sync:
         else:
             return self.create_local_tracks()
 
-    def update_by_ids(self, module_ids=None, force=False, **kwargs):
+    def update(self, module_ids=None, force=False, **kwargs):
         user_name = kwargs.get("user_name", None)
         if user_name is not None:
             if self._check_tracks(self._tracks, GithubTracks):
@@ -140,7 +138,7 @@ class Sync:
             if online_module is None:
                 continue
 
-            self._log.i(f"update_by_ids: [{track.id}] -> update to {online_module.version_display}")
+            self._log.i(f"update: [{track.id}] -> update to {online_module.version_display}")
 
     def push_by_git(self, branch):
         json_file = self._json_folder.joinpath(ModulesJson.filename())
