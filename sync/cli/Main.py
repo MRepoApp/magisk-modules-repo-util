@@ -219,7 +219,7 @@ class Main:
                 config=config,
                 tracks=tracks
             )
-            sync.update_by_ids(
+            sync.update(
                 module_ids=cls._args.repo_names,
                 force=False,
                 user_name=cls._args.user_name,
@@ -251,7 +251,7 @@ class Main:
 
         sync = Sync(root_folder=root_folder, config=config)
         sync.create_local_tracks()
-        sync.update_by_ids(
+        sync.update(
             module_ids=cls._args.module_ids,
             force=cls._args.force_update
         )
