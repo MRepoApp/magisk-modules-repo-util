@@ -1,17 +1,14 @@
 import functools
 import logging
-import os
 import sys
 from datetime import date
-from glob import glob
 from pathlib import Path
 from typing import Optional
 
-logger_initialized = {}
-
 
 class Log:
-    _file_prefix: str = None
+    _logger_initialized: dict = {}
+    _file_prefix: Optional[str] = None
     _enable_stdout: bool = True
 
     def __init__(self, tag: str, log_folder: Optional[Path] = None, show_log: bool = True):
@@ -56,10 +53,10 @@ class Log:
 
     @classmethod
     def clear(cls, log_folder: Path, prefix: str, max_num: int = 3):
-        log_files = sorted(glob(f"{log_folder}/{prefix}*"), reverse=True)
+        log_files = sorted(log_folder.glob(f"{prefix}*"), reverse=True)
         if len(log_files) >= max_num + 1:
             for log_file in log_files[max_num:]:
-                os.remove(log_file)
+                log_file.unlink()
 
     @classmethod
     def get_msg(cls, err: BaseException) -> str:
@@ -69,11 +66,11 @@ class Log:
 
     @classmethod
     @functools.lru_cache()
-    def get_logger(cls, name: str = "root", log_file: Optional[Path] = None, log_level=logging.DEBUG):
+    def get_logger(cls, name: str = "root", log_file: Optional[Path] = None, log_level: int = logging.DEBUG):
         logger = logging.getLogger(name)
-        if name in logger_initialized:
+        if name in cls._logger_initialized:
             return logger
-        for logger_name in logger_initialized:
+        for logger_name in cls._logger_initialized:
             if name.startswith(logger_name):
                 return logger
 
@@ -100,5 +97,5 @@ class Log:
             logger.addHandler(file_handler)
 
         logger.setLevel(log_level)
-        logger_initialized[name] = True
+        cls._logger_initialized[name] = True
         return logger
