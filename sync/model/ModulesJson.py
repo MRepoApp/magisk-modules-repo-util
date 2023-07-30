@@ -14,7 +14,7 @@ class OnlineModule(AttrDict):
 
     @property
     def version_display(self):
-        if f"({self.versionCode})" in self.version:
+        if f"{self.versionCode}" in self.version:
             return self.version
         else:
             return f"{self.version} ({self.versionCode})"
