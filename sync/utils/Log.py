@@ -3,13 +3,14 @@ import logging
 import sys
 from datetime import date
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Dict, Union
 
 
 class Log:
     _logger_initialized: dict = {}
     _file_prefix: Optional[str] = None
     _enable_stdout: bool = True
+    _log_level: int = logging.DEBUG
 
     def __init__(self, tag: str, log_folder: Optional[Path] = None, show_log: bool = True):
         if log_folder is not None:
@@ -25,7 +26,11 @@ class Log:
             log_file = None
 
         self._show_log = show_log
-        self._logging = self.get_logger(name=tag, log_file=log_file)
+        self._logging = self.get_logger(
+            name=tag,
+            log_file=log_file,
+            log_level=self._log_level
+        )
 
     def log(self, level: int, msg: str):
         if self._show_log:
@@ -44,12 +49,33 @@ class Log:
         self.log(level=logging.ERROR, msg=msg)
 
     @classmethod
+    def levels(cls) -> Dict[str, int]:
+        return {
+            "ERROR": logging.ERROR,
+            "WARN": logging.WARNING,
+            "WARNING": logging.WARNING,
+            "INFO": logging.INFO,
+            "DEBUG": logging.DEBUG,
+        }
+
+    @classmethod
     def set_file_prefix(cls, name: str):
         cls._file_prefix = name
 
     @classmethod
     def set_enable_stdout(cls, value: bool):
         cls._enable_stdout = value
+
+    @classmethod
+    def set_log_level(cls, level: Union[int, str]):
+        levels = cls.levels()
+
+        if isinstance(level, str):
+            level = levels.get(level, logging.DEBUG)
+        elif isinstance(level, int) and level not in levels.values():
+            level = logging.DEBUG
+
+        cls._log_level = level
 
     @classmethod
     def clear(cls, log_folder: Path, prefix: str, max_num: int = 3):

@@ -335,7 +335,7 @@ class Parameters:
             help=f"Clear null values in {TrackJson.filename()}."
         )
 
-        cls.add_parser_env(p, add_quiet=True)
+        cls.add_parser_env(p)
 
     @classmethod
     def add_parser_env(cls, p, add_quiet=False):

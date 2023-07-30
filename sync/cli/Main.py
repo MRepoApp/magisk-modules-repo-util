@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import sys
 from datetime import datetime
@@ -282,7 +283,7 @@ class Main:
     @classmethod
     def migrate(cls) -> int:
         root_folder = Path(cls._args.root_folder).resolve()
-        Log.set_enable_stdout(not cls._args.quiet)
+        Log.set_log_level(logging.INFO)
 
         if not (cls._args.check_id or cls._args.check_url or cls._args.clear_null):
             return cls.CODE_FAILURE
