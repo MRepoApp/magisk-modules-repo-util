@@ -1,3 +1,4 @@
+from enum import Enum
 from pathlib import Path
 from typing import List
 
@@ -19,6 +20,8 @@ class TrackJson(AttrDict, JsonIO):
     versions: int
     max_num: int
 
+    @property
+    def type(self) -> TrackType: ...
     def json(self) -> AttrDict: ...
     def write(self, file: Path): ...
     @classmethod
@@ -28,3 +31,11 @@ class TrackJson(AttrDict, JsonIO):
     @classmethod
     def expected_fields(cls) -> List[str]: ...
 
+
+class TrackType(Enum):
+    UNKNOWN: TrackType
+    ONLINE_JSON: TrackType
+    ONLINE_ZIP: TrackType
+    GIT: TrackType
+    LOCAL_JSON: TrackType
+    LOCAL_ZIP: TrackType

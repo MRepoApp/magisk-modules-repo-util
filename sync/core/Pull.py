@@ -6,7 +6,8 @@ from ..model import (
     LocalModule,
     AttrDict,
     MagiskUpdateJson,
-    OnlineModule
+    OnlineModule,
+    TrackType
 )
 from ..modifier import Result
 from ..track import LocalTracks
@@ -215,26 +216,18 @@ class Pull:
         return online_module, last_modified
 
     def from_track(self, track):
-        if not isinstance(track.update_to, str):
-            return None, 0.0
+        self._log.d(f"from_track: [{track.id}] -> type: {track.type.name}")
 
-        if track.update_to.startswith("http"):
-            if track.update_to.endswith("json"):
-                self._log.i(f"from_track: [{track.id}] -> from online json")
-                return self.from_json(track, local=False)
-            elif track.update_to.endswith("zip"):
-                self._log.i(f"from_track: [{track.id}] -> from online zip")
-                return self.from_url(track)
-            elif track.update_to.endswith("git"):
-                self._log.i(f"from_track: [{track.id}] -> from git")
-                return self.from_git(track)
-        else:
-            if track.update_to.endswith("json"):
-                self._log.i(f"from_track: [{track.id}] -> from local json")
-                return self.from_json(track, local=True)
-            elif track.update_to.endswith("zip"):
-                self._log.i(f"from_track: [{track.id}] -> from local zip")
-                return self.from_zip(track)
+        if track.type == TrackType.ONLINE_JSON:
+            return self.from_json(track, local=False)
+        elif track.type == TrackType.ONLINE_ZIP:
+            return self.from_url(track)
+        elif track.type == TrackType.GIT:
+            return self.from_git(track)
+        elif track.type == TrackType.LOCAL_JSON:
+            return self.from_json(track, local=True)
+        elif track.type == TrackType.LOCAL_ZIP:
+            return self.from_zip(track)
 
         self._log.e(f"from_track: [{track.id}] -> unsupported type [{track.update_to}]")
         return None, 0.0
