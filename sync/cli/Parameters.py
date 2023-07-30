@@ -13,7 +13,7 @@ from typing import Sequence, Optional
 
 from ..__version__ import version, versionCode
 from ..core import Index
-from ..model import AttrDict
+from ..model import AttrDict, TrackJson, UpdateJson
 from ..utils import GitUtils
 
 
@@ -314,19 +314,25 @@ class Parameters:
             metavar="MODULE_ID",
             nargs="+",
             default=None,
-            help="Ids of modules to checkout or clear. When this parameter is not set, the default is all."
+            help="Ids of modules to check or clear. When this parameter is not set, the default is all."
         )
         p.add_argument(
             "-c",
             "--check-id",
             action="store_true",
-            help="Checkout the ids of modules in all json."
+            help="Check the ids of modules in all json."
+        )
+        p.add_argument(
+            "-u",
+            "--check-url",
+            action="store_true",
+            help=f"Check the urls of files in {UpdateJson.filename()}."
         )
         p.add_argument(
             "-C",
             "--clear-null",
             action="store_true",
-            help="Clear null values in all json."
+            help=f"Clear null values in {TrackJson.filename()}."
         )
 
         cls.add_parser_env(p, add_quiet=True)

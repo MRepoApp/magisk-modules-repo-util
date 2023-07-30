@@ -284,7 +284,7 @@ class Main:
         root_folder = Path(cls._args.root_folder).resolve()
         Log.set_enable_stdout(not cls._args.quiet)
 
-        if not (cls._args.check_id or cls._args.clear_null):
+        if not (cls._args.check_id or cls._args.check_url or cls._args.clear_null):
             return cls.CODE_FAILURE
         else:
             config = Config(root_folder)
@@ -292,6 +292,9 @@ class Main:
 
         if cls._args.check_id:
             migrate.check_ids(module_ids=cls._args.module_ids)
+
+        if cls._args.check_url:
+            migrate.check_url(module_ids=cls._args.module_ids)
 
         if cls._args.clear_null:
             migrate.clear_null_values(module_ids=cls._args.module_ids)
