@@ -24,10 +24,7 @@ class Config(ConfigJson):
         self._log = Log("Config", self.log_dir, self.show_log)
 
         for key in obj.keys():
-            self._log.d(f"[{key}]: {self.get(key)}")
-
-    def __del__(self):
-        self._log.d("__del__")
+            self._log.d(f"{key} = {self.get(key)}")
 
     def _check_config(self):
         if StrUtils.isNone(self.repo_url):
