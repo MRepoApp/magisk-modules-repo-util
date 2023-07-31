@@ -98,7 +98,7 @@ class Pull:
 
         @Result.catching()
         def get_online_module():
-            return LocalModule.from_file(zip_file).to_OnlineModule()
+            return LocalModule.load(zip_file).to(OnlineModule)
 
         result = get_online_module()
         if result.is_failure:

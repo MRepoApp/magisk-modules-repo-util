@@ -6,29 +6,27 @@ from ..error import MagiskModuleError
 
 
 class LocalModule(AttrDict):
-    @property
-    def version_display(self):
-        if f"({self.versionCode})" in self.version:
-            return self.version
-        else:
-            return f"{self.version} ({self.versionCode})"
 
-    def to_OnlineModule(self):
-        return OnlineModule(self)
+    def to(self, cls):
+        if not issubclass(cls, AttrDict):
+            raise TypeError(f"unsupported type: {cls.__name__}")
+
+        return cls(self)
 
     @classmethod
-    def from_file(cls, file):
-        zip_file = ZipFile(file, "r")
+    def load(cls, file):
+        zipfile = ZipFile(file, "r")
+        fields = cls.expected_fields()
+
         try:
-            zip_file.read("META-INF/com/google/android/update-binary")
-            zip_file.read("META-INF/com/google/android/updater-script")
-            props = zip_file.read("module.prop")
+            zipfile.read("META-INF/com/google/android/update-binary")
+            zipfile.read("META-INF/com/google/android/updater-script")
+            props = zipfile.read("module.prop")
         except KeyError:
             file.unlink()
             raise MagiskModuleError(f"{file.name} is not a magisk module")
 
         obj = AttrDict()
-        fields = cls.expected_fields()
         for item in props.decode("utf-8").splitlines():
             prop = item.split("=", maxsplit=1)
             if len(prop) != 2:
@@ -49,7 +47,7 @@ class LocalModule(AttrDict):
             raise MagiskModuleError("versionCode does not exist in module.prop")
 
         local_module = LocalModule()
-        for key in cls.expected_fields():
+        for key in fields:
             local_module[key] = obj.get(key)
 
         return local_module

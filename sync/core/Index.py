@@ -6,7 +6,8 @@ from ..model import (
     AttrDict,
     ModulesJson,
     UpdateJson,
-    LocalModule
+    LocalModule,
+    OnlineModule
 )
 from ..modifier import Result
 from ..track import LocalTracks
@@ -88,7 +89,7 @@ class Index:
     def get_online_module(self, module_id, zip_file):
         @Result.catching()
         def get_online_module():
-            return LocalModule.from_file(zip_file).to_OnlineModule()
+            return LocalModule.load(zip_file).to(OnlineModule)
 
         result = get_online_module()
         if result.is_failure:
