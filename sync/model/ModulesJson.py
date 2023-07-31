@@ -27,7 +27,7 @@ class OnlineModule(AttrDict):
     def zipfile_name(self):
         return f"{self._base_filename}.zip"
 
-    def toVersionItem(self, timestamp):
+    def to_VersionItem(self, timestamp):
         return VersionItem(
             timestamp=timestamp,
             version=self.version,
