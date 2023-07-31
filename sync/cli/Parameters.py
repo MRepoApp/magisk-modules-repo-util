@@ -23,11 +23,11 @@ class Parameters:
     _choices: dict
 
     CONFIG = "config"
-    MODULE = "module"
+    TRACK = "track"
     GITHUB = "github"
     SYNC = "sync"
     INDEX = "index"
-    MIGRATE = "migrate"
+    CHECK = "check"
 
     @classmethod
     def set_root_folder(cls, root: Path):
@@ -67,11 +67,11 @@ class Parameters:
         )
 
         cls.configure_parser_config(sub_parsers)
-        cls.configure_parser_module(sub_parsers)
+        cls.configure_parser_track(sub_parsers)
         cls.configure_parser_github(sub_parsers)
         cls.configure_parser_sync(sub_parsers)
         cls.configure_parser_index(sub_parsers)
-        cls.configure_parser_migrate(sub_parsers)
+        cls.configure_parser_check(sub_parsers)
 
         cls._choices = sub_parsers.choices
 
@@ -90,26 +90,26 @@ class Parameters:
             metavar="KEY=VALUE",
             action=AttrDictAction,
             nargs="+",
-            help="Write values to the config."
+            help="Write values to config."
         )
         p.add_argument(
             "--stdin",
             action="store_true",
-            help="Write to the config piped through stdin."
+            help="Write config piped through stdin."
         )
         p.add_argument(
             "--stdout",
             action="store_true",
-            help="Show the config piped through stdout."
+            help="Show config piped through stdout."
         )
 
         cls.add_parser_env(p)
 
     @classmethod
-    def configure_parser_module(cls, sub_parsers):
+    def configure_parser_track(cls, sub_parsers):
         p = sub_parsers.add_parser(
-            cls.MODULE,
-            help="Magisk module tracks utility."
+            cls.TRACK,
+            help="Module tracks utility."
         )
         p.add_argument(
             "-l",
@@ -129,7 +129,7 @@ class Parameters:
         p.add_argument(
             "-r",
             "--remove",
-            dest="module_ids",
+            dest="remove_module_ids",
             metavar="MODULE_ID",
             nargs="+",
             default=None,
@@ -143,19 +143,21 @@ class Parameters:
         p.add_argument(
             "--keys",
             action="store_true",
-            help="Show the fields available in track."
+            help="Show fields available in track."
         )
 
         modify = p.add_argument_group("modify")
         modify.add_argument(
+            "-i",
             "--id",
-            dest="target_id",
+            dest="modify_module_id",
             metavar="MODULE_ID",
             type=str,
             default=None,
             help="Id of the module to modify."
         )
         modify.add_argument(
+            "-u",
             "--update",
             dest="update_track_json",
             metavar="KEY=VALUE",
@@ -164,8 +166,9 @@ class Parameters:
             help="Update values to the track."
         )
         modify.add_argument(
+            "-d",
             "--remove-key",
-            dest="key_list",
+            dest="remove_key_list",
             metavar="KEY",
             nargs="+",
             default=None,
@@ -211,7 +214,7 @@ class Parameters:
             metavar="REPO_NAME",
             nargs="+",
             default=None,
-            help="Names of repository. When this parameter is not set, the default is all."
+            help="Names of repository, default is all."
         )
         p.add_argument(
             "-v",
@@ -225,7 +228,7 @@ class Parameters:
         p.add_argument(
             "--cover",
             action="store_true",
-            help="Overwrite existing tracks, but the added time will not be overwritten."
+            help="Overwrite fields of tracks (exclude 'added')."
         )
         p.add_argument(
             "--update",
@@ -237,11 +240,10 @@ class Parameters:
         env = cls.add_parser_env(p, add_quiet=True)
         env.add_argument(
             "--api-token",
-            dest="api_token",
             metavar="GITHUB_TOKEN",
             type=str,
             default=cls._github_token,
-            help="GitHub API Token provided for use by PyGitHub. "
+            help="GitHub REST API Token for PyGitHub. "
                  "This can be defined in env as 'GITHUB_TOKEN', default: {0}.".format('%(default)s')
         )
 
@@ -249,13 +251,7 @@ class Parameters:
     def configure_parser_sync(cls, sub_parsers):
         p = sub_parsers.add_parser(
             cls.SYNC,
-            help="Sync modules and push to repository."
-        )
-        p.add_argument(
-            "-f",
-            "--force",
-            action="store_true",
-            help="Remove all existing versions of module when updating."
+            help="Sync modules in repository."
         )
         p.add_argument(
             "-i",
@@ -264,7 +260,7 @@ class Parameters:
             metavar="MODULE_ID",
             nargs="+",
             default=None,
-            help="Ids of modules to update. When this parameter is not set, the default is all."
+            help="Ids of modules to update, default is all."
         )
         p.add_argument(
             "-v",
@@ -274,6 +270,11 @@ class Parameters:
             type=int,
             default=Index.latest_version_code,
             help="Version of the modules.json, default: {0}.".format('%(default)s')
+        )
+        p.add_argument(
+            "--force",
+            action="store_true",
+            help="Remove all old versions."
         )
         cls.add_parser_git(p)
         cls.add_parser_env(p, add_quiet=True)
@@ -296,16 +297,16 @@ class Parameters:
         p.add_argument(
             "--stdout",
             action="store_true",
-            help="Show the modules.json piped through stdout."
+            help="Show modules.json piped through stdout."
         )
 
         cls.add_parser_env(p)
 
     @classmethod
-    def configure_parser_migrate(cls, sub_parsers):
+    def configure_parser_check(cls, sub_parsers):
         p = sub_parsers.add_parser(
-            cls.MIGRATE,
-            help="Check content in json and migrate."
+            cls.CHECK,
+            help="Content check and migrate."
         )
         p.add_argument(
             "-i",
@@ -314,25 +315,25 @@ class Parameters:
             metavar="MODULE_ID",
             nargs="+",
             default=None,
-            help="Ids of modules to check or clear. When this parameter is not set, the default is all."
+            help="Ids of modules to check, default is all."
         )
         p.add_argument(
             "-c",
             "--check-id",
             action="store_true",
-            help="Check the ids of modules in all json."
+            help="Check id of the module in all json."
         )
         p.add_argument(
             "-u",
             "--check-url",
             action="store_true",
-            help=f"Check the urls of files in {UpdateJson.filename()}."
+            help=f"Check urls of files in {UpdateJson.filename()}."
         )
         p.add_argument(
-            "-C",
-            "--clear-null",
+            "-e",
+            "--remove-empty",
             action="store_true",
-            help=f"Clear null values in {TrackJson.filename()}."
+            help=f"Remove empty values in {TrackJson.filename()}."
         )
 
         cls.add_parser_env(p)
@@ -360,7 +361,7 @@ class Parameters:
         git.add_argument(
             "--push",
             action="store_true",
-            help="Push to git repository if there are any updates."
+            help="Push to git repository."
         )
         git.add_argument(
             "--branch",
@@ -368,7 +369,7 @@ class Parameters:
             metavar="GIT_BRANCH",
             type=str,
             default=get_current_branch(cls._root_folder),
-            help="Define the branch to push, current: {0}.".format('%(default)s')
+            help="Define branch to push, current: {0}.".format('%(default)s')
         )
         git.add_argument(
             "--max-size",
@@ -376,7 +377,7 @@ class Parameters:
             metavar="MAX_SIZE",
             type=float,
             default=50.0,
-            help="Limit the size of module file, default: {0} MB.".format('%(default)s')
+            help="Limit size of file, default: {0} MB.".format('%(default)s')
         )
 
         return git

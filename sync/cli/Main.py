@@ -8,9 +8,9 @@ from pathlib import Path
 from .Parameters import Parameters
 from .SafeArgs import SafeArgs
 from ..core import (
+    Check,
     Config,
     Index,
-    Migrate,
     Pull,
     Sync
 )
@@ -53,16 +53,16 @@ class Main:
             return cls.CODE_FAILURE
         elif cls._args.cmd == Parameters.CONFIG:
             return cls.config()
-        elif cls._args.cmd == Parameters.MODULE:
-            return cls.module()
+        elif cls._args.cmd == Parameters.TRACK:
+            return cls.track()
         elif cls._args.cmd == Parameters.GITHUB:
             return cls.github()
         elif cls._args.cmd == Parameters.SYNC:
             return cls.sync()
         elif cls._args.cmd == Parameters.INDEX:
             return cls.index()
-        elif cls._args.cmd == Parameters.MIGRATE:
-            return cls.migrate()
+        elif cls._args.cmd == Parameters.CHECK:
+            return cls.check()
 
     @classmethod
     def config(cls) -> int:
@@ -94,7 +94,7 @@ class Main:
         return cls.CODE_SUCCESS
 
     @classmethod
-    def module(cls) -> int:
+    def track(cls) -> int:
         root_folder = Path(cls._args.root_folder).resolve()
         modules_folder = Config.get_modules_folder(root_folder)
         Log.set_enable_stdout(False)
@@ -117,8 +117,8 @@ class Main:
                 cover=True
             )
 
-        elif cls._args.module_ids is not None:
-            for module_id in cls._args.module_ids:
+        elif cls._args.remove_module_ids is not None:
+            for module_id in cls._args.remove_module_ids:
                 LocalTracks.del_track(
                     module_id=module_id,
                     modules_folder=modules_folder
@@ -134,23 +134,23 @@ class Main:
         elif cls._args.keys:
             print(TrackJson.expected_fields())
 
-        elif cls._args.target_id is not None:
-            module_folder = modules_folder.joinpath(cls._args.target_id)
+        elif cls._args.modify_module_id is not None:
+            module_folder = modules_folder.joinpath(cls._args.modify_module_id)
             json_file = module_folder.joinpath(TrackJson.filename())
             tag_disable = module_folder.joinpath(LocalTracks.TAG_DISABLE)
 
             if cls._args.update_track_json is not None:
                 track = TrackJson(cls._args.update_track_json)
-                track.update(id=cls._args.target_id)
+                track.update(id=cls._args.modify_module_id)
 
                 LocalTracks.update_track(
                     track=track,
                     modules_folder=modules_folder
                 )
 
-            elif cls._args.key_list is not None and json_file.exists():
+            elif cls._args.remove_key_list is not None and json_file.exists():
                 track = TrackJson.load(json_file)
-                for key in cls._args.key_list:
+                for key in cls._args.remove_key_list:
                     track.pop(key, None)
                 track.write(json_file)
 
@@ -165,6 +165,9 @@ class Main:
             elif cls._args.stdout and json_file.exists():
                 track = TrackJson.load(json_file)
                 json.dump(track, fp=sys.stdout, indent=2)
+
+            else:
+                return cls.CODE_FAILURE
 
         else:
             return cls.CODE_FAILURE
@@ -254,7 +257,7 @@ class Main:
         sync.create_local_tracks()
         sync.update(
             module_ids=cls._args.module_ids,
-            force=cls._args.force_update
+            force=cls._args.force
         )
 
         index = Index(root_folder=root_folder, config=config)
@@ -281,23 +284,23 @@ class Main:
         return cls.CODE_SUCCESS
 
     @classmethod
-    def migrate(cls) -> int:
+    def check(cls) -> int:
         root_folder = Path(cls._args.root_folder).resolve()
         Log.set_log_level(logging.INFO)
 
-        if not (cls._args.check_id or cls._args.check_url or cls._args.clear_null):
+        if not (cls._args.check_id or cls._args.check_url or cls._args.remove_empty):
             return cls.CODE_FAILURE
         else:
             config = Config(root_folder)
-            migrate = Migrate(root_folder=root_folder, config=config)
+            check = Check(root_folder=root_folder, config=config)
 
         if cls._args.check_id:
-            migrate.check_ids(module_ids=cls._args.module_ids)
+            check.ids(module_ids=cls._args.module_ids)
 
         if cls._args.check_url:
-            migrate.check_url(module_ids=cls._args.module_ids)
+            check.url(module_ids=cls._args.module_ids)
 
-        if cls._args.clear_null:
-            migrate.clear_null_values(module_ids=cls._args.module_ids)
+        if cls._args.remove_empty:
+            check.remove_empty_values(module_ids=cls._args.module_ids)
 
         return cls.CODE_SUCCESS
