@@ -42,6 +42,16 @@ class ModulesJson(AttrDict, JsonIO):
     def size(self):
         return len(self.modules)
 
+    def get_timestamp(self):
+        value0 = self.get("timestamp", None)
+
+        value1 = None
+        metadata = self.get("metadata", None)
+        if metadata is not None:
+            value1 = metadata.get("timestamp", None)
+
+        return value0 or value1 or 0.0
+
     @classmethod
     def load(cls, file):
         obj = JsonIO.load(file)

@@ -146,7 +146,7 @@ class Sync:
             self._log.e("push_by_git: git command not found")
             return
 
-        timestamp = json_file.stat().st_mtime
+        timestamp = ModulesJson.load(json_file).get_timestamp()
         msg = f"Update by CLI ({datetime.fromtimestamp(timestamp)})"
 
         subprocess.run(["git", "add", "."], cwd=self._root_folder.as_posix())
