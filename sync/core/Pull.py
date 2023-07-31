@@ -148,7 +148,7 @@ class Pull:
         else:
             update_json: MagiskUpdateJson = result.value
 
-        target_zip_file = module_folder.joinpath(update_json.zipfile_filename)
+        target_zip_file = module_folder.joinpath(update_json.zipfile_name)
         target_files = list(module_folder.glob(f"*{update_json.versionCode}.zip"))
 
         if target_zip_file.exists() or len(target_files) != 0:
