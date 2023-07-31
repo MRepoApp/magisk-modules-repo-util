@@ -1,7 +1,6 @@
 from zipfile import ZipFile
 
 from .AttrDict import AttrDict
-from .ModulesJson import OnlineModule
 from ..error import MagiskModuleError
 
 

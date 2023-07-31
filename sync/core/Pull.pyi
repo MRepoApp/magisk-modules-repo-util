@@ -1,12 +1,12 @@
 from pathlib import Path
 from typing import Optional, Tuple
 
+from ..error import Result
 from ..model import (
     TrackJson,
     ConfigJson,
     OnlineModule
 )
-from ..error import Result
 from ..utils import Log
 
 

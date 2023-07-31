@@ -2,6 +2,7 @@ from datetime import datetime
 
 from .Config import Config
 from ..__version__ import version, versionCode
+from ..error import Result
 from ..model import (
     AttrDict,
     ModulesJson,
@@ -9,7 +10,6 @@ from ..model import (
     LocalModule,
     OnlineModule
 )
-from ..error import Result
 from ..track import LocalTracks
 from ..utils import Log
 

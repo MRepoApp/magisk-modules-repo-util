@@ -3,8 +3,8 @@ from datetime import datetime
 from typing import List
 
 from .BaseTracks import BaseTracks
-from ..model import TrackJson
 from ..error import Result
+from ..model import TrackJson
 from ..utils.Log import Log
 
 

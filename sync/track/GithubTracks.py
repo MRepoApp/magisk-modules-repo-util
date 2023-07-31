@@ -4,9 +4,8 @@ from github.Repository import Repository
 
 from .BaseTracks import BaseTracks
 from .LocalTracks import LocalTracks
-from ..error import MagiskModuleError
+from ..error import MagiskModuleError, Result
 from ..model import TrackJson
-from ..error import Result
 from ..utils import Log, StrUtils
 
 

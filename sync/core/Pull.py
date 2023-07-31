@@ -2,6 +2,7 @@ import os
 import shutil
 
 from .Config import Config
+from ..error import Result
 from ..model import (
     LocalModule,
     AttrDict,
@@ -9,7 +10,6 @@ from ..model import (
     OnlineModule,
     TrackType
 )
-from ..error import Result
 from ..track import LocalTracks
 from ..utils import Log, HttpUtils, GitUtils
 

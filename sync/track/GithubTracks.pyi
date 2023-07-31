@@ -5,8 +5,8 @@ from github import Github
 from github.Repository import Repository
 
 from .BaseTracks import BaseTracks
-from ..model import TrackJson, ConfigJson
 from ..error import Result
+from ..model import TrackJson, ConfigJson
 from ..utils.Log import Log
 
 
