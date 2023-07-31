@@ -5,7 +5,7 @@ from .JsonIO import JsonIO
 class VersionItem(AttrDict):
     @property
     def version_display(self):
-        if f"({self.versionCode})" in self.version:
+        if f"{self.versionCode}" in self.version:
             return self.version
         else:
             return f"{self.version} ({self.versionCode})"
@@ -17,7 +17,7 @@ class UpdateJson(AttrDict, JsonIO):
         obj = JsonIO.load(file)
         obj.versions = [VersionItem(_obj) for _obj in obj.versions]
         obj.versions.sort(key=lambda v: v.versionCode)
-        return UpdateJson(**obj)
+        return UpdateJson(obj)
 
     @classmethod
     def filename(cls):

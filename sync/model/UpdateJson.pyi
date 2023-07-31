@@ -13,7 +13,7 @@ class VersionItem(AttrDict):
     changelog: str
 
     @property
-    def version_display(self) -> int: ...
+    def version_display(self) -> str: ...
 
 
 class UpdateJson(AttrDict, JsonIO):
