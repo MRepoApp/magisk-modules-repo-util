@@ -109,7 +109,7 @@ class Pull:
         else:
             online_module: OnlineModule = result.value
 
-        target_zip_file = module_folder.joinpath(online_module.zipfile_filename)
+        target_zip_file = module_folder.joinpath(online_module.zipfile_name)
         target_files = list(module_folder.glob(f"*{online_module.versionCode}.zip"))
 
         if not target_zip_file.exists() and len(target_files) == 0:

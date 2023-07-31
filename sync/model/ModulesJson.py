@@ -6,12 +6,6 @@ from .UpdateJson import VersionItem
 
 
 class OnlineModule(AttrDict):
-    def __eq__(self, other):
-        if isinstance(other, OnlineModule):
-            return self.id == other.id
-        else:
-            return False
-
     @property
     def version_display(self):
         if f"{self.versionCode}" in self.version:
@@ -30,10 +24,10 @@ class OnlineModule(AttrDict):
         return f"{self._base_filename}.md"
 
     @property
-    def zipfile_filename(self):
+    def zipfile_name(self):
         return f"{self._base_filename}.zip"
 
-    def to_VersionItem(self, timestamp):
+    def toVersionItem(self, timestamp):
         return VersionItem(
             timestamp=timestamp,
             version=self.version,
@@ -42,21 +36,17 @@ class OnlineModule(AttrDict):
             changelog=self.latest.changelog
         )
 
-    @classmethod
-    def from_dict(cls, obj: dict):
-        return OnlineModule(obj)
-
 
 class ModulesJson(AttrDict, JsonIO):
     @property
-    def size(self) -> int:
-        return self.modules.__len__()
+    def size(self):
+        return len(self.modules)
 
     @classmethod
     def load(cls, file):
         obj = JsonIO.load(file)
-        obj.modules = [OnlineModule.from_dict(_obj) for _obj in obj.modules]
-        return ModulesJson(**obj)
+        obj.modules = [OnlineModule(_obj) for _obj in obj.modules]
+        return ModulesJson(obj)
 
     @classmethod
     def filename(cls):

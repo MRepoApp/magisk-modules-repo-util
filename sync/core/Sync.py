@@ -58,7 +58,7 @@ class Sync:
                 versions=list()
             )
 
-        version_item = online_module.to_VersionItem(timestamp)
+        version_item = online_module.toVersionItem(timestamp)
 
         if len(update_json.versions) > 0:
             same_version = update_json.versions[-1].versionCode == version_item.versionCode
