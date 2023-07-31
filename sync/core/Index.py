@@ -9,7 +9,7 @@ from ..model import (
     LocalModule,
     OnlineModule
 )
-from ..modifier import Result
+from ..error import Result
 from ..track import LocalTracks
 from ..utils import Log
 

@@ -6,7 +6,7 @@ from .BaseTracks import BaseTracks
 from .LocalTracks import LocalTracks
 from ..error import MagiskModuleError
 from ..model import TrackJson
-from ..modifier import Result
+from ..error import Result
 from ..utils import Log, StrUtils
 
 

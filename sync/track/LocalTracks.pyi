@@ -3,7 +3,7 @@ from typing import Optional, List
 
 from .BaseTracks import BaseTracks
 from ..model import TrackJson, ConfigJson
-from ..modifier import Result
+from ..error import Result
 from ..utils.Log import Log
 
 

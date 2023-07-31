@@ -4,7 +4,7 @@ from typing import List
 
 from .BaseTracks import BaseTracks
 from ..model import TrackJson
-from ..modifier import Result
+from ..error import Result
 from ..utils.Log import Log
 
 

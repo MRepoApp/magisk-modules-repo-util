@@ -6,7 +6,7 @@ from ..model import (
     ConfigJson,
     OnlineModule
 )
-from ..modifier import Result
+from ..error import Result
 from ..utils import Log
 
 
