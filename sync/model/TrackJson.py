@@ -64,15 +64,16 @@ class TrackJson(AttrDict, JsonIO):
         return [
             "id",
             "update_to",
-            "license",
             "changelog",
+            "license",
             "website",
             "source",
             "tracker",
             "donate",
             "added",
             "last_update",
-            "versions"
+            "versions",
+            "max_num"
         ]
 
 
