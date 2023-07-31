@@ -1,4 +1,3 @@
-import os
 import subprocess
 from datetime import datetime
 
@@ -45,8 +44,12 @@ class Sync:
 
         if force:
             for file in module_folder.glob("*"):
-                if file.name != TrackJson.filename():
-                    os.remove(file)
+                if file.name not in [
+                    TrackJson.filename(),
+                    online_module.zipfile_name,
+                    online_module.changelog_filename
+                ]:
+                    file.unlink()
 
         if update_json_file.exists():
             update_json = UpdateJson.load(update_json_file)
@@ -74,12 +77,12 @@ class Sync:
 
         if len(update_json.versions) > max_num:
             old_item = update_json.versions.pop(0)
-            for file in module_folder.glob(f"*{old_item.versionCode}*"):
-                if not file.is_file():
+            for path in module_folder.glob(f"*{old_item.versionCode}*"):
+                if not path.is_file():
                     continue
 
-                self._log.d(f"_update_jsons: [{track.id}] -> remove {file.name}")
-                os.remove(file)
+                self._log.d(f"_update_jsons: [{track.id}] -> remove {path.name}")
+                path.unlink()
 
         track.last_update = timestamp
         track.versions = len(update_json.versions)
