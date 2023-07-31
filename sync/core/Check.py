@@ -6,9 +6,9 @@ from ..track import LocalTracks
 from ..utils import Log
 
 
-class Migrate:
+class Check:
     def __init__(self, root_folder, config):
-        self._log = Log("Migrate", config.log_dir, config.show_log)
+        self._log = Log("Check", config.log_dir, config.show_log)
 
         self._modules_folder = Config.get_modules_folder(root_folder)
         self._tracks = LocalTracks(self._modules_folder, config)
@@ -102,7 +102,7 @@ class Migrate:
         func = getattr(Index, "get_online_module")
         return func(self, module_id, zip_file)
 
-    def check_url(self, module_ids=None, new=False):
+    def url(self, module_ids=None, new=False):
         for track in self._get_tracks(module_ids, new):
             module_folder = self._modules_folder.joinpath(track.id)
             update_json_file = module_folder.joinpath(UpdateJson.filename())
@@ -112,7 +112,7 @@ class Migrate:
                 self._log.i(f"check_url: [{track.id}] -> {UpdateJson.filename()} has been updated")
                 update_json.write(update_json_file)
 
-    def check_ids(self, module_ids=None, new=False):
+    def ids(self, module_ids=None, new=False):
         for track in self._get_tracks(module_ids, new):
             old_id = track.id
             module_folder = self._modules_folder.joinpath(old_id)
@@ -138,7 +138,7 @@ class Migrate:
                 self._log.i(f"check_ids: [{track.id}] -> {UpdateJson.filename()} has been updated")
                 update_json.write(update_json_file)
 
-    def clear_null_values(self, module_ids=None, new=False):
+    def remove_empty_values(self, module_ids=None, new=False):
         for track in self._get_tracks(module_ids, new):
             module_folder = self._modules_folder.joinpath(track.id)
             track_json_file = module_folder.joinpath(TrackJson.filename())
