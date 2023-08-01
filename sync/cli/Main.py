@@ -2,11 +2,11 @@ import json
 import logging
 import os
 import sys
+from argparse import Namespace
 from datetime import datetime
 from pathlib import Path
 
 from .Parameters import Parameters
-from .SafeArgs import SafeArgs
 from ..core import (
     Check,
     Config,
@@ -17,6 +17,17 @@ from ..core import (
 from ..model import ConfigJson, TrackJson
 from ..track import LocalTracks, GithubTracks
 from ..utils import Log
+
+
+class SafeArgs(Namespace):
+    def __init__(self, args: Namespace):
+        super().__init__(**args.__dict__)
+
+    def __getattr__(self, item):
+        if item not in self.__dict__:
+            return None
+
+        return self.__dict__[item]
 
 
 class Main:

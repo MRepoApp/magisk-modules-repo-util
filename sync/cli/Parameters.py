@@ -17,6 +17,43 @@ from ..model import AttrDict, TrackJson, UpdateJson
 from ..utils import GitUtils
 
 
+class ArgumentParser(ArgumentParserBase):
+    def __init__(self, *args, **kwargs):
+        if not kwargs.get("formatter_class"):
+            kwargs["formatter_class"] = RawDescriptionHelpFormatter
+        if "add_help" not in kwargs:
+            add_custom_help = True
+            kwargs["add_help"] = False
+        else:
+            add_custom_help = False
+        super().__init__(*args, **kwargs)
+
+        if add_custom_help:
+            Parameters.add_parser_help(self)
+
+
+class AttrDictAction(Action):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        _dict = self._to_AttrDict(values)
+        setattr(namespace, self.dest, _dict)
+
+    @staticmethod
+    def _to_AttrDict(values: Sequence) -> AttrDict:
+        _dict = AttrDict()
+        for value in values:
+            value = value.split("=", maxsplit=1)
+            if len(value) != 2:
+                continue
+
+            k, v = value
+            _dict[k] = v
+
+        return _dict
+
+
 class Parameters:
     _root_folder: Path
     _github_token: Optional[str]
@@ -399,43 +436,6 @@ class Parameters:
             action=_HelpAction,
             help="Show this help message and exit.",
         )
-
-
-class ArgumentParser(ArgumentParserBase):
-    def __init__(self, *args, **kwargs):
-        if not kwargs.get("formatter_class"):
-            kwargs["formatter_class"] = RawDescriptionHelpFormatter
-        if "add_help" not in kwargs:
-            add_custom_help = True
-            kwargs["add_help"] = False
-        else:
-            add_custom_help = False
-        super().__init__(*args, **kwargs)
-
-        if add_custom_help:
-            Parameters.add_parser_help(self)
-
-
-class AttrDictAction(Action):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
-    def __call__(self, parser, namespace, values, option_string=None):
-        _dict = self._to_AttrDict(values)
-        setattr(namespace, self.dest, _dict)
-
-    @staticmethod
-    def _to_AttrDict(values: Sequence) -> AttrDict:
-        _dict = AttrDict()
-        for value in values:
-            value = value.split("=", maxsplit=1)
-            if len(value) != 2:
-                continue
-
-            k, v = value
-            _dict[k] = v
-
-        return _dict
 
 
 def get_current_branch(root_folder: Path):
