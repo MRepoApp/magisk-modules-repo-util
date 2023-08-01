@@ -11,7 +11,7 @@ from argparse import ArgumentParser as ArgumentParserBase
 from pathlib import Path
 from typing import Sequence, Optional
 
-from ..__version__ import version, versionCode
+from ..__version__ import get_version, get_version_code
 from ..core import Index
 from ..model import AttrDict, TrackJson, UpdateJson
 from ..utils import GitUtils
@@ -87,14 +87,14 @@ class Parameters:
             "-v",
             "--version",
             action="version",
-            version=version,
+            version=get_version(),
             help="Show util version and exit."
         )
         p.add_argument(
             "-V",
             "--version-code",
             action="version",
-            version=str(versionCode),
+            version=str(get_version_code()),
             help="Show util version code and exit."
         )
 

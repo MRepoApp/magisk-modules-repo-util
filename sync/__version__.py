@@ -5,47 +5,42 @@ from .utils import GitUtils
 GitUtils.set_cwd_folder(Path(__file__).resolve().parent)
 
 
-def get_baseVersion():
+def get_base_version() -> str:
     return "1.0.0"
 
 
-def get_baseVersionCode():
+def get_base_version_code() -> int:
     return 100
 
 
-def is_devVersion():
+def is_dev_version() -> bool:
     if not GitUtils.is_enable():
         return False
 
-    return not GitUtils.has_tag(f"v{get_baseVersion()}")
+    return not GitUtils.has_tag(f"v{get_base_version()}")
 
 
-def get_version():
+def get_version() -> str:
     if GitUtils.is_enable():
         suffix = f".{GitUtils.commit_id()}"
-        if is_devVersion():
+        if is_dev_version():
             suffix += ".dev"
     else:
         suffix = ""
 
-    return get_baseVersion() + suffix
+    return get_base_version() + suffix
 
 
-def get_versionCode():
+def get_version_code() -> int:
     if GitUtils.is_enable():
         count = int(GitUtils.commit_count())
     else:
         count = 0
 
-    return get_baseVersionCode() + count
+    return get_base_version_code() + count
 
-
-version = get_version()
-versionCode = get_versionCode()
-__version__ = f"{version} (${versionCode})"
 
 __all__ = [
-    "version",
-    "versionCode",
-    "__version__"
+    "get_version",
+    "get_version_code"
 ]
