@@ -1,4 +1,3 @@
-import os
 import shutil
 
 from .Config import Config
@@ -28,7 +27,7 @@ class Pull:
     def _copy_file(old, new, delete_old=True):
         shutil.copy(old, new)
         if delete_old:
-            os.remove(old)
+            old.unlink()
 
     @staticmethod
     @Result.catching()
@@ -72,7 +71,7 @@ class Pull:
 
         if changelog_file is not None:
             if not self._check_changelog(module_id, changelog_file):
-                os.remove(changelog_file)
+                changelog_file.unlink()
                 changelog_file = None
 
         return changelog_file
@@ -82,15 +81,15 @@ class Pull:
 
         def remove_file():
             if delete_tmp:
-                os.remove(zip_file)
+                zip_file.unlink()
             if delete_tmp and changelog_file is not None:
-                os.remove(changelog_file)
+                changelog_file.unlink()
 
-        zip_file_size = os.path.getsize(zip_file) / (1024 ** 2)
+        zip_file_size = zip_file.stat().st_size / (1024 ** 2)
         if zip_file_size > self._max_size:
             module_folder.joinpath(LocalTracks.TAG_DISABLE).touch()
             if delete_tmp:
-                os.remove(zip_file)
+                zip_file.unlink()
 
             msg = f"file size too large ({self._max_size} MB), update check will be disabled"
             self._log.w(f"_from_zip_common: [{module_id}] -> {msg}")
@@ -204,7 +203,7 @@ class Pull:
 
     def from_zip(self, track):
         zip_file = self._local_folder.joinpath(track.update_to)
-        last_modified = os.path.getmtime(zip_file)
+        last_modified = zip_file.stat().st_mtime
 
         if not zip_file.exists():
             msg = f"{track.update_to} is not in {self._local_folder}"
