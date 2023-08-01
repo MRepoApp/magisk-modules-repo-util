@@ -11,7 +11,7 @@ from ..utils import Log, StrUtils
 
 class GithubTracks(BaseTracks):
     def __init__(self, api_token, modules_folder, config):
-        self._log = Log("GithubTracks", config.log_dir, config.show_log)
+        self._log = Log("GithubTracks", enable_log=config.enable_log, log_dir=config.log_dir)
         self._modules_folder = modules_folder
 
         self._api_token = api_token

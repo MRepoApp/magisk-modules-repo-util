@@ -12,7 +12,7 @@ class LocalTracks(BaseTracks):
     TAG_DISABLE = ".disable"
 
     def __init__(self, modules_folder, config):
-        self._log = Log("LocalTracks", config.log_dir, config.show_log)
+        self._log = Log("LocalTracks", enable_log=config.enable_log, log_dir=config.log_dir)
         self._modules_folder = modules_folder
 
         self._tracks: List[TrackJson] = list()

@@ -15,11 +15,11 @@ from ..utils import Log
 
 
 class Index:
-    version_codes = [0, 1]
-    latest_version_code = version_codes[-1]
+    versions = [0, 1]
+    latest_version = versions[-1]
 
     def __init__(self, root_folder, config):
-        self._log = Log("Index", config.log_dir, config.show_log)
+        self._log = Log("Index", enable_log=config.enable_log, log_dir=config.log_dir)
 
         self._modules_folder = Config.get_modules_folder(root_folder)
         self._tracks = LocalTracks(self._modules_folder, config)
@@ -34,7 +34,7 @@ class Index:
     def _add_modules_json_0(self, track, update_json, online_module):
         if self.modules_json is None:
             self.modules_json = ModulesJson(
-                name=self._config.repo_name,
+                name=self._config.name,
                 timestamp=datetime.now().timestamp(),
                 metadata=AttrDict(
                     version=get_version(),
@@ -56,7 +56,7 @@ class Index:
     def _add_modules_json_1(self, track, update_json, online_module):
         if self.modules_json is None:
             self.modules_json = ModulesJson(
-                name=self._config.repo_name,
+                name=self._config.name,
                 metadata=AttrDict(
                     version=1,
                     timestamp=datetime.now().timestamp()
@@ -75,11 +75,11 @@ class Index:
 
         self.modules_json.modules.append(online_module)
 
-    def _add_modules_json(self, track, update_json, online_module, version_code):
-        if version_code not in self.version_codes:
-            raise RuntimeError(f"unsupported version code {version_code}")
+    def _add_modules_json(self, track, update_json, online_module, version):
+        if version not in self.versions:
+            raise RuntimeError(f"unsupported version: {version}")
 
-        func = getattr(self, f"_add_modules_json_{version_code}")
+        func = getattr(self, f"_add_modules_json_{version}")
         func(
             track=track,
             update_json=update_json,
@@ -100,7 +100,7 @@ class Index:
         else:
             return result.value
 
-    def __call__(self, version_code, to_file):
+    def __call__(self, version, to_file):
         for track in self._tracks.get_tracks():
             module_folder = self._modules_folder.joinpath(track.id)
             update_json_file = module_folder.joinpath(UpdateJson.filename())
@@ -123,7 +123,7 @@ class Index:
                 track=track,
                 update_json=update_json,
                 online_module=online_module,
-                version_code=version_code
+                version=version
             )
 
         self.modules_json.modules.sort(key=lambda v: v.id)

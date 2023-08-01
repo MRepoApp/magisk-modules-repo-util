@@ -17,7 +17,7 @@ class Pull:
     _max_size = 50
 
     def __init__(self, root_folder, config):
-        self._log = Log("Pull", config.log_dir, config.show_log)
+        self._log = Log("Pull", enable_log=config.enable_log, log_dir=config.log_dir)
 
         self._local_folder = root_folder.joinpath("local")
         self._modules_folder = Config.get_modules_folder(root_folder)
@@ -44,7 +44,7 @@ class Pull:
 
     def _get_file_url(self, module_id, file):
         module_folder = self._modules_folder.joinpath(module_id)
-        url = f"{self._config.repo_url}{self._modules_folder.name}/{module_id}/{file.name}"
+        url = f"{self._config.base_url}{self._modules_folder.name}/{module_id}/{file.name}"
 
         if not (file.is_relative_to(module_folder) and file.exists()):
             raise FileNotFoundError(f"{file} is not in {module_folder}")

@@ -12,20 +12,20 @@ class Log:
     _enable_stdout: bool = True
     _log_level: int = logging.DEBUG
 
-    def __init__(self, tag: str, log_folder: Optional[Path] = None, show_log: bool = True):
-        if log_folder is not None:
+    def __init__(self, tag: str, *, enable_log: bool = True, log_dir: Optional[Path] = None):
+        if log_dir is not None:
             if self._file_prefix is None:
                 prefix = tag.lower()
             else:
                 prefix = self._file_prefix
 
             log_file = f"{prefix}_{date.today()}.log"
-            log_file = log_folder.joinpath(log_file)
-            self.clear(log_folder, prefix)
+            log_file = log_dir.joinpath(log_file)
+            self.clear(log_dir, prefix)
         else:
             log_file = None
 
-        self._show_log = show_log
+        self._enable_log = enable_log
         self._logging = self.get_logger(
             name=tag,
             log_file=log_file,
@@ -33,7 +33,7 @@ class Log:
         )
 
     def log(self, level: int, msg: str):
-        if self._show_log:
+        if self._enable_log:
             self._logging.log(level=level, msg=msg)
 
     def d(self, msg: str):
@@ -78,8 +78,8 @@ class Log:
         cls._log_level = level
 
     @classmethod
-    def clear(cls, log_folder: Path, prefix: str, max_num: int = 3):
-        log_files = sorted(log_folder.glob(f"{prefix}*"), reverse=True)
+    def clear(cls, log_dir: Path, prefix: str, max_num: int = 3):
+        log_files = sorted(log_dir.glob(f"{prefix}*"), reverse=True)
         if len(log_files) >= max_num + 1:
             for log_file in log_files[max_num:]:
                 log_file.unlink()

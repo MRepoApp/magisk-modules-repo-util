@@ -13,7 +13,12 @@ from typing import Sequence, Optional
 
 from ..__version__ import get_version, get_version_code
 from ..core import Index
-from ..model import AttrDict, TrackJson, UpdateJson
+from ..model import (
+    AttrDict,
+    TrackJson,
+    UpdateJson,
+    ModulesJson
+)
 from ..utils import GitUtils
 
 
@@ -256,11 +261,11 @@ class Parameters:
         p.add_argument(
             "-v",
             "--version",
-            dest="version_code",
-            metavar="VERSION_CODE",
+            dest="index_version",
+            metavar="VERSION",
             type=int,
-            default=Index.latest_version_code,
-            help="Version of the modules.json, default: {0}.".format('%(default)s')
+            default=Index.latest_version,
+            help="Version of the index file ({0}), default: {1}.".format(ModulesJson.filename(), "%(default)s")
         )
         p.add_argument(
             "--cover",
@@ -281,7 +286,7 @@ class Parameters:
             type=str,
             default=cls._github_token,
             help="GitHub REST API Token for PyGitHub. "
-                 "This can be defined in env as 'GITHUB_TOKEN', default: {0}.".format('%(default)s')
+                 "This can be defined in env as 'GITHUB_TOKEN', default: {0}.".format("%(default)s")
         )
 
     @classmethod
@@ -302,11 +307,11 @@ class Parameters:
         p.add_argument(
             "-v",
             "--version",
-            dest="version_code",
-            metavar="VERSION_CODE",
+            dest="index_version",
+            metavar="VERSION",
             type=int,
-            default=Index.latest_version_code,
-            help="Version of the modules.json, default: {0}.".format('%(default)s')
+            default=Index.latest_version,
+            help="Version of the index file ({0}), default: {1}.".format(ModulesJson.filename(), "%(default)s")
         )
         p.add_argument(
             "--force",
@@ -325,11 +330,11 @@ class Parameters:
         p.add_argument(
             "-v",
             "--version",
-            dest="version_code",
-            metavar="VERSION_CODE",
+            dest="index_version",
+            metavar="VERSION",
             type=int,
-            default=Index.latest_version_code,
-            help="Version of the modules.json, default: {0}.".format('%(default)s')
+            default=Index.latest_version,
+            help="Version of the index file ({0}), default: {1}.".format(ModulesJson.filename(), "%(default)s")
         )
         p.add_argument(
             "--stdout",
@@ -385,7 +390,7 @@ class Parameters:
             metavar="ROOT_FOLDER",
             type=str,
             default=cls._root_folder.as_posix(),
-            help="Full path to repository location, current: {0}.".format('%(default)s')
+            help="Full path to repository location, current: {0}.".format("%(default)s")
         )
         if add_quiet:
             cls.add_parser_quiet(env)
@@ -406,7 +411,7 @@ class Parameters:
             metavar="GIT_BRANCH",
             type=str,
             default=get_current_branch(cls._root_folder),
-            help="Define branch to push, current: {0}.".format('%(default)s')
+            help="Define branch to push, current: {0}.".format("%(default)s")
         )
         git.add_argument(
             "--max-size",
@@ -414,7 +419,7 @@ class Parameters:
             metavar="MAX_SIZE",
             type=float,
             default=50.0,
-            help="Limit size of file, default: {0} MB.".format('%(default)s')
+            help="Limit size of file, default: {0} MB.".format("%(default)s")
         )
 
         return git

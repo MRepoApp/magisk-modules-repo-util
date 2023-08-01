@@ -8,7 +8,7 @@ from ..utils import Log
 
 class Check:
     def __init__(self, root_folder, config):
-        self._log = Log("Check", config.log_dir, config.show_log)
+        self._log = Log("Check", enable_log=config.enable_log, log_dir=config.log_dir)
 
         self._modules_folder = Config.get_modules_folder(root_folder)
         self._tracks = LocalTracks(self._modules_folder, config)
@@ -82,7 +82,7 @@ class Check:
 
             if check_id and old_id == track.id:
                 continue
-            elif not check_id and item.zipUrl.startswith(self._config.repo_url):
+            elif not check_id and item.zipUrl.startswith(self._config.base_url):
                 continue
 
             new_item = self._get_new_version_item(track, item)
@@ -138,7 +138,7 @@ class Check:
                 self._log.i(f"check_ids: [{track.id}] -> {UpdateJson.filename()} has been updated")
                 update_json.write(update_json_file)
 
-    def remove_empty_values(self, module_ids=None, new=False):
+    def empty_values(self, module_ids=None, new=False):
         for track in self._get_tracks(module_ids, new):
             module_folder = self._modules_folder.joinpath(track.id)
             track_json_file = module_folder.joinpath(TrackJson.filename())

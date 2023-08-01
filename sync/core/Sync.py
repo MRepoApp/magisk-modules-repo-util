@@ -14,7 +14,7 @@ from ..utils import Log, GitUtils
 
 class Sync:
     def __init__(self, root_folder, config, tracks=None):
-        self._log = Log("Sync", config.log_dir, config.show_log)
+        self._log = Log("Sync", enable_log=config.enable_log, log_dir=config.log_dir)
         self._root_folder = root_folder
         self._pull = Pull(root_folder, config)
 

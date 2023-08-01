@@ -14,7 +14,7 @@ from ..core import (
     Pull,
     Sync
 )
-from ..model import ConfigJson, TrackJson
+from ..model import TrackJson, JsonIO
 from ..track import LocalTracks, GithubTracks
 from ..utils import Log
 
@@ -78,27 +78,25 @@ class Main:
     @classmethod
     def config(cls) -> int:
         root_folder = Path(cls._args.root_folder).resolve()
-        config_folder = Config.get_config_folder(root_folder)
-        json_file = config_folder.joinpath(ConfigJson.filename())
+        json_folder = Config.get_json_folder(root_folder)
+        json_file = json_folder.joinpath(Config.filename())
 
         if cls._args.config_json is not None:
             if json_file.exists():
-                config = ConfigJson.load(json_file)
+                config_dict = JsonIO.load(json_file)
             else:
-                config = ConfigJson()
+                config_dict = dict()
 
-            config.update(cls._args.config_json)
-            config.check_type()
-            config.write(json_file)
+            config_dict.update(cls._args.config_json)
+            JsonIO.write(config_dict, json_file)
 
         elif cls._args.stdin:
-            config = ConfigJson(json.load(fp=sys.stdin))
-            config.check_type()
-            config.write(json_file)
+            config_dict = json.load(fp=sys.stdin)
+            JsonIO.write(config_dict, json_file)
 
         elif cls._args.stdout and json_file.exists():
-            config = ConfigJson.load(json_file)
-            json.dump(config, fp=sys.stdout, indent=2)
+            config_dict = JsonIO.load(json_file)
+            json.dump(config_dict, fp=sys.stdout, indent=2)
         else:
             return cls.CODE_FAILURE
 
@@ -242,7 +240,7 @@ class Main:
             )
 
             index = Index(root_folder=root_folder, config=config)
-            index(version_code=cls._args.version_code, to_file=True)
+            index(version=cls._args.index_version, to_file=True)
 
             if cls._args.push:
                 sync.push_by_git(cls._args.git_branch)
@@ -272,7 +270,7 @@ class Main:
         )
 
         index = Index(root_folder=root_folder, config=config)
-        index(version_code=cls._args.version_code, to_file=True)
+        index(version=cls._args.index_version, to_file=True)
 
         if cls._args.push:
             sync.push_by_git(cls._args.git_branch)
@@ -287,7 +285,7 @@ class Main:
         config = Config(root_folder)
 
         index = Index(root_folder=root_folder, config=config)
-        index(version_code=cls._args.version_code, to_file=not cls._args.stdout)
+        index(version=cls._args.index_version, to_file=not cls._args.stdout)
 
         if cls._args.stdout:
             json.dump(index.modules_json, fp=sys.stdout, indent=2)
@@ -312,6 +310,6 @@ class Main:
             check.url(module_ids=cls._args.module_ids)
 
         if cls._args.remove_empty:
-            check.remove_empty_values(module_ids=cls._args.module_ids)
+            check.empty_values(module_ids=cls._args.module_ids)
 
         return cls.CODE_SUCCESS
