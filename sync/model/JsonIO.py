@@ -6,9 +6,11 @@ from .AttrDict import AttrDict
 
 class JsonIO:
     def write(self, file):
+        assert isinstance(self, dict)
+
         file.parent.mkdir(parents=True, exist_ok=True)
 
-        with open(file, 'w') as f:
+        with open(file, "w") as f:
             json.dump(self, f, indent=2)
 
     @classmethod
@@ -20,5 +22,7 @@ class JsonIO:
         with open(file, encoding="utf-8", mode="r") as f:
             text = cls.filter(f.read())
             obj = json.loads(text)
+
+            assert isinstance(obj, dict)
 
         return AttrDict(obj)

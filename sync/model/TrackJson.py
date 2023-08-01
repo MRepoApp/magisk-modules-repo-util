@@ -40,7 +40,6 @@ class TrackJson(AttrDict, JsonIO):
             donate=self.donate or ""
         )
 
-    # noinspection PyTypeChecker
     def write(self, file):
         new = AttrDict()
         for key in self.expected_fields():
