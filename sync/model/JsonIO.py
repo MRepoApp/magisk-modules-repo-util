@@ -1,8 +1,6 @@
 import json
 import re
 
-from .AttrDict import AttrDict
-
 
 class JsonIO:
     def write(self, file):
@@ -25,4 +23,4 @@ class JsonIO:
 
             assert isinstance(obj, dict)
 
-        return AttrDict(obj)
+        return obj
