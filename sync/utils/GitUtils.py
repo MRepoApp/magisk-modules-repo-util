@@ -1,3 +1,4 @@
+import functools
 import os
 import shutil
 import subprocess
@@ -18,6 +19,7 @@ class GitUtils:
         cls._cwd_folder = cwd
 
     @classmethod
+    @functools.lru_cache()
     def exec(cls, cmd: str) -> str:
         return subprocess.run(
             args=cmd.split(" "),
