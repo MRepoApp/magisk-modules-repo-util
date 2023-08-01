@@ -62,8 +62,8 @@ class GitUtils:
     @classmethod
     def clone_and_zip(cls, url: str, out: Path) -> float:
         out.parent.mkdir(parents=True, exist_ok=True)
-
         repo_dir = out.with_suffix("")
+
         if not cls.is_enable():
             raise RuntimeError("git command not found")
 
@@ -76,7 +76,7 @@ class GitUtils:
             )
         except CalledProcessError:
             shutil.rmtree(repo_dir, ignore_errors=True)
-            raise HTTPError(f"git repository clone failed: {url}")
+            raise HTTPError(f"clone failed: {url}")
 
         try:
             result = subprocess.run(
@@ -90,17 +90,16 @@ class GitUtils:
         except CalledProcessError:
             last_committed = datetime.now().timestamp()
 
-        for path in repo_dir.glob(".git*"):
-            if path.is_dir():
-                shutil.rmtree(path, ignore_errors=True)
+        for path in repo_dir.rglob("*"):
+            if path.name.startswith(".git"):
+                if path.is_dir():
+                    shutil.rmtree(path, ignore_errors=True)
+                if path.is_file():
+                    path.unlink(missing_ok=True)
 
-            if path.is_file():
-                os.remove(path)
+                continue
 
-        for root, _, files in os.walk(repo_dir):
-            for file in files:
-                path = os.path.join(root, file)
-                os.utime(path, (last_committed, last_committed))
+            os.utime(path, (last_committed, last_committed))
 
         shutil.make_archive(repo_dir.as_posix(), format="zip", root_dir=repo_dir)
         shutil.rmtree(repo_dir)
