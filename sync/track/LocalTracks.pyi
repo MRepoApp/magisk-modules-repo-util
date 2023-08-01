@@ -4,7 +4,7 @@ from typing import Optional, List
 from .BaseTracks import BaseTracks
 from ..error import Result
 from ..model import TrackJson, ConfigJson
-from ..utils.Log import Log
+from ..utils import Log
 
 
 class LocalTracks(BaseTracks):
