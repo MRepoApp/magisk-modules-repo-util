@@ -1,5 +1,13 @@
 from pathlib import Path
-from typing import List, Dict, Any, Optional, overload
+from typing import (
+    List,
+    Dict,
+    Any,
+    Optional,
+    overload,
+    Self,
+    Union
+)
 
 from .JsonIO import JsonIO
 
@@ -40,7 +48,7 @@ class ConfigJson(JsonIO):
     def track_version(self) -> int: ...
     def _set_property(self, key: str): ...
     def _set_properties(self): ...
-    def write(self, file: Path): ...
+    def write(self: Union[Self, Dict], file: Path): ...
     @classmethod
     def load(cls, file: Path) -> ConfigJson: ...
     @classmethod

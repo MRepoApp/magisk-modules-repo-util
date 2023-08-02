@@ -53,44 +53,18 @@ class Config(ConfigJson):
         )
 
     def _migrate_0_1(self, json_file):
-        """
-        old: {
-            repo_name: <str>,
-            repo_url: <str>,
-            max_num: <int>,
-            show_log: <bool>,
-            log_dir: <str>
-        }
-
-        new: {
-            NAME: <str>,
-            BASE_URL: <str>,
-            MAX_NUM: <int>,
-            ENABLE_LOG: <bool>,
-            LOG_DIR: <str>,
-            ENV: {
-                CONFIG_VERSION: 1,
-                TRACK_VERSION: 1
-            }
-        }
-        """
-
         old_config = JsonIO.load(json_file)
         new_config = {
             "NAME": old_config.get("repo_name"),
             "BASE_URL": old_config.get("repo_url"),
             "MAX_NUM": old_config.get("max_num"),
             "ENABLE_LOG": old_config.get("show_log"),
-            "LOG_DIR": old_config.get("log_dir"),
-            "ENV": {
-                "CONFIG_VERSION": 1,
-                "TRACK_VERSION": 1
-            }
+            "LOG_DIR": old_config.get("log_dir")
         }
 
         json_folder = Config.get_json_folder(self._root_folder)
         new_json_file = json_folder.joinpath(ConfigJson.filename())
-        JsonIO.write(new_config, new_json_file)
+        ConfigJson.write(new_config, new_json_file)
 
     def _get_config(self):
         config_folder = self._root_folder.joinpath("config")

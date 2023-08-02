@@ -43,14 +43,21 @@ class ConfigJson(JsonIO):
         return env["TRACK_VERSION"]
 
     def write(self, file):
-        self._config.update(
-            ENV={
-                "CONFIG_VERSION": self.CONFIG_VERSION,
-                "TRACK_VERSION": self.TRACK_VERSION
-            }
-        )
+        env = {
+            "CONFIG_VERSION": ConfigJson.CONFIG_VERSION,
+            "TRACK_VERSION": ConfigJson.TRACK_VERSION
+        }
 
-        JsonIO.write(self._config, file)
+        if isinstance(self, dict):
+            self.update(ENV=env)
+            _dict = self
+        elif isinstance(self, ConfigJson):
+            self._config.update(ENV=env)
+            _dict = self._config
+        else:
+            raise TypeError(f"unsupported type: {type(self).__name__}")
+
+        JsonIO.write(_dict, file)
 
     @classmethod
     def load(cls, file):
