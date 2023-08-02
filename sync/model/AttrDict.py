@@ -20,7 +20,7 @@ class AttrDict(dict):
         super().__setitem__(key, value)
 
     def __getattr__(self, item):
-        return self.get(item, None)
+        return self.get(item)
 
     def __update(self):
         for key in self.keys():

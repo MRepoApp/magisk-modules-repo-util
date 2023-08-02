@@ -43,12 +43,12 @@ class ModulesJson(AttrDict, JsonIO):
         return len(self.modules)
 
     def get_timestamp(self):
-        value0 = self.get("timestamp", None)
+        value0 = self.get("timestamp")
 
         value1 = None
-        metadata = self.get("metadata", None)
+        metadata = self.get("metadata")
         if metadata is not None:
-            value1 = metadata.get("timestamp", None)
+            value1 = metadata.get("timestamp")
 
         return value0 or value1 or 0.0
 

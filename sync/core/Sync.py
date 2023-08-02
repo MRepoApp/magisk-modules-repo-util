@@ -115,14 +115,14 @@ class Sync:
         return self._tracks
 
     def create_tracks(self, **kwargs):
-        api_token = kwargs.get("api_token", None)
+        api_token = kwargs.get("api_token")
         if api_token is not None:
             return self.create_github_tracks(api_token)
         else:
             return self.create_local_tracks()
 
     def update(self, module_ids=None, force=False, **kwargs):
-        user_name = kwargs.get("user_name", None)
+        user_name = kwargs.get("user_name")
         if user_name is not None:
             if self._check_tracks(self._tracks, GithubTracks):
                 tracks = self._tracks.get_tracks(

@@ -42,7 +42,7 @@ class Main:
         root_folder = Path(root_folder).resolve()
         Parameters.set_root_folder(root_folder)
 
-        github_token = kwargs.get("github_token", None)
+        github_token = kwargs.get("github_token")
         Parameters.set_github_token(github_token)
 
     @classmethod
