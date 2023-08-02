@@ -8,7 +8,6 @@ except ImportError:
 
 
 __all__ = [
-    "BaseTracks",
     "GithubTracks",
     "LocalTracks"
 ]
