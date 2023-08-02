@@ -8,8 +8,6 @@ import requests
 from dateutil.parser import parse
 from requests import HTTPError
 
-from ..model import AttrDict
-
 
 class HttpUtils:
     @classmethod
@@ -17,15 +15,13 @@ class HttpUtils:
         return re.sub(r",(?=\s*?[}\]])", "", text)
 
     @classmethod
-    def load_json(cls, url: str) -> Union[list, AttrDict]:
+    def load_json(cls, url: str) -> Union[list, dict]:
         response = requests.get(url, stream=True)
         if not response.ok:
             raise HTTPError(response.text)
 
         text = cls._filter_json(response.text)
         obj = json.loads(text)
-        if isinstance(obj, dict):
-            return AttrDict(obj)
 
         return obj
 
