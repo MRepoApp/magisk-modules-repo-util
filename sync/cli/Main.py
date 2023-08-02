@@ -7,6 +7,7 @@ from datetime import datetime
 from pathlib import Path
 
 from .Parameters import Parameters
+from .TypeDict import ConfigDict, TrackDict
 from ..core import (
     Check,
     Config,
@@ -14,7 +15,7 @@ from ..core import (
     Pull,
     Sync
 )
-from ..model import TrackJson, JsonIO
+from ..model import TrackJson, JsonIO, ConfigJson
 from ..track import LocalTracks, GithubTracks
 from ..utils import Log
 
@@ -82,21 +83,31 @@ class Main:
         json_file = json_folder.joinpath(Config.filename())
 
         if cls._args.config_json is not None:
-            if json_file.exists():
-                config_dict = JsonIO.load(json_file)
-            else:
-                config_dict = dict()
+            if not ConfigDict.has_error():
+                if json_file.exists():
+                    config_dict = JsonIO.load(json_file)
+                else:
+                    config_dict = dict()
 
-            config_dict.update(cls._args.config_json)
-            JsonIO.write(config_dict, json_file)
+                config_dict.update(cls._args.config_json)
+                ConfigJson.write(config_dict, json_file)
+
+            else:
+                error = json.dumps(obj=ConfigDict.get_error(True), indent=2)
+                print_error(error)
 
         elif cls._args.stdin:
             config_dict = json.load(fp=sys.stdin)
-            JsonIO.write(config_dict, json_file)
+            ConfigJson.write(config_dict, json_file)
 
         elif cls._args.stdout and json_file.exists():
             config_dict = JsonIO.load(json_file)
-            json.dump(config_dict, fp=sys.stdout, indent=2)
+            print_json(config_dict, True)
+
+        elif cls._args.keys:
+            keys = ConfigDict.keys_dict()
+            print_json(keys)
+
         else:
             return cls.CODE_FAILURE
 
@@ -113,18 +124,22 @@ class Main:
 
             tracks = LocalTracks(modules_folder=modules_folder, config=config)
 
-            cls._print_modules_list(
+            print_modules_list(
                 modules_folder=modules_folder,
                 tracks=tracks.get_tracks()
             )
 
         elif cls._args.track_json is not None:
-            track = TrackJson(cls._args.track_json)
-            LocalTracks.add_track(
-                track=track,
-                modules_folder=modules_folder,
-                cover=True
-            )
+            if not TrackDict.has_error():
+                track = TrackJson(cls._args.track_json)
+                LocalTracks.add_track(
+                    track=track,
+                    modules_folder=modules_folder,
+                    cover=True
+                )
+            else:
+                error = json.dumps(obj=TrackDict.get_error(True), indent=2)
+                print_error(error)
 
         elif cls._args.remove_module_ids is not None:
             for module_id in cls._args.remove_module_ids:
@@ -141,21 +156,30 @@ class Main:
             track.write(json_file)
 
         elif cls._args.keys:
-            print(TrackJson.expected_fields())
+            keys = TrackDict.keys_dict()
+            print_json(keys)
 
         elif cls._args.modify_module_id is not None:
             module_folder = modules_folder.joinpath(cls._args.modify_module_id)
             json_file = module_folder.joinpath(TrackJson.filename())
             tag_disable = module_folder.joinpath(LocalTracks.TAG_DISABLE)
 
-            if cls._args.update_track_json is not None:
-                track = TrackJson(cls._args.update_track_json)
-                track.update(id=cls._args.modify_module_id)
+            if not json_file.exists():
+                print_error(f"There is no track for this id ({cls._args.modify_module_id})")
+                return cls.CODE_SUCCESS
 
-                LocalTracks.update_track(
-                    track=track,
-                    modules_folder=modules_folder
-                )
+            if cls._args.update_track_json is not None:
+                if not TrackDict.has_error():
+                    track = TrackJson(cls._args.update_track_json)
+                    track.update(id=cls._args.modify_module_id)
+
+                    LocalTracks.update_track(
+                        track=track,
+                        modules_folder=modules_folder
+                    )
+                else:
+                    error = json.dumps(obj=TrackDict.get_error(True), indent=2)
+                    print_error(error)
 
             elif cls._args.remove_key_list is not None and json_file.exists():
                 track = TrackJson.load(json_file)
@@ -173,7 +197,7 @@ class Main:
 
             elif cls._args.stdout and json_file.exists():
                 track = TrackJson.load(json_file)
-                json.dump(track, fp=sys.stdout, indent=2)
+                print_json(track, True)
 
             else:
                 return cls.CODE_FAILURE
@@ -182,34 +206,6 @@ class Main:
             return cls.CODE_FAILURE
 
         return cls.CODE_SUCCESS
-
-    @classmethod
-    def _format_text(cls, text: str, _len: int, left: bool = True):
-        if len(text) < _len:
-            if left:
-                return text.ljust(_len)
-            else:
-                return text.rjust(_len)
-        else:
-            return text[:_len - 3] + "..."
-
-    @classmethod
-    def _print_modules_list(cls, modules_folder: Path, tracks: list):
-        print("# tracks in repository at {}:".format(modules_folder))
-        print("#")
-        print("# {:<28} {:<15} {:<15} {}".format(
-            "ID", "Add Date", "Last Update", "Versions"
-        ))
-
-        for track in tracks:
-            if track.versions is None:
-                track.last_update = 0
-                track.versions = 0
-
-            print("{:<30}".format(cls._format_text(track.id, 30, left=True)), end=" ")
-            print("{:<15}".format(str(datetime.fromtimestamp(track.added).date())), end=" ")
-            print("{:<15}".format(str(datetime.fromtimestamp(track.last_update).date())), end=" ")
-            print("{:^10}".format(track.versions))
 
     @classmethod
     def github(cls) -> int:
@@ -288,7 +284,7 @@ class Main:
         index(version=cls._args.index_version, to_file=not cls._args.stdout)
 
         if cls._args.stdout:
-            json.dump(index.modules_json, fp=sys.stdout, indent=2)
+            print_json(index.modules_json, True)
 
         return cls.CODE_SUCCESS
 
@@ -313,3 +309,43 @@ class Main:
             check.empty_values(module_ids=cls._args.module_ids)
 
         return cls.CODE_SUCCESS
+
+
+def print_error(msg):
+    print(f"Error: {msg}")
+
+
+def print_json(obj: dict, __stdout: bool = False):
+    if __stdout:
+        json.dump(obj, fp=sys.stdout, indent=2)
+    else:
+        string = json.dumps(obj, indent=2)
+        print(string)
+
+
+def format_text(text: str, _len: int, left: bool = True):
+    if len(text) < _len:
+        if left:
+            return text.ljust(_len)
+        else:
+            return text.rjust(_len)
+    else:
+        return text[:_len - 3] + "..."
+
+
+def print_modules_list(modules_folder: Path, tracks: list):
+    print("# tracks in repository at {}:".format(modules_folder))
+    print("#")
+    print("# {:<28} {:<15} {:<15} {}".format(
+        "ID", "Add Date", "Last Update", "Versions"
+    ))
+
+    for track in tracks:
+        if track.versions is None:
+            track.last_update = 0
+            track.versions = 0
+
+        print("{:<30}".format(format_text(track.id, 30, left=True)), end=" ")
+        print("{:<15}".format(str(datetime.fromtimestamp(track.added).date())), end=" ")
+        print("{:<15}".format(str(datetime.fromtimestamp(track.last_update).date())), end=" ")
+        print("{:^10}".format(track.versions))

@@ -1,20 +1,16 @@
 # noinspection PyUnresolvedReferences,PyProtectedMember
 from argparse import (
-    Action,
+    ArgumentParser as ArgumentParserBase,
     RawDescriptionHelpFormatter,
-    _CountAction,
-    _HelpAction,
-    _StoreAction,
-
+    _HelpAction
 )
-from argparse import ArgumentParser as ArgumentParserBase
 from pathlib import Path
-from typing import Sequence, Optional
+from typing import Optional
 
+from .TypeDict import ConfigDict, TrackDict
 from ..__version__ import get_version, get_version_code
 from ..core import Index
 from ..model import (
-    AttrDict,
     TrackJson,
     UpdateJson,
     ModulesJson
@@ -35,28 +31,6 @@ class ArgumentParser(ArgumentParserBase):
 
         if add_custom_help:
             Parameters.add_parser_help(self)
-
-
-class AttrDictAction(Action):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
-    def __call__(self, parser, namespace, values, option_string=None):
-        _dict = self._to_AttrDict(values)
-        setattr(namespace, self.dest, _dict)
-
-    @staticmethod
-    def _to_AttrDict(values: Sequence) -> AttrDict:
-        _dict = AttrDict()
-        for value in values:
-            value = value.split("=", maxsplit=1)
-            if len(value) != 2:
-                continue
-
-            k, v = value
-            _dict[k] = v
-
-        return _dict
 
 
 class Parameters:
@@ -130,7 +104,7 @@ class Parameters:
             "--write",
             dest="config_json",
             metavar="KEY=VALUE",
-            action=AttrDictAction,
+            action=ConfigDict,
             nargs="+",
             help="Write values to config."
         )
@@ -143,6 +117,11 @@ class Parameters:
             "--stdout",
             action="store_true",
             help="Show config piped through stdout."
+        )
+        p.add_argument(
+            "--keys",
+            action="store_true",
+            help="Show fields available in config."
         )
 
         cls.add_parser_env(p)
@@ -164,7 +143,7 @@ class Parameters:
             "--add",
             dest="track_json",
             metavar="KEY=VALUE",
-            action=AttrDictAction,
+            action=TrackDict,
             nargs="+",
             help="Add a track to repository."
         )
@@ -203,7 +182,7 @@ class Parameters:
             "--update",
             dest="update_track_json",
             metavar="KEY=VALUE",
-            action=AttrDictAction,
+            action=TrackDict,
             nargs="+",
             help="Update values to the track."
         )
