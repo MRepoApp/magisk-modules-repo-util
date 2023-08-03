@@ -101,9 +101,9 @@ class Sync:
 
     def create_github_tracks(self, api_token):
         self._tracks = GithubTracks(
-            api_token=api_token,
             modules_folder=self._modules_folder,
-            config=self._config
+            config=self._config,
+            api_token=api_token
         )
         return self._tracks
 
@@ -128,7 +128,8 @@ class Sync:
                 tracks = self._tracks.get_tracks(
                     user_name=user_name,
                     repo_names=module_ids,
-                    cover=kwargs.get("cover", True)
+                    cover=kwargs.get("cover", False),
+                    use_ssh=kwargs.get("use_ssh", True)
                 )
             else:
                 msg = f"unsupported tracks interface type [{type(self._tracks).__name__}]"

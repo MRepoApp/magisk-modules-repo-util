@@ -247,6 +247,13 @@ class Parameters:
             help="Version of the index file ({0}), default: {1}.".format(ModulesJson.filename(), "%(default)s")
         )
         p.add_argument(
+            "-S",
+            "--ssh",
+            action="store_true",
+            help="Use SSH instead of HTTPS for git clone (deploy SSH key by yourself)."
+        )
+        p.add_argument(
+            "-C",
             "--cover",
             action="store_true",
             help="Overwrite fields of tracks (exclude 'added')."

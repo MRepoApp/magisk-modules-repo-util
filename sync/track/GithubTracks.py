@@ -10,7 +10,7 @@ from ..utils import Log, StrUtils
 
 
 class GithubTracks(BaseTracks):
-    def __init__(self, api_token, modules_folder, config):
+    def __init__(self, modules_folder, config, *, api_token):
         self._log = Log("GithubTracks", enable_log=config.enable_log, log_dir=config.log_dir)
         self._modules_folder = modules_folder
 
@@ -19,7 +19,7 @@ class GithubTracks(BaseTracks):
         self._tracks = list()
 
     @Result.catching()
-    def _get_from_repo_common(self, repo: Repository):
+    def _get_from_repo_common(self, repo: Repository, use_ssh):
         if not self.is_module_repo(repo):
             raise MagiskModuleError(f"{repo.name} is not a target magisk module repository")
 
@@ -27,7 +27,10 @@ class GithubTracks(BaseTracks):
             update_to = repo.get_contents("update.json").download_url
             changelog = ""
         except UnknownObjectException:
-            update_to = repo.clone_url
+            if use_ssh:
+                update_to = repo.ssh_url
+            else:
+                update_to = repo.clone_url
             changelog = self.get_changelog(repo)
 
         if repo.has_issues:
@@ -52,35 +55,34 @@ class GithubTracks(BaseTracks):
             donate=donate
         )
 
-    def _get_from_repo(self, repo, cover):
+    def _get_from_repo(self, repo, cover, use_ssh):
         self._log.d(f"_get_from_repo: repo_name = {repo.name}")
 
-        result = self._get_from_repo_common(repo)
+        result = self._get_from_repo_common(repo, use_ssh)
         if result.is_failure:
             msg = Log.get_msg(result.error)
             self._log.e(f"_get_from_repo: [{repo.name}] -> {msg}")
             return None
         else:
             track_json: TrackJson = result.value
-            if cover is not None:
-                LocalTracks.add_track(track_json, self._modules_folder, cover)
+            LocalTracks.add_track(track_json, self._modules_folder, cover)
 
             return track_json
 
-    def get_track(self, user_name, repo_name, cover=True):
+    def get_track(self, user_name, repo_name, *, cover=False, use_ssh=True):
         user = self._github.get_user(user_name)
         repo = user.get_repo(repo_name)
 
-        return self._get_from_repo(repo, cover)
+        return self._get_from_repo(repo, cover, use_ssh)
 
-    def get_tracks(self, user_name, repo_names=None, cover=True):
+    def get_tracks(self, user_name, repo_names=None, *, cover=False, use_ssh=True):
         self._tracks.clear()
         self._log.i(f"get_tracks: user_name = {user_name}")
 
         user = self._github.get_user(user_name)
         if repo_names is None:
             for repo in user.get_repos():
-                track_json = self._get_from_repo(repo, cover)
+                track_json = self._get_from_repo(repo, cover, use_ssh)
                 if track_json is not None:
                     self._tracks.append(track_json)
         else:
@@ -93,7 +95,7 @@ class GithubTracks(BaseTracks):
                     self._log.e(f"get_tracks: [{repo_name}] -> {msg}")
 
                 if repo is not None:
-                    track_json = self._get_from_repo(repo, cover)
+                    track_json = self._get_from_repo(repo, cover, use_ssh)
                     if track_json is not None:
                         self._tracks.append(track_json)
 

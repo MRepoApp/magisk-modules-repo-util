@@ -217,9 +217,9 @@ class Main:
         config = Config(root_folder)
 
         tracks = GithubTracks(
-            api_token=cls._args.api_token,
             modules_folder=modules_folder,
-            config=config
+            config=config,
+            api_token=cls._args.api_token
         )
 
         if cls._args.update:
@@ -232,7 +232,8 @@ class Main:
                 module_ids=cls._args.repo_names,
                 force=False,
                 user_name=cls._args.user_name,
-                cover=cls._args.cover
+                cover=cls._args.cover,
+                use_ssh=cls._args.ssh
             )
 
             index = Index(root_folder=root_folder, config=config)
@@ -245,7 +246,8 @@ class Main:
             tracks.get_tracks(
                 user_name=cls._args.user_name,
                 repo_names=cls._args.repo_names,
-                cover=cls._args.cover
+                cover=cls._args.cover,
+                use_ssh=cls._args.ssh
             )
 
         return cls.CODE_SUCCESS
