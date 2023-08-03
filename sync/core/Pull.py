@@ -24,7 +24,7 @@ class Pull:
         self._config = config
 
     @staticmethod
-    def _copy_file(old, new, delete_old=True):
+    def _copy_file(old, new, delete_old):
         shutil.copy(old, new)
         if delete_old:
             old.unlink()
@@ -37,7 +37,7 @@ class Pull:
     def _check_changelog(self, module_id, file):
         text = file.read_text()
         if HttpUtils.is_html(text):
-            self._log.w(f"_check_changelog: [{module_id}] -> unsupported changelog type [html text]")
+            self._log.w(f"_check_changelog: [{module_id}] -> unsupported type [html text]")
             return False
         else:
             return True
@@ -76,7 +76,7 @@ class Pull:
 
         return changelog_file
 
-    def _from_zip_common(self,  module_id, zip_file, changelog_file, *, delete_tmp=True):
+    def _from_zip_common(self,  module_id, zip_file, changelog_file, *, delete_tmp):
         module_folder = self._modules_folder.joinpath(module_id)
 
         def remove_file():

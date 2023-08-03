@@ -8,7 +8,7 @@ from ..model import (
     UpdateJson,
     VersionItem
 )
-from ..track import BaseTracks
+from ..track import LocalTracks
 from ..utils import Log
 
 
@@ -17,7 +17,7 @@ class Check:
 
     _modules_folder: Path
     _config: ConfigJson
-    _tracks: BaseTracks
+    _tracks: LocalTracks
 
     def __init__(self, root_folder: Path, config: ConfigJson): ...
     def _get_file_url(self, module_id: str, file: Path) -> str: ...

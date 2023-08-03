@@ -8,7 +8,7 @@ from ..model import (
     ModulesJson,
     UpdateJson
 )
-from ..track import BaseTracks
+from ..track import LocalTracks
 from ..utils import Log
 
 
@@ -17,7 +17,7 @@ class Index:
 
     _modules_folder: Path
     _config: ConfigJson
-    _tracks: BaseTracks
+    _tracks: LocalTracks
 
     json_file: Path
     modules_json: ModulesJson
@@ -28,12 +28,22 @@ class Index:
     def __init__(self, root_folder: Path, config: ConfigJson): ...
     def __call__(self, version: int, to_file: bool) -> ModulesJson: ...
     def _add_modules_json_0(
-        self, track: TrackJson, update_json: UpdateJson, online_module: OnlineModule
+        self,
+        track: TrackJson,
+        update_json: UpdateJson,
+        online_module: OnlineModule
     ): ...
     def _add_modules_json_1(
-        self, track: TrackJson, update_json: UpdateJson, online_module: OnlineModule
+        self,
+        track: TrackJson,
+        update_json: UpdateJson,
+        online_module: OnlineModule
     ): ...
     def _add_modules_json(
-        self, track: TrackJson, update_json: UpdateJson, online_module: OnlineModule, version: int
+        self,
+        track: TrackJson,
+        update_json: UpdateJson,
+        online_module: OnlineModule,
+        version: int
     ): ...
     def get_online_module(self, module_id: str, zip_file: Path) -> Optional[OnlineModule]: ...
