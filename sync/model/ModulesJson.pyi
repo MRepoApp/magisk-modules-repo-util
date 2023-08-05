@@ -14,9 +14,8 @@ class OnlineModule(AttrDict):
     name: str
     author: str
     description: str
-    latest: AttrDict
-    versions: List[VersionItem]
     track: AttrDict
+    versions: List[VersionItem]
 
     @property
     def version_display(self) -> str: ...

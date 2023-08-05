@@ -60,11 +60,6 @@ class ConfigJson(JsonIO):
         JsonIO.write(_dict, file)
 
     @classmethod
-    def load(cls, file):
-        obj = JsonIO.load(file)
-        return ConfigJson(obj)
-
-    @classmethod
     def default(cls):
         return ConfigJson(
             name="Unknown",

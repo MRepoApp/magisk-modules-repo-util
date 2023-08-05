@@ -55,7 +55,7 @@ class ModulesJson(AttrDict, JsonIO):
     @classmethod
     def load(cls, file):
         obj = JsonIO.load(file)
-        obj.modules = [OnlineModule(_obj) for _obj in obj.modules]
+        obj["modules"] = [OnlineModule(_obj) for _obj in obj["modules"]]
         return ModulesJson(obj)
 
     @classmethod
