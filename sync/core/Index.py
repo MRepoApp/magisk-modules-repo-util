@@ -64,14 +64,8 @@ class Index:
                 modules=list()
             )
 
-        latest_item = update_json.versions[-1]
-
-        online_module.latest = AttrDict(
-            zipUrl=latest_item.zipUrl,
-            changelog=latest_item.changelog
-        )
-        online_module.versions = update_json.versions
         online_module.track = track.json()
+        online_module.versions = update_json.versions
 
         self.modules_json.modules.append(online_module)
 
