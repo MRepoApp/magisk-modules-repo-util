@@ -34,9 +34,9 @@ class TrackJson(AttrDict, JsonIO):
             type=self.type.name,
             added=self.added,
             license=self.license or "",
-            website=self.website or "",
+            homepage=self.homepage or "",
             source=self.source or "",
-            tracker=self.tracker or "",
+            support=self.support or "",
             donate=self.donate or ""
         )
 
@@ -65,9 +65,9 @@ class TrackJson(AttrDict, JsonIO):
             "update_to",
             "changelog",
             "license",
-            "website",
+            "homepage",
             "source",
-            "tracker",
+            "support",
             "donate",
             "added",
             "last_update",

@@ -22,8 +22,8 @@ class TrackDict(TypeDictAction, TypeKeys):
     update_to: str
     license: str
     changelog: str
-    website: str
+    homepage: str
     source: str
-    tracker: str
+    support: str
     donate: str
     max_num: int

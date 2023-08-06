@@ -34,9 +34,9 @@ class GithubTracks(BaseTracks):
             changelog = self.get_changelog(repo)
 
         if repo.has_issues:
-            tracker = f"{repo.html_url}/issues"
+            issues = f"{repo.html_url}/issues"
         else:
-            tracker = ""
+            issues = ""
 
         donate_urls = self.get_sponsor_url(self._api_token, repo)
         if len(donate_urls) == 0:
@@ -49,9 +49,9 @@ class GithubTracks(BaseTracks):
             update_to=update_to,
             license=self.get_license(repo),
             changelog=changelog,
-            website=self.get_homepage_url(self._api_token, repo),
+            homepage=self.get_homepage_url(self._api_token, repo),
             source=repo.clone_url,
-            tracker=tracker,
+            support=issues,
             donate=donate
         )
 
