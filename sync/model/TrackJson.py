@@ -12,16 +12,21 @@ class TrackJson(AttrDict, JsonIO):
             return self._type
 
         if self.update_to.startswith("http"):
-            if self.update_to.endswith("json"):
+            if self.update_to.endswith(".json"):
                 self._type = TrackType.ONLINE_JSON
-            elif self.update_to.endswith("zip"):
+            elif self.update_to.endswith(".zip"):
                 self._type = TrackType.ONLINE_ZIP
-            elif self.update_to.endswith("git"):
+            elif self.update_to.endswith(".git"):
                 self._type = TrackType.GIT
+
+        elif self.update_to.startswith("git@"):
+            if self.update_to.endswith(".git"):
+                self._type = TrackType.GIT
+
         else:
-            if self.update_to.endswith("json"):
+            if self.update_to.endswith(".json"):
                 self._type = TrackType.LOCAL_JSON
-            elif self.update_to.endswith("zip"):
+            elif self.update_to.endswith(".zip"):
                 self._type = TrackType.LOCAL_ZIP
 
         if self._type is None:
