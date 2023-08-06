@@ -20,8 +20,8 @@ class ConfigDict(TypeDictAction, TypeKeys):
 class TrackDict(TypeDictAction, TypeKeys):
     id: str
     update_to: str
-    license: str
     changelog: str
+    license: str
     homepage: str
     source: str
     support: str
