@@ -12,18 +12,12 @@ class OnlineModule(AttrDict):
         return StrUtils.get_version_display(self.version, self.versionCode)
 
     @property
-    def _base_filename(self):
-        filename = self.version_display.replace(" ", "_")
-        filename = re.sub(r"[^a-zA-Z0-9\-._]", "", filename)
-        return filename
-
-    @property
     def changelog_filename(self):
-        return f"{self._base_filename}.md"
+        return StrUtils.get_filename(self.version_display, "md")
 
     @property
     def zipfile_name(self):
-        return f"{self._base_filename}.zip"
+        return StrUtils.get_filename(self.version_display, "zip")
 
     def to_VersionItem(self, timestamp):
         return VersionItem(

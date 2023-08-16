@@ -22,3 +22,9 @@ class StrUtils:
             return version
         else:
             return f"{version} ({version_code})"
+
+    @classmethod
+    def get_filename(cls, base: str, suffix: str):
+        filename = base.replace(" ", "_")
+        filename = re.sub(r"[^a-zA-Z0-9\-._]", "", filename)
+        return f"{filename}.{suffix}"

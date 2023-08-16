@@ -13,9 +13,7 @@ class MagiskUpdateJson(AttrDict):
 
     @property
     def zipfile_name(self):
-        filename = self.version_display.replace(" ", "_")
-        filename = re.sub(r"[^a-zA-Z0-9\-._]", "", filename)
-        return f"{filename}.zip"
+        return StrUtils.get_filename(self.version_display, "zip")
 
     @classmethod
     def load(cls, path):
