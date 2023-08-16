@@ -29,7 +29,7 @@ class Config(ConfigJson):
         base_url = self._config.get("BASE_URL", default.base_url)
         if base_url == default.base_url:
             raise ConfigError("BASE_URL is undefined")
-        elif not StrUtils.isWith(base_url, "https", "/"):
+        elif not StrUtils.is_with(base_url, "https", "/"):
             raise ConfigError("BASE_URL must start with 'https' and end with '/'")
 
         max_num = self._config.get("MAX_NUM", default.max_num)

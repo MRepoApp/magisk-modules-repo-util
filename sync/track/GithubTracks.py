@@ -191,7 +191,7 @@ class GithubTracks(BaseTracks):
         data = result["data"]
         repository = data["repository"]
         homepage_url = repository["homepageUrl"]
-        if StrUtils.isNotNone(homepage_url):
+        if StrUtils.is_not_none(homepage_url):
             return homepage_url
         else:
             return repo.html_url
