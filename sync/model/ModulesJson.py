@@ -3,15 +3,13 @@ import re
 from .AttrDict import AttrDict
 from .JsonIO import JsonIO
 from .UpdateJson import VersionItem
+from ..utils import StrUtils
 
 
 class OnlineModule(AttrDict):
     @property
     def version_display(self):
-        if f"{self.versionCode}" in self.version:
-            return self.version
-        else:
-            return f"{self.version} ({self.versionCode})"
+        return StrUtils.get_version_display(self.version, self.versionCode)
 
     @property
     def _base_filename(self):

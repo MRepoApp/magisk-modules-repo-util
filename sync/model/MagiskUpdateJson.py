@@ -3,16 +3,13 @@ from pathlib import Path
 
 from .AttrDict import AttrDict
 from .JsonIO import JsonIO
-from ..utils import HttpUtils
+from ..utils import HttpUtils, StrUtils
 
 
 class MagiskUpdateJson(AttrDict):
     @property
     def version_display(self):
-        if f"{self.versionCode}" in self.version:
-            return self.version
-        else:
-            return f"{self.version} ({self.versionCode})"
+        return StrUtils.get_version_display(self.version, self.versionCode)
 
     @property
     def zipfile_name(self):
