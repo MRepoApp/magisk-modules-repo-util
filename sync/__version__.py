@@ -6,11 +6,11 @@ GitUtils.set_cwd_folder(Path(__file__).resolve().parent)
 
 
 def get_base_version() -> str:
-    return "1.0.0"
+    return "2.0.0"
 
 
 def get_base_version_code() -> int:
-    return 100
+    return 200
 
 
 def is_dev_version() -> bool:
