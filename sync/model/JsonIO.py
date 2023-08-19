@@ -1,12 +1,14 @@
 import json
 import re
 
-from .AttrDict import AttrDict
-
 
 class JsonIO:
     def write(self, file):
-        with open(file, 'w') as f:
+        assert isinstance(self, dict)
+
+        file.parent.mkdir(parents=True, exist_ok=True)
+
+        with open(file, "w") as f:
             json.dump(self, f, indent=2)
 
     @classmethod
@@ -19,4 +21,6 @@ class JsonIO:
             text = cls.filter(f.read())
             obj = json.loads(text)
 
-        return AttrDict(obj)
+            assert isinstance(obj, dict)
+
+        return obj

@@ -1,3 +1,4 @@
+import functools
 import os
 import shutil
 import subprocess
@@ -9,52 +10,62 @@ from typing import Optional
 from dateutil.parser import parse
 from requests import HTTPError
 
-from ..modifier import Command
-
 
 class GitUtils:
-    @classmethod
-    def set_cwd_folder(cls, cwd: Optional[Path] = None):
-        Command.set_cwd_folder(cwd)
+    _cwd_folder = None
 
     @classmethod
-    @Command.exec()
-    def version(cls) -> Optional[str]:
-        return "git --version"
+    def set_cwd_folder(cls, cwd: Optional[Path] = None):
+        cls._cwd_folder = cwd
+
+    @classmethod
+    @functools.lru_cache()
+    def exec(cls, cmd: str) -> str:
+        return subprocess.run(
+            args=cmd.split(" "),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            cwd=cls._cwd_folder
+        ).stdout.decode("utf-8").strip()
+
+    @classmethod
+    def version(cls) -> str:
+        return cls.exec("git --version")
 
     @classmethod
     def is_enable(cls) -> bool:
         return cls.version() is not None
 
     @classmethod
-    @Command.exec()
-    def branch_all(cls) -> Optional[str]:
-        return "git branch --all"
+    def branch_all(cls) -> str:
+        return cls.exec("git branch --all")
 
     @classmethod
-    def current_branch(cls) -> Optional[str]:
-        result = cls.branch_all()
-        if result is not None:
-            for out in result.splitlines():
-                if out.startswith("*"):
-                    out = out.strip().split(maxsplit=1)
-                    return out[-1]
+    def current_branch(cls) -> str:
+        for out in cls.branch_all().splitlines():
+            if not out.startswith("*"):
+                continue
 
-        return None
+            out = out.strip().split(maxsplit=1)
+            return out[-1]
 
     @classmethod
-    @Command.exec()
-    def commit_id(cls) -> Optional[str]:
-        return "git rev-parse --short HEAD"
+    def commit_id(cls) -> str:
+        return cls.exec("git rev-parse --short HEAD")
 
     @classmethod
-    @Command.exec()
-    def commit_count(cls) -> Optional[str]:
-        return "git rev-list --count HEAD"
+    def commit_count(cls) -> int:
+        return int(cls.exec("git rev-list --count HEAD"))
+
+    @classmethod
+    def has_tag(cls, name: str) -> bool:
+        return cls.exec(f"git tag -l {name}") != ""
 
     @classmethod
     def clone_and_zip(cls, url: str, out: Path) -> float:
+        out.parent.mkdir(parents=True, exist_ok=True)
         repo_dir = out.with_suffix("")
+
         if not cls.is_enable():
             raise RuntimeError("git command not found")
 
@@ -67,7 +78,7 @@ class GitUtils:
             )
         except CalledProcessError:
             shutil.rmtree(repo_dir, ignore_errors=True)
-            raise HTTPError(f"git repository clone failed: {url}")
+            raise HTTPError(f"clone failed: {url}")
 
         try:
             result = subprocess.run(
@@ -81,17 +92,16 @@ class GitUtils:
         except CalledProcessError:
             last_committed = datetime.now().timestamp()
 
-        for path in repo_dir.glob(".git*"):
-            if path.is_dir():
-                shutil.rmtree(path, ignore_errors=True)
+        for path in repo_dir.rglob("*"):
+            if path.name.startswith(".git"):
+                if path.is_dir():
+                    shutil.rmtree(path, ignore_errors=True)
+                if path.is_file():
+                    path.unlink(missing_ok=True)
 
-            if path.is_file():
-                os.remove(path)
+                continue
 
-        for root, _, files in os.walk(repo_dir):
-            for file in files:
-                path = os.path.join(root, file)
-                os.utime(path, (last_committed, last_committed))
+            os.utime(path, (last_committed, last_committed))
 
         shutil.make_archive(repo_dir.as_posix(), format="zip", root_dir=repo_dir)
         shutil.rmtree(repo_dir)

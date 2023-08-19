@@ -1,5 +1,4 @@
 import json
-import os
 import re
 from datetime import datetime
 from pathlib import Path
@@ -9,8 +8,6 @@ import requests
 from dateutil.parser import parse
 from requests import HTTPError
 
-from ..model import AttrDict
-
 
 class HttpUtils:
     @classmethod
@@ -18,15 +15,13 @@ class HttpUtils:
         return re.sub(r",(?=\s*?[}\]])", "", text)
 
     @classmethod
-    def load_json(cls, url: str) -> Union[list, AttrDict]:
+    def load_json(cls, url: str) -> Union[list, dict]:
         response = requests.get(url, stream=True)
         if not response.ok:
             raise HTTPError(response.text)
 
         text = cls._filter_json(response.text)
         obj = json.loads(text)
-        if isinstance(obj, dict):
-            return AttrDict(obj)
 
         return obj
 
@@ -37,6 +32,8 @@ class HttpUtils:
 
     @classmethod
     def download(cls, url: str, out: Path) -> float:
+        out.parent.mkdir(parents=True, exist_ok=True)
+
         response = requests.get(url, stream=True)
         if response.ok:
             block_size = 1024
@@ -50,7 +47,7 @@ class HttpUtils:
             else:
                 return datetime.now().timestamp()
         else:
-            os.remove(out)
+            out.unlink(missing_ok=True)
 
             if cls.is_html(response.text):
                 msg = "404 not found"

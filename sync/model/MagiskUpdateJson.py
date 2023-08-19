@@ -3,30 +3,17 @@ from pathlib import Path
 
 from .AttrDict import AttrDict
 from .JsonIO import JsonIO
-from ..utils import HttpUtils
+from ..utils import HttpUtils, StrUtils
 
 
 class MagiskUpdateJson(AttrDict):
     @property
     def version_display(self):
-        if f"({self.versionCode})" in self.version:
-            return self.version
-        else:
-            return f"{self.version} ({self.versionCode})"
+        return StrUtils.get_version_display(self.version, self.versionCode)
 
     @property
-    def _base_filename(self):
-        filename = self.version_display.replace(" ", "_")
-        filename = re.sub(r"[^a-zA-Z0-9\-._]", "", filename)
-        return filename
-
-    @property
-    def changelog_filename(self):
-        return f"{self._base_filename}.md"
-
-    @property
-    def zipfile_filename(self):
-        return f"{self._base_filename}.zip"
+    def zipfile_name(self):
+        return StrUtils.get_filename(self.version_display, "zip")
 
     @classmethod
     def load(cls, path):
@@ -37,4 +24,4 @@ class MagiskUpdateJson(AttrDict):
         else:
             raise ValueError(f"unsupported type {type(path).__name__}")
 
-        return MagiskUpdateJson(**obj)
+        return MagiskUpdateJson(obj)

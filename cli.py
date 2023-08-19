@@ -3,9 +3,18 @@
 import os
 import sys
 from pathlib import Path
+from signal import SIGINT, signal
+
 from sync.cli import Main
 
+
+# noinspection PyUnresolvedReferences,PyProtectedMember
+def signal_handler(*args):
+    os._exit(1)
+
+
 if __name__ == "__main__":
+    signal(SIGINT, signal_handler)
     cwd_folder = Path(__name__).resolve().parent
 
     try:

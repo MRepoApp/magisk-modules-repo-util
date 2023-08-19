@@ -2,6 +2,7 @@
 
 - This util is to build module repository for [MRepo](https://github.com/ya0211/MRepo)
 - `sync` is a python package
+- `cli.py` is a cli tool
 
 ## Getting Started
 ### Initialize repository
@@ -9,38 +10,38 @@ You should create a folder, or a git repository and clone it, for example `your-
 ```shell
 $ git clone -b main https://github.com/ya0211/magisk-modules-repo-util.git util
 ```
-or add it as a submodule of the git repository
+or add it as a submodule of your git repository
 ```shell
 $ git submodule add https://github.com/ya0211/magisk-modules-repo-util.git util
 ```
 
 ### Install dependencies
 ```shell
-$ python3 -m pip install -r requirements.txt
+$ python3 -m pip install -r util/requirements.txt
 ```
 
-### Create config.json
-You can write it to `your-repo/config/config.json` by yourself, or
+### New config.json
+You can write it to `your-repo/json/config.json` by yourself, or
 ```shell
 $ cli.py config --stdin << EOF
 {
-  "repo_name": "Your Magisk Repo",
-  "repo_url": "https://you.github.io/magisk-modules-repo/",
-  "max_num": 3,
-  "show_log": true,
-  "log_dir": "log"
+  "NAME": "Your Magisk Repo",
+  "BASE_URL": "https://you.github.io/magisk-modules-repo/",
+  "MAX_NUM": 3,
+  "ENABLE_LOG": true,
+  "LOG_DIR": "log"
 }
 EOF
 ```
 or 
 ```shell
-$ cli.py config --write repo_name="Your Magisk Repo" repo_url="https://you.github.io/magisk-modules-repo/" max_num=3 show_log=true log_dir="log"
+$ cli.py config --write NAME="Your Magisk Repo" BASE_URL="https://you.github.io/magisk-modules-repo/" MAX_NUM=3 ENABLE_LOG=true LOG_DIR="log"
 ```
 
-### Create track.json
+### New track.json
 You can write it to `your-repo/modules/{id}/track.json` by yourself, or
 ```shell
-$ cli.py module --stdin << EOF
+$ cli.py track --stdin << EOF
 {
   "id": "zygisk_lsposed",
   "update_to": "https://lsposed.github.io/LSPosed/release/zygisk.json",
@@ -50,9 +51,9 @@ EOF
 ```
 or
 ```shell
-$ cli.py module --add id="zygisk_lsposed" update_to="https://lsposed.github.io/LSPosed/release/zygisk.json" license="GPL-3.0"
+$ cli.py track --add id="zygisk_lsposed" update_to="https://lsposed.github.io/LSPosed/release/zygisk.json" license="GPL-3.0"
 ```
-If you want to generate track.json from repositories on github
+If you want to generate track.json from repository on github
 ```shell
 $ cli.py github --user-name <github-user-name> --api-token=<github-api-token>
 ```
@@ -72,11 +73,12 @@ Magisk Modules Repo Util
 
 positional arguments:
   command
-    config            Modify config values of repository.
-    module            Magisk module tracks utility.
-    github            Generate track(s) from github.
-    sync              Sync modules and push to repository.
+    config            Modify config of repository.
+    track             Module tracks utility.
+    github            Generate tracks from GitHub.
+    sync              Sync modules in repository.
     index             Generate modules.json from local.
+    check             Content check and migrate.
 
 options:
   -h, --help          Show this help message and exit.
@@ -87,39 +89,49 @@ options:
 ## config.json
 ```json
 {
-  "repo_name": "required",
-  "repo_url": "required",
-  "max_num": "optional",
-  "show_log": "optional",
-  "log_dir": "optional"
+  "NAME": "str",
+  "BASE_URL": "str",
+  "MAX_NUM": "int",
+  "ENABLE_LOG": "bool",
+  "LOG_DIR": "str"
 }
 ```
 | Key | Attribute | Description |
 |:-:|:-:|:-:|
-| repo_name | required | Name of your module repository |
-| repo_url | required | Need to end with `/` |
-| max_num | optional | Max number of keeping old version modules, default value is 3 |
-| show_log | optional | If false, the log will never be showed and stored,  default value is true |
-| log_dir | optional | If defined, the log file will be stored in this directory |
+| NAME | required | Name of your module repository |
+| BASE_URL | required | Need to end with `/` |
+| MAX_NUM | optional | Max num of versions for modules, default is `3` |
+| ENABLE_LOG | optional | default is `true` |
+| LOG_DIR | optional | default is `null` |
 
 ## track.json
 ```json
 {
-  "id": "required",
-  "update_to": "required",
-  "license": "optional",
-  "changelog": "optional"
+  "id": "str",
+  "update_to": "str",
+  "changelog": "str",
+  "license": "str",
+  "homepage": "str",
+  "source": "str",
+  "support": "str",
+  "donate": "str",
+  "max_num": "int"
 }
 ```
 | Key | Attribute | Description |
 |:-:|:-:|:-:|
-| id | required | Id of the module itself |
-| update_to | required | Url of updateJson or zipFile, or file name of zipFile, or url of a git repository (end with `.git`) |
+| id | required | Id of Module (_in `module.prop`_) |
+| update_to | required | Follow examples below |
+| changelog | optional | Markdown or Simple Text (**_no HTML_**) |
 | license | optional | SPDX ID |
-| changelog | optional | Url of changelog.md or file name of changelog.md (markdown is the best, simple text is also ok, **no html**) |
+| homepage | optional | Url |
+| source | optional | Url |
+| support | optional | Url |
+| donate | optional | Url |
+| max_num | optional | Overload `MAX_NUM` in config.json |
 
 ### Update from updateJson
-This is for those modules that provide [updateJson](https://topjohnwu.github.io/Magisk/guides.html#moduleprop). 
+> For those modules that provide [updateJson](https://topjohnwu.github.io/Magisk/guides.html#moduleprop). 
 
 ```json
 {
@@ -130,10 +142,7 @@ This is for those modules that provide [updateJson](https://topjohnwu.github.io/
 ```
 
 ### Update from local updateJson
-The `update_to` requires a relative directory of *local*.
-1. Create a new folder named *local* in *your-repo*
-2. Put the update.json into *local*
-
+> `update_to` requires a relative directory of *local*.
 ```json
 {
   "id": "zygisk_lsposed",
@@ -143,9 +152,7 @@ The `update_to` requires a relative directory of *local*.
 ```
 
 ### Update from url
-This is for those have a same url to release new modules.
-- If url has changed, you have to edit it.
-
+> For those have a same url to release new modules.
 ```json
 {
   "id": "zygisk_lsposed",
@@ -156,8 +163,7 @@ This is for those have a same url to release new modules.
 ```
 
 ### Update from git
-This is for those you can **get the module by packaging all files** in the repository, such as [Magisk-Modules-Repo](https://github.com/Magisk-Modules-Repo) and [Magisk-Modules-Alt-Repo](https://github.com/Magisk-Modules-Alt-Repo). 
-- If you are looking how to add *Magisk-Modules-Alt-Repo* to *MRepo*, you can refer to [ya0211/magisk-modules-alt-repo](https://github.com/ya0211/magisk-modules-alt-repo).
+> For those we can get module by packaging all files in the repository, such as [Magisk-Modules-Repo](https://github.com/Magisk-Modules-Repo) and [Magisk-Modules-Alt-Repo](https://github.com/Magisk-Modules-Alt-Repo).
 
 ```json
 {
@@ -169,9 +175,7 @@ This is for those you can **get the module by packaging all files** in the repos
 ```
 
 ### Update from local zip
-The `update_to` requires a relative directory of *local*.
-1. Create a new folder named *local* in *your-repo*
-2. Put the zip file (and changelog.md) into *local*
+> `update_to` and `changelog` requires a relative directory of *local*.
 
 ```json
 {
@@ -185,10 +189,8 @@ The `update_to` requires a relative directory of *local*.
 ## For developer
 ```
 your-repo
-├── config
-│   └── config.json
-│
 ├── json
+│   ├── config.json
 │   └── modules.json
 │
 ├── local
@@ -216,41 +218,19 @@ your-repo
 │
 └── util
 ```
-### modules.json
-```json
-{
-  "name": "{repo_name}",
-  "timestamp": 1679036889.233794,
-  "modules": [
-    {
-      "id": "zygisk_lsposed",
-      "license": "GPL-3.0",
-      "name": "Zygisk - LSPosed",
-      "version": "v1.8.6 (6712)",
-      "versionCode": 6712,
-      "author": "LSPosed Developers",
-      "description": "Another enhanced implementation of Xposed Framework. Supports Android 8.1 ~ 13. Requires Magisk 24.0+ and Zygisk enabled.",
-      "states": {
-        "zipUrl": "{repo_url}modules/zygisk_lsposed/v1.8.6_6712.zip",
-        "changelog": "{repo_url}modules/zygisk_lsposed/v1.8.6_6712.md"
-      }
-    }
-  ]
-}
-```
 
 ### update.json
 ```json
 {
   "id": "zygisk_lsposed",
-  "timestamp": 1679025505.129431,
+  "timestamp": 1673882223.0,
   "versions": [
     {
-      "timestamp": 1679025505.129431,
+      "timestamp": 1673882223.0,
       "version": "v1.8.6 (6712)",
       "versionCode": 6712,
-      "zipUrl": "{repo_url}modules/zygisk_lsposed/v1.8.6_6712.zip",
-      "changelog": "{repo_url}modules/zygisk_lsposed/v1.8.6_6712.md"
+      "zipUrl": "{BASE_URL}modules/zygisk_lsposed/v1.8.6_(6712)_6712.zip",
+      "changelog": "{BASE_URL}modules/zygisk_lsposed/v1.8.6_(6712)_6712.md"
     }
   ]
 }
@@ -262,8 +242,79 @@ your-repo
   "id": "zygisk_lsposed",
   "update_to": "https://lsposed.github.io/LSPosed/release/zygisk.json",
   "license": "GPL-3.0",
+  "homepage": "https://lsposed.org/",
+  "source": "https://github.com/LSPosed/LSPosed.git",
+  "support": "https://github.com/LSPosed/LSPosed/issues",
   "added": 1679025505.129431,
-  "last_update": 1679025505.129431,
+  "last_update": 1673882223.0,
   "versions": 1
+}
+```
+
+## modules.json
+### v1
+> For MRepo v2.0.0-beta01 and higher
+```json
+{
+  "name": "{NAME}",
+  "metadata": {
+    "version": 1,
+    "timestamp": 1692439764.10608
+  },
+  "modules": [
+    {
+      "id": "zygisk_lsposed",
+      "name": "Zygisk - LSPosed",
+      "version": "v1.8.6 (6712)",
+      "versionCode": 6712,
+      "author": "LSPosed Developers",
+      "description": "Another enhanced implementation of Xposed Framework. Supports Android 8.1 ~ 13. Requires Magisk 24.0+ and Zygisk enabled.",
+      "track": {
+        "type": "ONLINE_JSON",
+        "added": 1679025505.129431,
+        "license": "GPL-3.0",
+        "homepage": "https://lsposed.org/",
+        "source": "https://github.com/LSPosed/LSPosed.git",
+        "support": "https://github.com/LSPosed/LSPosed/issues",
+        "donate": ""
+      },
+      "versions": [
+        {
+          "timestamp": 1673882223.0,
+          "version": "v1.8.6 (6712)",
+          "versionCode": 6712,
+          "zipUrl": "{BASE_URL}modules/zygisk_lsposed/v1.8.6_(6712)_6712.zip",
+          "changelog": "{BASE_URL}modules/zygisk_lsposed/v1.8.6_(6712)_6712.md"
+        }
+      ]
+    }
+  ]
+}
+```
+### v0
+> For MRepo v1.5.0-alpha02 and lower
+```json
+{
+  "name": "{NAME}",
+  "timestamp": 1692439602.46997,
+  "metadata": {
+    "version": "1.0.0",
+    "versionCode": 100
+  },
+  "modules": [
+    {
+      "id": "zygisk_lsposed",
+      "name": "Zygisk - LSPosed",
+      "version": "v1.8.6 (6712)",
+      "versionCode": 6712,
+      "author": "LSPosed Developers",
+      "description": "Another enhanced implementation of Xposed Framework. Supports Android 8.1 ~ 13. Requires Magisk 24.0+ and Zygisk enabled.",
+      "license": "GPL-3.0",
+      "states": {
+        "zipUrl": "{BASE_URL}modules/zygisk_lsposed/v1.8.6_(6712)_6712.zip",
+        "changelog": "{BASE_URL}modules/zygisk_lsposed/v1.8.6_(6712)_6712.md"
+      }
+    }
+  ]
 }
 ```

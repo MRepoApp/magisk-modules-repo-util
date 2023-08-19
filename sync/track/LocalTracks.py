@@ -3,25 +3,19 @@ from datetime import datetime
 from typing import List
 
 from .BaseTracks import BaseTracks
+from ..error import Result
 from ..model import TrackJson
-from ..modifier import Result
-from ..utils.Log import Log
+from ..utils import Log
 
 
 class LocalTracks(BaseTracks):
     TAG_DISABLE = ".disable"
 
     def __init__(self, modules_folder, config):
-        self._log = Log("LocalTracks", config.log_dir, config.show_log)
+        self._log = Log("LocalTracks", enable_log=config.enable_log, log_dir=config.log_dir)
         self._modules_folder = modules_folder
 
         self._tracks: List[TrackJson] = list()
-
-        self._modules_folder.mkdir(exist_ok=True)
-        self._log.d("__init__")
-
-    def __del__(self):
-        self._log.d("__del__")
 
     @Result.catching()
     def _get_from_file(self, file):
@@ -65,8 +59,8 @@ class LocalTracks(BaseTracks):
 
     @classmethod
     def add_track(cls, track, modules_folder, cover=True):
-        json_file = modules_folder.joinpath(track.id, TrackJson.filename())
-        json_file.parent.mkdir(exist_ok=True)
+        module_folder = modules_folder.joinpath(track.id)
+        json_file = module_folder.joinpath(TrackJson.filename())
 
         if not json_file.exists():
             track.added = datetime.now().timestamp()
@@ -78,11 +72,13 @@ class LocalTracks(BaseTracks):
 
     @classmethod
     def del_track(cls, module_id, modules_folder):
-        shutil.rmtree(modules_folder.joinpath(module_id), ignore_errors=True)
+        module_folder = modules_folder.joinpath(module_id)
+        shutil.rmtree(module_folder, ignore_errors=True)
 
     @classmethod
     def update_track(cls, track, modules_folder):
-        json_file = modules_folder.joinpath(track.id, TrackJson.filename())
+        module_folder = modules_folder.joinpath(track.id)
+        json_file = module_folder.joinpath(TrackJson.filename())
 
         if not json_file.exists():
             return

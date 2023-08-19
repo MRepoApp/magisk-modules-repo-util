@@ -2,38 +2,45 @@ from pathlib import Path
 
 from .utils import GitUtils
 
-
-def get_baseVersion():
-    return "1.0.0"
+GitUtils.set_cwd_folder(Path(__file__).resolve().parent)
 
 
-def get_baseVersionCode():
-    return 100
+def get_base_version() -> str:
+    return "2.0.0"
 
 
-def get_version():
-    sha = GitUtils.commit_id()
-    if sha is not None:
-        return f"{get_baseVersion()}.{sha}"
+def get_base_version_code() -> int:
+    return 200
+
+
+def is_dev_version() -> bool:
+    if not GitUtils.is_enable():
+        return False
+
+    return not GitUtils.has_tag(f"v{get_base_version()}")
+
+
+def get_version() -> str:
+    if GitUtils.is_enable():
+        suffix = f".{GitUtils.commit_id()}"
+        if is_dev_version():
+            suffix += ".dev"
     else:
-        return get_baseVersion()
+        suffix = ""
+
+    return get_base_version() + suffix
 
 
-def get_versionCode():
-    count = GitUtils.commit_count()
-    if count is not None:
-        return int(count) + get_baseVersionCode()
+def get_version_code() -> int:
+    if GitUtils.is_enable():
+        count = int(GitUtils.commit_count())
     else:
-        return get_baseVersionCode()
+        count = 0
+
+    return get_base_version_code() + count
 
 
 __all__ = [
-    "version",
-    "versionCode",
-    "__version__"
+    "get_version",
+    "get_version_code"
 ]
-
-GitUtils.set_cwd_folder(Path(__file__).resolve().parent)
-version = get_version()
-versionCode = get_versionCode()
-__version__ = f"{get_version()} (${get_versionCode()})"

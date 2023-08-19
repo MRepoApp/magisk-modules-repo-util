@@ -1,15 +1,34 @@
 import json
+import logging
 import os
 import sys
+from argparse import Namespace
 from datetime import datetime
 from pathlib import Path
 
 from .Parameters import Parameters
-from .SafeArgs import SafeArgs
-from ..core import Config, Pull, Sync
-from ..model import ConfigJson, TrackJson
+from .TypeDict import ConfigDict, TrackDict
+from ..core import (
+    Check,
+    Config,
+    Index,
+    Pull,
+    Sync
+)
+from ..model import TrackJson, JsonIO, ConfigJson
 from ..track import LocalTracks, GithubTracks
 from ..utils import Log
+
+
+class SafeArgs(Namespace):
+    def __init__(self, args: Namespace):
+        super().__init__(**args.__dict__)
+
+    def __getattr__(self, item):
+        if item not in self.__dict__:
+            return None
+
+        return self.__dict__[item]
 
 
 class Main:
@@ -23,16 +42,20 @@ class Main:
         root_folder = Path(root_folder).resolve()
         Parameters.set_root_folder(root_folder)
 
-        github_token = kwargs.get("github_token", None)
+        github_token = kwargs.get("github_token")
         Parameters.set_github_token(github_token)
 
     @classmethod
     def exec(cls) -> int:
         parser = Parameters.generate_parser()
         cls._args = SafeArgs(parser.parse_args())
+
         code = cls._check_args()
         if code == cls.CODE_FAILURE:
-            parser.print_help()
+            if cls._args.cmd is None:
+                parser.print_help()
+            else:
+                Parameters.print_cmd_help(cls._args.cmd)
 
         return code
 
@@ -42,74 +65,84 @@ class Main:
             return cls.CODE_FAILURE
         elif cls._args.cmd == Parameters.CONFIG:
             return cls.config()
-        elif cls._args.cmd == Parameters.MODULE:
-            return cls.module()
+        elif cls._args.cmd == Parameters.TRACK:
+            return cls.track()
         elif cls._args.cmd == Parameters.GITHUB:
             return cls.github()
         elif cls._args.cmd == Parameters.SYNC:
             return cls.sync()
         elif cls._args.cmd == Parameters.INDEX:
             return cls.index()
+        elif cls._args.cmd == Parameters.CHECK:
+            return cls.check()
 
     @classmethod
     def config(cls) -> int:
         root_folder = Path(cls._args.root_folder).resolve()
-        config_folder = Config.get_config_folder(root_folder)
-        os.makedirs(config_folder, exist_ok=True)
-
-        json_file = config_folder.joinpath(ConfigJson.filename())
+        json_folder = Config.get_json_folder(root_folder)
+        json_file = json_folder.joinpath(Config.filename())
 
         if cls._args.config_json is not None:
-            if json_file.exists():
-                config = ConfigJson.load(json_file)
-            else:
-                config = ConfigJson()
+            if not ConfigDict.has_error():
+                if json_file.exists():
+                    config_dict = JsonIO.load(json_file)
+                else:
+                    config_dict = dict()
 
-            config.update(cls._args.config_json)
-            config.check_type()
-            config.write(json_file)
+                config_dict.update(cls._args.config_json)
+                ConfigJson.write(config_dict, json_file)
+
+            else:
+                error = json.dumps(obj=ConfigDict.get_error(True), indent=2)
+                print_error(error)
 
         elif cls._args.stdin:
-            config = ConfigJson(json.load(fp=sys.stdin))
-            config.check_type()
-            config.write(json_file)
+            config_dict = json.load(fp=sys.stdin)
+            ConfigJson.write(config_dict, json_file)
 
         elif cls._args.stdout and json_file.exists():
-            config = ConfigJson.load(json_file)
-            json.dump(config, fp=sys.stdout, indent=2)
+            config_dict = JsonIO.load(json_file)
+            print_json(config_dict, True)
+
+        elif cls._args.keys:
+            keys = ConfigDict.keys_dict()
+            print_json(keys)
+
+        else:
+            return cls.CODE_FAILURE
 
         return cls.CODE_SUCCESS
 
     @classmethod
-    def module(cls) -> int:
+    def track(cls) -> int:
         root_folder = Path(cls._args.root_folder).resolve()
         modules_folder = Config.get_modules_folder(root_folder)
         Log.set_enable_stdout(False)
-        os.makedirs(modules_folder, exist_ok=True)
 
         if cls._args.list:
             config = Config(root_folder)
 
-            tracks = LocalTracks(
-                modules_folder=modules_folder,
-                config=config
-            )
+            tracks = LocalTracks(modules_folder=modules_folder, config=config)
 
-            cls._print_modules_list(
+            print_modules_list(
                 modules_folder=modules_folder,
-                tracks=tracks.get_tracks(module_ids=None)
+                tracks=tracks.get_tracks()
             )
 
         elif cls._args.track_json is not None:
-            track = TrackJson(cls._args.track_json)
-            LocalTracks.add_track(
-                track=track,
-                modules_folder=modules_folder,
-                cover=True
-            )
+            if not TrackDict.has_error():
+                track = TrackJson(cls._args.track_json)
+                LocalTracks.add_track(
+                    track=track,
+                    modules_folder=modules_folder,
+                    cover=True
+                )
+            else:
+                error = json.dumps(obj=TrackDict.get_error(True), indent=2)
+                print_error(error)
 
-        elif cls._args.module_ids is not None:
-            for module_id in cls._args.module_ids:
+        elif cls._args.remove_module_ids is not None:
+            for module_id in cls._args.remove_module_ids:
                 LocalTracks.del_track(
                     module_id=module_id,
                     modules_folder=modules_folder
@@ -118,34 +151,45 @@ class Main:
         elif cls._args.stdin:
             track = TrackJson(json.load(fp=sys.stdin))
             module_folder = modules_folder.joinpath(track.id)
-            os.makedirs(module_folder, exist_ok=True)
 
             json_file = module_folder.joinpath(TrackJson.filename())
             track.write(json_file)
 
-        elif cls._args.target_id is not None:
-            module_folder = modules_folder.joinpath(cls._args.target_id)
+        elif cls._args.keys:
+            keys = TrackDict.keys_dict()
+            print_json(keys)
+
+        elif cls._args.modify_module_id is not None:
+            module_folder = modules_folder.joinpath(cls._args.modify_module_id)
             json_file = module_folder.joinpath(TrackJson.filename())
             tag_disable = module_folder.joinpath(LocalTracks.TAG_DISABLE)
 
+            if not json_file.exists():
+                print_error(f"There is no track for this id ({cls._args.modify_module_id})")
+                return cls.CODE_SUCCESS
+
             if cls._args.update_track_json is not None:
-                track = TrackJson(cls._args.update_track_json)
-                track.update(id=cls._args.target_id)
+                if not TrackDict.has_error():
+                    track = TrackJson(cls._args.update_track_json)
+                    track.update(id=cls._args.modify_module_id)
 
-                LocalTracks.update_track(
-                    track=track,
-                    modules_folder=modules_folder
-                )
+                    LocalTracks.update_track(
+                        track=track,
+                        modules_folder=modules_folder
+                    )
+                else:
+                    error = json.dumps(obj=TrackDict.get_error(True), indent=2)
+                    print_error(error)
 
-            elif cls._args.key_list is not None and json_file.exists():
+            elif cls._args.remove_key_list is not None and json_file.exists():
                 track = TrackJson.load(json_file)
-                for key in cls._args.key_list:
+                for key in cls._args.remove_key_list:
                     track.pop(key, None)
                 track.write(json_file)
 
             elif cls._args.enable_update and module_folder.exists():
                 if tag_disable.exists():
-                    os.remove(tag_disable)
+                    tag_disable.unlink()
 
             elif cls._args.disable_update and module_folder.exists():
                 if not tag_disable.exists():
@@ -153,23 +197,15 @@ class Main:
 
             elif cls._args.stdout and json_file.exists():
                 track = TrackJson.load(json_file)
-                json.dump(track, fp=sys.stdout, indent=2)
+                print_json(track, True)
+
+            else:
+                return cls.CODE_FAILURE
+
+        else:
+            return cls.CODE_FAILURE
 
         return cls.CODE_SUCCESS
-
-    @classmethod
-    def _print_modules_list(cls, modules_folder: Path, tracks: list):
-        print("# tracks in repository at {}:".format(modules_folder))
-        print("#")
-        print("# {:<28} {:<15} {:<15} {}".format(
-            "ID", "Add Time", "Last Update", "Versions"
-        ))
-
-        for track in tracks:
-            print("{:<30}".format(track.id), end=" ")
-            print("{:<15}".format(str(datetime.fromtimestamp(track.added).date())), end=" ")
-            print("{:<15}".format(str(datetime.fromtimestamp(track.last_update).date())), end=" ")
-            print("{:^10}".format(track.versions))
 
     @classmethod
     def github(cls) -> int:
@@ -179,10 +215,11 @@ class Main:
         Pull.set_max_size(cls._args.max_size)
 
         config = Config(root_folder)
+
         tracks = GithubTracks(
-            api_token=cls._args.api_token,
             modules_folder=modules_folder,
-            config=config
+            config=config,
+            api_token=cls._args.api_token
         )
 
         if cls._args.update:
@@ -191,13 +228,16 @@ class Main:
                 config=config,
                 tracks=tracks
             )
-            sync.update_by_ids(
+            sync.update(
                 module_ids=cls._args.repo_names,
                 force=False,
                 user_name=cls._args.user_name,
-                cover=cls._args.cover
+                cover=cls._args.cover,
+                use_ssh=cls._args.ssh
             )
-            sync.create_modules_json(True)
+
+            index = Index(root_folder=root_folder, config=config)
+            index(version=cls._args.index_version, to_file=True)
 
             if cls._args.push:
                 sync.push_by_git(cls._args.git_branch)
@@ -206,7 +246,8 @@ class Main:
             tracks.get_tracks(
                 user_name=cls._args.user_name,
                 repo_names=cls._args.repo_names,
-                cover=cls._args.cover
+                cover=cls._args.cover,
+                use_ssh=cls._args.ssh
             )
 
         return cls.CODE_SUCCESS
@@ -219,16 +260,15 @@ class Main:
 
         config = Config(root_folder)
 
-        sync = Sync(
-            root_folder=root_folder,
-            config=config
-        )
+        sync = Sync(root_folder=root_folder, config=config)
         sync.create_local_tracks()
-        sync.update_by_ids(
+        sync.update(
             module_ids=cls._args.module_ids,
-            force=cls._args.force_update
+            force=cls._args.force
         )
-        sync.create_modules_json(True)
+
+        index = Index(root_folder=root_folder, config=config)
+        index(version=cls._args.index_version, to_file=True)
 
         if cls._args.push:
             sync.push_by_git(cls._args.git_branch)
@@ -242,14 +282,72 @@ class Main:
 
         config = Config(root_folder)
 
-        sync = Sync(
-            root_folder=root_folder,
-            config=config
-        )
-        sync.create_local_tracks()
+        index = Index(root_folder=root_folder, config=config)
+        index(version=cls._args.index_version, to_file=not cls._args.stdout)
 
-        modules_json = sync.create_modules_json(not cls._args.stdout)
         if cls._args.stdout:
-            json.dump(modules_json, fp=sys.stdout, indent=2)
+            print_json(index.modules_json, True)
 
         return cls.CODE_SUCCESS
+
+    @classmethod
+    def check(cls) -> int:
+        root_folder = Path(cls._args.root_folder).resolve()
+        Log.set_log_level(logging.INFO)
+
+        if not (cls._args.check_id or cls._args.check_url or cls._args.remove_empty):
+            return cls.CODE_FAILURE
+        else:
+            config = Config(root_folder)
+            check = Check(root_folder=root_folder, config=config)
+
+        if cls._args.check_id:
+            check.ids(module_ids=cls._args.module_ids)
+
+        if cls._args.check_url:
+            check.url(module_ids=cls._args.module_ids)
+
+        if cls._args.remove_empty:
+            check.empty_values(module_ids=cls._args.module_ids)
+
+        return cls.CODE_SUCCESS
+
+
+def print_error(msg):
+    print(f"Error: {msg}")
+
+
+def print_json(obj: dict, __stdout: bool = False):
+    if __stdout:
+        json.dump(obj, fp=sys.stdout, indent=2)
+    else:
+        string = json.dumps(obj, indent=2)
+        print(string)
+
+
+def format_text(text: str, _len: int, left: bool = True):
+    if len(text) < _len:
+        if left:
+            return text.ljust(_len)
+        else:
+            return text.rjust(_len)
+    else:
+        return text[:_len - 3] + "..."
+
+
+def print_modules_list(modules_folder: Path, tracks: list):
+    print("# tracks in repository at {}:".format(modules_folder))
+    print("#")
+    print("# {:<28} {:<15} {:<15} {}".format(
+        "ID", "Add Date", "Last Update", "Versions"
+    ))
+
+    for track in tracks:
+        if track.versions is None:
+            track.last_update = 0
+            track.versions = 0
+
+        print("{:<30}".format(format_text(track.id, 30, left=True)), end=" ")
+        print("{:<15}".format(str(datetime.fromtimestamp(track.added).date())), end=" ")
+        print("{:<15}".format(str(datetime.fromtimestamp(track.last_update).date())), end=" ")
+        print("{:^10}".format(track.versions))

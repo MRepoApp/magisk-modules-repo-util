@@ -1,37 +1,39 @@
 import functools
 import logging
-import os
 import sys
 from datetime import date
-from glob import glob
 from pathlib import Path
-from typing import Optional
-
-logger_initialized = {}
+from typing import Optional, Dict, Union
 
 
 class Log:
-    _file_prefix: str = None
+    _logger_initialized: dict = {}
+    _file_prefix: Optional[str] = None
     _enable_stdout: bool = True
+    _log_level: int = logging.DEBUG
 
-    def __init__(self, tag: str, log_folder: Optional[Path] = None, show_log: bool = True):
-        if log_folder is not None:
+    def __init__(self, tag: str, *, enable_log: bool = True, log_dir: Optional[Path] = None):
+        if log_dir is not None:
             if self._file_prefix is None:
                 prefix = tag.lower()
             else:
                 prefix = self._file_prefix
 
             log_file = f"{prefix}_{date.today()}.log"
-            log_file = log_folder.joinpath(log_file)
-            self.clear(log_folder, prefix)
+            log_file = log_dir.joinpath(log_file)
+            self.clear(log_dir, prefix)
         else:
             log_file = None
 
-        self._show_log = show_log
-        self._logging = self.get_logger(name=tag, log_file=log_file)
+        self._enable_log = enable_log
+        self._logging = self.get_logger(
+            name=tag,
+            log_file=log_file,
+            log_level=self._log_level
+        )
 
     def log(self, level: int, msg: str):
-        if self._show_log:
+        if self._enable_log:
             self._logging.log(level=level, msg=msg)
 
     def d(self, msg: str):
@@ -47,6 +49,16 @@ class Log:
         self.log(level=logging.ERROR, msg=msg)
 
     @classmethod
+    def levels(cls) -> Dict[str, int]:
+        return {
+            "ERROR": logging.ERROR,
+            "WARN": logging.WARNING,
+            "WARNING": logging.WARNING,
+            "INFO": logging.INFO,
+            "DEBUG": logging.DEBUG,
+        }
+
+    @classmethod
     def set_file_prefix(cls, name: str):
         cls._file_prefix = name
 
@@ -55,11 +67,22 @@ class Log:
         cls._enable_stdout = value
 
     @classmethod
-    def clear(cls, log_folder: Path, prefix: str, max_num: int = 3):
-        log_files = sorted(glob(f"{log_folder}/{prefix}*"), reverse=True)
+    def set_log_level(cls, level: Union[int, str]):
+        levels = cls.levels()
+
+        if isinstance(level, str):
+            level = levels.get(level, logging.DEBUG)
+        elif isinstance(level, int) and level not in levels.values():
+            level = logging.DEBUG
+
+        cls._log_level = level
+
+    @classmethod
+    def clear(cls, log_dir: Path, prefix: str, max_num: int = 3):
+        log_files = sorted(log_dir.glob(f"{prefix}*"), reverse=True)
         if len(log_files) >= max_num + 1:
             for log_file in log_files[max_num:]:
-                os.remove(log_file)
+                log_file.unlink()
 
     @classmethod
     def get_msg(cls, err: BaseException) -> str:
@@ -69,11 +92,11 @@ class Log:
 
     @classmethod
     @functools.lru_cache()
-    def get_logger(cls, name: str = "root", log_file: Optional[Path] = None, log_level=logging.DEBUG):
+    def get_logger(cls, name: str = "root", log_file: Optional[Path] = None, log_level: int = logging.DEBUG):
         logger = logging.getLogger(name)
-        if name in logger_initialized:
+        if name in cls._logger_initialized:
             return logger
-        for logger_name in logger_initialized:
+        for logger_name in cls._logger_initialized:
             if name.startswith(logger_name):
                 return logger
 
@@ -100,5 +123,5 @@ class Log:
             logger.addHandler(file_handler)
 
         logger.setLevel(log_level)
-        logger_initialized[name] = True
+        cls._logger_initialized[name] = True
         return logger

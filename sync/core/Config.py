@@ -1,54 +1,84 @@
+import shutil
 from pathlib import Path
 
 from ..error import ConfigError
-from ..model import ConfigJson
-from ..utils.Log import Log
-from ..utils.StrUtils import StrUtils
+from ..model import ConfigJson, JsonIO
+from ..utils import Log, StrUtils
 
 
 class Config(ConfigJson):
     def __init__(self, root_folder):
-        config_json = self.get_config_folder(root_folder).joinpath(ConfigJson.filename())
-        if not config_json.exists():
-            raise FileNotFoundError(config_json.as_posix())
+        self._log = Log("Config", enable_log=True)
+        self._root_folder = root_folder
 
-        obj = self.load(config_json)
-        super().__init__(obj)
+        self._get_config()
+        self._check_values()
+        super().__init__(self._config)
 
-        self._check_config()
-        self._set_log_dir(root_folder)
+        self._log = Log("Config", enable_log=self.enable_log, log_dir=self.log_dir)
+        for key in self.expected_fields():
+            self._log.d(f"{key} = {self._config[key]}")
 
-        self.set_default()
-        self.check_type()
+    def _check_values(self):
+        default = self.default()
 
-        self._log = Log("Config", self.log_dir, self.show_log)
-        self._log.d("__init__")
+        name = self._config.get("NAME", default.name)
+        if name == default.name:
+            self._log.w("_check_values: NAME is undefined")
 
-        for key in obj.keys():
-            self._log.d(f"[{key}]: {self.get(key)}")
+        base_url = self._config.get("BASE_URL", default.base_url)
+        if base_url == default.base_url:
+            raise ConfigError("BASE_URL is undefined")
+        elif not StrUtils.is_with(base_url, "https", "/"):
+            raise ConfigError("BASE_URL must start with 'https' and end with '/'")
 
-    def __del__(self):
-        self._log.d("__del__")
+        max_num = self._config.get("MAX_NUM", default.max_num)
+        enable_log = self._config.get("ENABLE_LOG", default.enable_log)
 
-    def _check_config(self):
-        if StrUtils.isNone(self.repo_url):
-            raise ConfigError("repo_url field is undefined")
-        elif not StrUtils.isWith(self.repo_url, "http", "/"):
-            raise ConfigError(f"repo_url must start with 'http' and end with '/'")
+        log_dir = self._config.get("LOG_DIR", default.log_dir)
+        if log_dir != default.log_dir:
+            log_dir = Path(log_dir)
 
-    def _set_log_dir(self, root_folder):
-        if self.log_dir is None:
-            return
+            if not log_dir.is_absolute():
+                log_dir = self._root_folder.joinpath(log_dir)
 
-        _log_dir = Path(self.log_dir)
-        if not _log_dir.is_absolute():
-            _log_dir = root_folder.joinpath(_log_dir)
+        self._config.update(
+            {
+                "NAME": name,
+                "BASE_URL": base_url,
+                "MAX_NUM": max_num,
+                "ENABLE_LOG": enable_log,
+                "LOG_DIR": log_dir
+            }
+        )
 
-        self.log_dir = _log_dir
+    def _migrate_0_1(self, json_file):
+        old_config = JsonIO.load(json_file)
+        new_config = {
+            "NAME": old_config.get("repo_name"),
+            "BASE_URL": old_config.get("repo_url"),
+            "MAX_NUM": old_config.get("max_num"),
+            "ENABLE_LOG": old_config.get("show_log"),
+            "LOG_DIR": old_config.get("log_dir")
+        }
 
-    @classmethod
-    def get_config_folder(cls, root_folder):
-        return root_folder.joinpath("config")
+        json_folder = Config.get_json_folder(self._root_folder)
+        new_json_file = json_folder.joinpath(ConfigJson.filename())
+        ConfigJson.write(new_config, new_json_file)
+
+    def _get_config(self):
+        config_folder = self._root_folder.joinpath("config")
+        config_json0 = config_folder.joinpath(ConfigJson.filename())
+        if config_json0.exists():
+            self._migrate_0_1(config_json0)
+            shutil.rmtree(config_folder, ignore_errors=True)
+
+        json_folder = self.get_json_folder(self._root_folder)
+        config_json1 = json_folder.joinpath(ConfigJson.filename())
+        if not config_json1.exists():
+            raise FileNotFoundError(config_json1.as_posix())
+
+        self._config = JsonIO.load(config_json1)
 
     @classmethod
     def get_json_folder(cls, root_folder):

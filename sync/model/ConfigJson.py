@@ -1,47 +1,84 @@
-from .AttrDict import AttrDict
 from .JsonIO import JsonIO
-from ..error import ConfigError
 
 
-# noinspection PyAttributeOutsideInit
-class ConfigJson(AttrDict, JsonIO):
-    def set_default(self):
-        default = self.default()
-        self.repo_name = self.repo_name or default.repo_name
-        self.max_num = self.max_num or default.max_num
-        self.show_log = self.show_log or default.show_log
-        self.log_dir = self.log_dir or default.log_dir
+class ConfigJson(JsonIO):
+    CONFIG_VERSION = 1
+    TRACK_VERSION = 1
 
-    def check_type(self):
-        try:
-            self.max_num = int(self.max_num)
-        except ValueError:
-            msg = f"unsupported type [{type(self.max_num).__name__}], max_num must be defined as int"
-            raise ConfigError(msg)
-
-        if isinstance(self.show_log, str):
-            self.show_log = self.show_log.lower() == "true"
-        elif isinstance(self.show_log, bool):
-            pass
+    def __init__(self, *args, **kwargs):
+        if len(args) == 0:
+            config = {k.upper(): v for k, v in kwargs.items()}
         else:
-            msg = f"unsupported type [{type(self.show_log).__name__}], show_log must be defined as bool"
-            raise ConfigError(msg)
+            config = args[0]
 
-    @classmethod
-    def load(cls, file):
-        obj = JsonIO.load(file)
-        return ConfigJson(obj)
+        self._config = config
+        self._set_properties()
+
+    # noinspection PyProtectedMember
+    def _set_property(self, key):
+        setattr(
+            self.__class__,
+            key.lower(),
+            property(fget=lambda obj: obj._config[key])
+        )
+
+    def _set_properties(self):
+        for key in self.expected_fields():
+            self._set_property(key)
+
+    @property
+    def config_version(self):
+        env = self._config.get("ENV")
+        if env is None:
+            return self.CONFIG_VERSION
+
+        return env["CONFIG_VERSION"]
+
+    @property
+    def track_version(self):
+        env = self._config.get("ENV")
+        if env is None:
+            return self.TRACK_VERSION
+
+        return env["TRACK_VERSION"]
+
+    def write(self, file):
+        env = {
+            "CONFIG_VERSION": ConfigJson.CONFIG_VERSION,
+            "TRACK_VERSION": ConfigJson.TRACK_VERSION
+        }
+
+        if isinstance(self, dict):
+            self.update(ENV=env)
+            _dict = self
+        elif isinstance(self, ConfigJson):
+            self._config.update(ENV=env)
+            _dict = self._config
+        else:
+            raise TypeError(f"unsupported type: {type(self).__name__}")
+
+        JsonIO.write(_dict, file)
 
     @classmethod
     def default(cls):
         return ConfigJson(
-            repo_name="Unknown Magisk Repo",
-            repo_url="",
+            name="Unknown",
+            base_url="",
             max_num=3,
-            show_log=True,
+            enable_log=True,
             log_dir=None
         )
 
     @classmethod
     def filename(cls):
         return "config.json"
+
+    @classmethod
+    def expected_fields(cls):
+        return [
+            "NAME",
+            "BASE_URL",
+            "MAX_NUM",
+            "ENABLE_LOG",
+            "LOG_DIR"
+        ]

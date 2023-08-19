@@ -1,36 +1,40 @@
 from pathlib import Path
 from typing import Optional, Tuple
 
+from ..error import Result
 from ..model import (
     TrackJson,
     ConfigJson,
     OnlineModule
 )
-from ..modifier import Result
 from ..utils import Log
 
 
 class Pull:
-    _max_size: float
-
     _log: Log
-    _local_folder: Path
 
+    _local_folder: Path
+    _modules_folder: Path
     _config: ConfigJson
 
-    modules_folder: Path
+    _max_size: float
 
     def __init__(self, root_folder: Path, config: ConfigJson): ...
     @staticmethod
-    def _copy_file(old: Path, new: Path, delete_old: bool = True): ...
+    def _copy_file(old: Path, new: Path, delete_old: bool): ...
     @staticmethod
     @Result.catching()
-    def _safe_download(url: str, out: Path) -> Result: ...
+    def _download(url: str, out: Path) -> Result: ...
     def _check_changelog(self, module_id: str, file: Path) -> bool: ...
     def _get_file_url(self, module_id: str, file: Path) -> str: ...
     def _get_changelog_common(self, module_id: str, changelog: str) -> Optional[Path]: ...
     def _from_zip_common(
-        self, module_id: str, zip_file: Path, changelog_file: Optional[Path], *, delete_tmp: bool = ...
+        self,
+        module_id: str,
+        zip_file: Path,
+        changelog_file: Optional[Path],
+        *,
+        delete_tmp: bool
     ) -> Optional[OnlineModule]: ...
     def from_json(self, track: TrackJson, *, local: bool) -> Tuple[Optional[OnlineModule], float]: ...
     def from_url(self, track: TrackJson) -> Tuple[Optional[OnlineModule], float]: ...
