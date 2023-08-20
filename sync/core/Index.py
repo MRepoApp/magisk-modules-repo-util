@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from .Config import Config
+from .Sync import Sync
 from ..__version__ import get_version, get_version_code
 from ..error import Result
 from ..model import (
@@ -20,13 +21,13 @@ class Index:
 
     def __init__(self, root_folder, config):
         self._log = Log("Index", enable_log=config.enable_log, log_dir=config.log_dir)
+        self._root_folder = root_folder
 
         self._modules_folder = Config.get_modules_folder(root_folder)
         self._tracks = LocalTracks(self._modules_folder, config)
         self._config = config
 
-        json_folder = Config.get_json_folder(root_folder)
-        self.json_file = json_folder.joinpath(ModulesJson.filename())
+        self._json_folder = Config.get_json_folder(root_folder)
 
         # noinspection PyTypeChecker
         self.modules_json = None
@@ -122,6 +123,11 @@ class Index:
 
         self.modules_json.modules.sort(key=lambda v: v.id)
         if to_file:
-            self.modules_json.write(self.json_file)
+            json_file = self._json_folder.joinpath(ModulesJson.filename())
+            self.modules_json.write(json_file)
 
         return self.modules_json
+
+    def push_by_git(self, branch):
+        func = getattr(Sync, "push_by_git")
+        return func(self, branch)

@@ -328,6 +328,7 @@ class Parameters:
             help="Show modules.json piped through stdout."
         )
 
+        cls.add_parser_git(p, add_set_size=False)
         cls.add_parser_env(p)
 
     @classmethod
@@ -378,13 +379,14 @@ class Parameters:
             default=cls._root_folder.as_posix(),
             help="Full path to repository location, current: {0}.".format("%(default)s")
         )
+
         if add_quiet:
             cls.add_parser_quiet(env)
 
         return env
 
     @classmethod
-    def add_parser_git(cls, p):
+    def add_parser_git(cls, p, add_set_size=True):
         git = p.add_argument_group("git")
         git.add_argument(
             "--push",
@@ -399,14 +401,16 @@ class Parameters:
             default=get_current_branch(cls._root_folder),
             help="Define branch to push, current: {0}.".format("%(default)s")
         )
-        git.add_argument(
-            "--max-size",
-            dest="max_size",
-            metavar="MAX_SIZE",
-            type=float,
-            default=50.0,
-            help="Limit size of file, default: {0} MB.".format("%(default)s")
-        )
+
+        if add_set_size:
+            git.add_argument(
+                "--max-size",
+                dest="max_size",
+                metavar="MAX_SIZE",
+                type=float,
+                default=50.0,
+                help="Limit size of file, default: {0} MB.".format("%(default)s")
+            )
 
         return git
 

@@ -14,12 +14,13 @@ from ..utils import Log
 
 class Index:
     _log: Log
+    _root_folder: Path
 
+    _json_folder: Path
     _modules_folder: Path
     _config: ConfigJson
     _tracks: LocalTracks
 
-    json_file: Path
     modules_json: ModulesJson
 
     versions: List[int]
@@ -47,3 +48,4 @@ class Index:
         version: int
     ): ...
     def get_online_module(self, module_id: str, zip_file: Path) -> Optional[OnlineModule]: ...
+    def push_by_git(self, branch: str): ...

@@ -288,6 +288,9 @@ class Main:
         if cls._args.stdout:
             print_json(index.modules_json, True)
 
+        elif cls._args.push:
+            index.push_by_git(cls._args.git_branch)
+
         return cls.CODE_SUCCESS
 
     @classmethod
