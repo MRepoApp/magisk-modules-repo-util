@@ -1,4 +1,5 @@
 import shutil
+from pathlib import Path
 
 from .Config import Config
 from ..error import Result
@@ -52,8 +53,13 @@ class Pull:
             return url
 
     def _get_changelog_common(self, module_id, changelog):
-        if not isinstance(changelog, str) or changelog == "":
+        is_file = False
+
+        if isinstance(changelog, str) and changelog == "":
             return None
+        elif isinstance(changelog, Path):
+            changelog = changelog.name
+            is_file = True
 
         if changelog.startswith("http"):
             changelog_file = self._modules_folder.joinpath(module_id, f"{module_id}.md")
@@ -62,12 +68,17 @@ class Pull:
                 msg = Log.get_msg(result.error)
                 self._log.e(f"_get_changelog_common: [{module_id}] -> {msg}")
                 changelog_file = None
-        else:
+
+        elif is_file:
             changelog_file = self._local_folder.joinpath(changelog)
             if not changelog_file.exists():
                 msg = f"{changelog} is not in {self._local_folder}"
                 self._log.d(f"_get_changelog_common: [{module_id}] -> {msg}")
                 changelog_file = None
+
+        else:
+            self._log.w(f"_get_changelog_common: [{module_id}] -> unsupported type [{changelog}]")
+            changelog_file = None
 
         if changelog_file is not None:
             if not self._check_changelog(module_id, changelog_file):
@@ -210,7 +221,7 @@ class Pull:
             self._log.i(f"from_zip: [{track.id}] -> {msg}")
             return None, 0.0
 
-        changelog = self._get_changelog_common(track.id, track.changelog)
+        changelog = self._get_changelog_common(track.id, Path(track.changelog))
         online_module = self._from_zip_common(track.id, zip_file, changelog, delete_tmp=False)
         return online_module, last_modified
 
