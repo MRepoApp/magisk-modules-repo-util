@@ -2,7 +2,6 @@ from datetime import datetime
 
 from .Config import Config
 from .Sync import Sync
-from ..__version__ import get_version, get_version_code
 from ..error import Result
 from ..model import (
     AttrDict,
@@ -37,10 +36,6 @@ class Index:
             self.modules_json = ModulesJson(
                 name=self._config.name,
                 timestamp=datetime.now().timestamp(),
-                metadata=AttrDict(
-                    version=get_version(),
-                    versionCode=get_version_code()
-                ),
                 modules=list()
             )
 
