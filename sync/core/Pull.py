@@ -8,7 +8,8 @@ from ..model import (
     AttrDict,
     MagiskUpdateJson,
     OnlineModule,
-    TrackType
+    TrackType,
+    UpdateJson
 )
 from ..track import LocalTracks
 from ..utils import Log, HttpUtils, GitUtils
@@ -42,6 +43,20 @@ class Pull:
             return False
         else:
             return True
+
+    def _check_version_code(self, module_id, version_code):
+        module_folder = self._modules_folder.joinpath(module_id)
+        json_file = module_folder.joinpath(UpdateJson.filename())
+
+        if not json_file.exists():
+            return True
+
+        update_json = UpdateJson.load(json_file)
+        if len(update_json.versions) != 0 and version_code > update_json.versions[-1].versionCode:
+            return True
+
+        self._log.i(f"_check_version_code: [{module_id}] -> already the latest version")
+        return False
 
     def _get_file_url(self, module_id, file):
         module_folder = self._modules_folder.joinpath(module_id)
@@ -87,7 +102,7 @@ class Pull:
 
         return changelog_file
 
-    def _from_zip_common(self,  module_id, zip_file, changelog_file, *, delete_tmp):
+    def _from_zip_common(self, module_id, zip_file, changelog_file, *, delete_tmp):
         module_folder = self._modules_folder.joinpath(module_id)
 
         def remove_file():
@@ -120,9 +135,7 @@ class Pull:
             online_module: OnlineModule = result.value
 
         target_zip_file = module_folder.joinpath(online_module.zipfile_name)
-        target_files = list(module_folder.glob(f"*{online_module.versionCode}.zip"))
-
-        if not target_zip_file.exists() and len(target_files) == 0:
+        if self._check_version_code(module_id, online_module.versionCode):
             self._copy_file(zip_file, target_zip_file, delete_tmp)
         else:
             remove_file()
@@ -134,6 +147,7 @@ class Pull:
             self._copy_file(changelog_file, target_changelog_file, delete_tmp)
             changelog_url = self._get_file_url(module_id, target_changelog_file)
 
+        # For OnlineModule.to_VersionItem
         online_module.latest = AttrDict(
             zipUrl=self._get_file_url(module_id, target_zip_file),
             changelog=changelog_url
@@ -142,7 +156,6 @@ class Pull:
         return online_module
 
     def from_json(self, track, *, local):
-        module_folder = self._modules_folder.joinpath(track.id)
         if local:
             track.update_to = self._local_folder.joinpath(track.update_to)
 
@@ -158,10 +171,7 @@ class Pull:
         else:
             update_json: MagiskUpdateJson = result.value
 
-        target_zip_file = module_folder.joinpath(update_json.zipfile_name)
-        target_files = list(module_folder.glob(f"*{update_json.versionCode}.zip"))
-
-        if target_zip_file.exists() or len(target_files) != 0:
+        if not self._check_version_code(track.id, update_json.versionCode):
             return None, 0.0
 
         zip_file = self._modules_folder.joinpath(track.id, f"{track.id}.zip")

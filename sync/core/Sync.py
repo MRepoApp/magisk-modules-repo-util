@@ -62,13 +62,6 @@ class Sync:
             )
 
         version_item = online_module.to_VersionItem(timestamp)
-
-        if len(update_json.versions) > 0:
-            same_version = update_json.versions[-1].versionCode == version_item.versionCode
-            if same_version:
-                self._log.d(f"_update_jsons: [{track.id}] -> {version_item.version_display} already exists")
-                return None
-
         update_json.versions.append(version_item)
 
         max_num = self._config.max_num
