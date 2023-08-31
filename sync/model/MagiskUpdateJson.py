@@ -1,4 +1,3 @@
-import re
 from pathlib import Path
 
 from .AttrDict import AttrDict
@@ -23,5 +22,13 @@ class MagiskUpdateJson(AttrDict):
             obj = JsonIO.load(path)
         else:
             raise ValueError(f"unsupported type {type(path).__name__}")
+
+        try:
+            obj["versionCode"] = int(obj["versionCode"])
+        except ValueError:
+            msg = f"wrong type of versionCode, expected int but got {type(obj['versionCode']).__name__}"
+            raise ValueError(msg)
+        except TypeError:
+            raise ValueError("versionCode does not exist in module.prop")
 
         return MagiskUpdateJson(obj)
