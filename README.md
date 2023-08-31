@@ -1,4 +1,5 @@
 # Magisk Modules Repo Util
+[![python](https://img.shields.io/badge/3.9+-blue.svg?label=python)](https://github.com/ya0211/magisk-modules-repo-util) [![release](https://img.shields.io/github/v/release/ya0211/magisk-modules-repo-util?label=release&color=green)](https://github.com/ya0211/magisk-modules-repo-util/releases/latest) [![license](https://img.shields.io/github/license/ya0211/magisk-modules-repo-util)](LICENSE)
 
 - This util is to build module repository for [MRepo](https://github.com/ya0211/MRepo)
 - `sync` is a python package
