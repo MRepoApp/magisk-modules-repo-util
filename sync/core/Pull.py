@@ -70,7 +70,9 @@ class Pull:
     def _get_changelog_common(self, module_id, changelog):
         is_file = False
 
-        if isinstance(changelog, str) and changelog == "":
+        if changelog is None:
+            return None
+        elif isinstance(changelog, str) and changelog == "":
             return None
         elif isinstance(changelog, Path):
             changelog = changelog.name
