@@ -62,7 +62,7 @@ class Pull:
         module_folder = self._modules_folder.joinpath(module_id)
         url = f"{self._config.base_url}{self._modules_folder.name}/{module_id}/{file.name}"
 
-        if not (file.is_relative_to(module_folder) and file.exists()):
+        if not (file.parent == module_folder and file.exists()):
             raise FileNotFoundError(f"{file} is not in {module_folder}")
         else:
             return url
