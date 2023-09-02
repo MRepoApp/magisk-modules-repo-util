@@ -159,11 +159,13 @@ class Pull:
 
     def from_json(self, track, *, local):
         if local:
-            track.update_to = self._local_folder.joinpath(track.update_to)
+            update_to = self._local_folder.joinpath(track.update_to)
+        else:
+            update_to = track.update_to
 
         @Result.catching()
         def load_json():
-            return MagiskUpdateJson.load(track.update_to)
+            return MagiskUpdateJson.load(update_to)
 
         result = load_json()
         if result.is_failure:
