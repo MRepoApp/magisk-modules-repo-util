@@ -347,22 +347,28 @@ class Parameters:
             help="Ids of modules to check, default is all."
         )
         p.add_argument(
-            "-c",
+            "-I",
             "--check-id",
             action="store_true",
             help="Check id of the module in all json."
         )
         p.add_argument(
-            "-u",
+            "-U",
             "--check-url",
             action="store_true",
             help=f"Check urls of files in {UpdateJson.filename()}."
         )
         p.add_argument(
-            "-e",
+            "-E",
             "--remove-empty",
             action="store_true",
             help=f"Remove empty values in {TrackJson.filename()}."
+        )
+        p.add_argument(
+            "-O",
+            "--remove-old",
+            action="store_true",
+            help=f"Remove old versions based on max_num."
         )
 
         cls.add_parser_env(p)

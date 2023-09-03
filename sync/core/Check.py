@@ -19,7 +19,7 @@ class Check:
         return func(self, module_id, file)
 
     def _get_tracks(self, module_ids, new):
-        if new or len(self._tracks.tracks) == 0:
+        if new or self._tracks.size == 0:
             return self._tracks.get_tracks(module_ids)
 
         return self._tracks.tracks
@@ -106,7 +106,7 @@ class Check:
             update_json = UpdateJson.load(update_json_file)
 
             if not self._check_update_json(track, update_json, False):
-                self._log.i(f"url: [{track.id}] -> {UpdateJson.filename()} has been updated")
+                self._log.i(f"[{track.id}] -> {UpdateJson.filename()} has been updated")
                 update_json.write(update_json_file)
 
     def ids(self, module_ids=None, new=False):
@@ -129,7 +129,7 @@ class Check:
                 continue
 
             if not self._check_folder(track, online_module.id):
-                self._log.i(f"ids: [{old_id}] -> track has been migrated to {track.id}")
+                self._log.i(f"[{old_id}] -> track has been migrated to {track.id}")
                 module_folder = self._modules_folder.joinpath(track.id)
                 track_json_file = module_folder.joinpath(TrackJson.filename())
                 track.write(track_json_file)
@@ -140,11 +140,48 @@ class Check:
 
             update_json = UpdateJson.load(update_json_file)
             if not self._check_update_json(track, update_json, True):
-                self._log.i(f"ids: [{track.id}] -> {UpdateJson.filename()} has been updated")
+                self._log.i(f"[{track.id}] -> {UpdateJson.filename()} has been updated")
                 update_json.write(update_json_file)
 
-    def empty_values(self, module_ids=None, new=False):
+    def empty(self, module_ids=None, new=False):
         for track in self._get_tracks(module_ids, new):
             module_folder = self._modules_folder.joinpath(track.id)
             track_json_file = module_folder.joinpath(TrackJson.filename())
+            track.write(track_json_file)
+
+    def old(self, module_ids=None, new=False):
+        for track in self._get_tracks(module_ids, new):
+            module_folder = self._modules_folder.joinpath(track.id)
+            update_json_file = module_folder.joinpath(UpdateJson.filename())
+            if not update_json_file.exists():
+                continue
+
+            update_json = UpdateJson.load(update_json_file)
+
+            max_num = self._config.max_num
+            if track.max_num is not None:
+                max_num = track.max_num
+
+            if len(update_json.versions) <= max_num:
+                continue
+
+            old_versions = update_json.versions[:-max_num]
+            for old_item in old_versions:
+                update_json.versions.remove(old_item)
+                zipfile = module_folder.joinpath(old_item.zipfile_name)
+                changelog = module_folder.joinpath(old_item.changelog_filename)
+
+                for path in [zipfile, changelog]:
+                    if not (path.exists() and path.is_file()):
+                        continue
+
+                    self._log.d(f"[{track.id}] -> remove {path.name}")
+                    path.unlink()
+
+            self._log.i(f"[{track.id}] -> {UpdateJson.filename()} has been updated")
+            update_json.write(update_json_file)
+
+            self._log.i(f"[{track.id}] -> {TrackJson.filename()} has been updated")
+            track_json_file = module_folder.joinpath(TrackJson.filename())
+            track.versions = len(update_json.versions)
             track.write(track_json_file)
