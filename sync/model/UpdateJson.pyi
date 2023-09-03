@@ -13,7 +13,13 @@ class VersionItem(AttrDict):
     changelog: str
 
     @property
+    def id(self) -> str: ...
+    @property
     def version_display(self) -> str: ...
+    @property
+    def changelog_filename(self) -> str: ...
+    @property
+    def zipfile_name(self) -> str: ...
 
 
 class UpdateJson(AttrDict, JsonIO):

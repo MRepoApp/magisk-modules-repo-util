@@ -100,8 +100,7 @@ class Index:
             update_json = UpdateJson.load(update_json_file)
             latest_item = update_json.versions[-1]
 
-            file_name = latest_item.zipUrl.split("/")[-1]
-            zip_file = module_folder.joinpath(file_name)
+            zip_file = module_folder.joinpath(latest_item.zipfile_name)
             if not zip_file.exists():
                 continue
 

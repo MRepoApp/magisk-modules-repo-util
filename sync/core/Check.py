@@ -47,7 +47,7 @@ class Check:
     def _get_new_version_item(self, track, item):
         module_folder = self._modules_folder.joinpath(track.id)
 
-        zipfile_name = item.zipUrl.split("/")[-1]
+        zipfile_name = item.zipfile_name
         zipfile = module_folder.joinpath(zipfile_name)
         if not zipfile.exists():
             msg = f"{zipfile_name} does not exist, it will be removed from {UpdateJson.filename()}"
@@ -56,8 +56,7 @@ class Check:
 
         new_zip_url = self._get_file_url(track.id, zipfile)
 
-        changelog_name = item.changelog.split("/")[-1]
-        changelog = module_folder.joinpath(changelog_name)
+        changelog = module_folder.joinpath(item.changelog_filename)
         new_changelog_url = ""
         if changelog.exists() and changelog.is_file():
             new_changelog_url = self._get_file_url(track.id, changelog)
@@ -78,9 +77,7 @@ class Check:
         )
 
         for item in update_json.versions:
-            old_id, zipfile_name = item.zipUrl.split("/")[-2:]
-
-            if check_id and old_id == track.id:
+            if check_id and item.id == track.id:
                 continue
             elif not check_id and item.zipUrl.startswith(self._config.base_url):
                 continue
