@@ -103,6 +103,9 @@ class Check:
         for track in self._get_tracks(module_ids, new):
             module_folder = self._modules_folder.joinpath(track.id)
             update_json_file = module_folder.joinpath(UpdateJson.filename())
+            if not update_json_file.exists():
+                continue
+
             update_json = UpdateJson.load(update_json_file)
 
             if not self._check_update_json(track, update_json, False):
