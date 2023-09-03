@@ -55,7 +55,7 @@ class Pull:
         if len(update_json.versions) != 0 and version_code > update_json.versions[-1].versionCode:
             return True
 
-        self._log.i(f"_check_version_code: [{module_id}] -> already the latest version")
+        self._log.d(f"_check_version_code: [{module_id}] -> already the latest version")
         return False
 
     def _get_file_url(self, module_id, file):
@@ -240,7 +240,7 @@ class Pull:
         return online_module, last_modified
 
     def from_track(self, track):
-        self._log.d(f"from_track: [{track.id}] -> type: {track.type.name}")
+        self._log.i(f"from_track: [{track.id}] -> type: {track.type.name}")
 
         if track.type == TrackType.ONLINE_JSON:
             return self.from_json(track, local=False)
