@@ -6,16 +6,6 @@
 - `cli.py` is a cli tool
 
 ## Getting Started
-### Initialize repository
-You should create a folder, or a git repository and clone it, for example `your-repo`, and clone util
-```shell
-$ git clone -b main https://github.com/ya0211/magisk-modules-repo-util.git util
-```
-or add it as a submodule of your git repository
-```shell
-$ git submodule add https://github.com/ya0211/magisk-modules-repo-util.git util
-```
-
 ### Install dependencies
 ```shell
 $ python3 -m pip install -r util/requirements.txt
@@ -143,7 +133,7 @@ options:
 ```
 
 ### Update from local updateJson
-> `update_to` requires a relative directory of *local*.
+> *update_to* requires a relative directory of *local*.
 ```json
 {
   "id": "zygisk_lsposed",
@@ -176,7 +166,7 @@ options:
 ```
 
 ### Update from local zip
-> `update_to` and `changelog` requires a relative directory of *local*.
+> *update_to* and *changelog* requires a relative directory of *local*.
 
 ```json
 {
@@ -254,7 +244,7 @@ your-repo
 
 ## modules.json
 ### v1
-> For MRepo v2.0.0-beta01 and higher
+> For MRepo v2.0.0-beta01 and Higher
 ```json
 {
   "name": "{NAME}",
@@ -293,15 +283,11 @@ your-repo
 }
 ```
 ### v0
-> For MRepo v1.5.0-alpha02 and lower
+> For MRepo v1.5.0-alpha02 and Lower
 ```json
 {
   "name": "{NAME}",
   "timestamp": 1692439602.46997,
-  "metadata": {
-    "version": "1.0.0",
-    "versionCode": 100
-  },
   "modules": [
     {
       "id": "zygisk_lsposed",
