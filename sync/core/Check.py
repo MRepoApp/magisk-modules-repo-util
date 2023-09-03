@@ -18,7 +18,7 @@ class Check:
         func = getattr(Pull, "_get_file_url")
         return func(self, module_id, file)
 
-    def _get_tracks(self, module_ids=None, new=False):
+    def _get_tracks(self, module_ids, new):
         if new or len(self._tracks.tracks) == 0:
             return self._tracks.get_tracks(module_ids)
 
@@ -109,33 +109,41 @@ class Check:
             update_json = UpdateJson.load(update_json_file)
 
             if not self._check_update_json(track, update_json, False):
-                self._log.i(f"check_url: [{track.id}] -> {UpdateJson.filename()} has been updated")
+                self._log.i(f"url: [{track.id}] -> {UpdateJson.filename()} has been updated")
                 update_json.write(update_json_file)
 
     def ids(self, module_ids=None, new=False):
         for track in self._get_tracks(module_ids, new):
             old_id = track.id
             module_folder = self._modules_folder.joinpath(old_id)
-            latest_zip = sorted(
+
+            zip_files = sorted(
                 module_folder.glob("*.zip"),
                 key=lambda f: f.stat().st_mtime,
                 reverse=True
-            )[0]
+            )
 
+            if len(zip_files) == 0:
+                continue
+
+            latest_zip = zip_files[0]
             online_module = self.get_online_module(track.id, latest_zip)
             if online_module is None:
                 continue
 
             if not self._check_folder(track, online_module.id):
-                self._log.i(f"check_ids: [{old_id}] -> track has been migrated to {track.id}")
+                self._log.i(f"ids: [{old_id}] -> track has been migrated to {track.id}")
                 module_folder = self._modules_folder.joinpath(track.id)
                 track_json_file = module_folder.joinpath(TrackJson.filename())
                 track.write(track_json_file)
 
             update_json_file = module_folder.joinpath(UpdateJson.filename())
+            if not update_json_file.exists():
+                continue
+
             update_json = UpdateJson.load(update_json_file)
             if not self._check_update_json(track, update_json, True):
-                self._log.i(f"check_ids: [{track.id}] -> {UpdateJson.filename()} has been updated")
+                self._log.i(f"ids: [{track.id}] -> {UpdateJson.filename()} has been updated")
                 update_json.write(update_json_file)
 
     def empty_values(self, module_ids=None, new=False):
