@@ -70,8 +70,11 @@ class Sync:
 
         if len(update_json.versions) > max_num:
             old_item = update_json.versions.pop(0)
-            for path in module_folder.glob(f"*{old_item.versionCode}*"):
-                if not path.is_file():
+            zipfile = module_folder.joinpath(old_item.zipfile_name)
+            changelog = module_folder.joinpath(old_item.changelog_filename)
+
+            for path in [zipfile, changelog]:
+                if not (path.exists() and path.is_file()):
                     continue
 
                 self._log.d(f"_update_jsons: [{track.id}] -> remove {path.name}")
