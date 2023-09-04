@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 
 import requests
 from dateutil.parser import parse
@@ -38,7 +38,7 @@ class GitHubGraphQLAPI:
         except AttributeError:
             return None
 
-    def get_sponsor_url(self, owner: str, name: str) -> list[str]:
+    def get_sponsor_url(self, owner: str, name: str) -> List[str]:
         repository = self._query_repository(
             owner=owner,
             name=name,
