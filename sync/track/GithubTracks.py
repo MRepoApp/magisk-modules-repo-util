@@ -1,3 +1,6 @@
+import concurrent.futures
+from concurrent.futures import ThreadPoolExecutor
+
 import requests
 from github import Github, Auth, UnknownObjectException
 from github.Repository import Repository
@@ -80,24 +83,30 @@ class GithubTracks(BaseTracks):
         self._log.i(f"get_tracks: user_name = {user_name}")
 
         user = self._github.get_user(user_name)
-        if repo_names is None:
-            for repo in user.get_repos():
-                track_json = self._get_from_repo(repo, cover, use_ssh)
-                if track_json is not None:
-                    self._tracks.append(track_json)
-        else:
+        repos = []
+
+        if repo_names is not None:
             for repo_name in repo_names:
                 try:
                     repo = user.get_repo(repo_name)
+                    repos.append(repo)
                 except UnknownObjectException as err:
-                    repo = None
                     msg = Log.get_msg(err)
                     self._log.e(f"get_tracks: [{repo_name}] -> {msg}")
+        else:
+            repos = user.get_repos()
 
-                if repo is not None:
-                    track_json = self._get_from_repo(repo, cover, use_ssh)
-                    if track_json is not None:
-                        self._tracks.append(track_json)
+        with ThreadPoolExecutor() as executor:
+            futures = []
+            for repo in repos:
+                futures.append(
+                    executor.submit(self._get_from_repo, repo=repo, cover=cover, use_ssh=use_ssh)
+                )
+
+            for future in concurrent.futures.as_completed(futures):
+                track_json = future.result()
+                if track_json is not None:
+                    self._tracks.append(track_json)
 
         self._log.i(f"get_tracks: size = {self.size}")
         return self._tracks

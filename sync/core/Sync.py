@@ -1,4 +1,6 @@
+import concurrent.futures
 import subprocess
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 
 from .Config import Config
@@ -133,12 +135,17 @@ class Sync:
         else:
             tracks = self._tracks.get_tracks(module_ids)
 
-        for track in tracks:
-            online_module = self._update_jsons(track=track, force=force)
-            if online_module is None:
-                continue
+        with ThreadPoolExecutor() as executor:
+            futures = []
+            for track in tracks:
+                futures.append(
+                    executor.submit(self._update_jsons, track=track, force=force)
+                )
 
-            self._log.i(f"update: [{track.id}] -> update to {online_module.version_display}")
+            for future in concurrent.futures.as_completed(futures):
+                online_module = future.result()
+                if online_module is not None:
+                    self._log.i(f"update: [{online_module.id}] -> update to {online_module.version_display}")
 
     def push_by_git(self, branch):
         json_file = self._json_folder.joinpath(ModulesJson.filename())
