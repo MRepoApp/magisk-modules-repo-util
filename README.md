@@ -50,10 +50,14 @@ $ cli.py github --user-name <github-user-name> --api-token=<github-api-token>
 ```
 > **_TIP_**: [click here to create a new api token](https://github.com/settings/personal-access-tokens/new).
 
-### Start sync
+### Sync
 ```shell
 $ cli.py sync 
 ```
+
+## How to update by GitHub Actions?
+- You can refer to [demo](https://github.com/ya0211/magisk-modules-repo).
+
 
 ## cli.py
 ```
