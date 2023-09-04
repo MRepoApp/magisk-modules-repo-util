@@ -54,3 +54,12 @@ class HttpUtils:
             else:
                 msg = response.text
             raise HTTPError(msg)
+
+    @classmethod
+    def is_blob(cls, url):
+        pattern = r"https://github\.com/.+/blob/main/.+"
+        match = re.match(pattern, url)
+        if match:
+            return True
+        else:
+            return False

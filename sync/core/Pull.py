@@ -79,6 +79,11 @@ class Pull:
             is_file = True
 
         if changelog.startswith("http"):
+            if HttpUtils.is_blob(changelog):
+                msg = f"'{changelog}' is not unsupported type, please use 'https://raw.githubusercontent.com'"
+                self._log.w(f"_get_changelog_common: [{module_id}] -> {msg}")
+                return None
+
             changelog_file = self._modules_folder.joinpath(module_id, f"{module_id}.md")
             result = self._download(changelog, changelog_file)
             if result.is_failure:
@@ -94,7 +99,7 @@ class Pull:
                 changelog_file = None
 
         else:
-            self._log.w(f"_get_changelog_common: [{module_id}] -> unsupported type [{changelog}]")
+            self._log.w(f"_get_changelog_common: [{module_id}] -> '{changelog}' unsupported type")
             changelog_file = None
 
         if changelog_file is not None:
