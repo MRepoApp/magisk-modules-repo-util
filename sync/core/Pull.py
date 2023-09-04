@@ -55,7 +55,7 @@ class Pull:
         if len(update_json.versions) != 0 and version_code > update_json.versions[-1].versionCode:
             return True
 
-        self._log.d(f"_check_version_code: [{module_id}] -> already the latest version")
+        self._log.i(f"_check_version_code: [{module_id}] -> already the latest version")
         return False
 
     def _get_file_url(self, module_id, file):
@@ -90,7 +90,7 @@ class Pull:
             changelog_file = self._local_folder.joinpath(changelog)
             if not changelog_file.exists():
                 msg = f"{changelog} is not in {self._local_folder}"
-                self._log.d(f"_get_changelog_common: [{module_id}] -> {msg}")
+                self._log.e(f"_get_changelog_common: [{module_id}] -> {msg}")
                 changelog_file = None
 
         else:
@@ -232,7 +232,7 @@ class Pull:
 
         if not zip_file.exists():
             msg = f"{track.update_to} is not in {self._local_folder}"
-            self._log.i(f"from_zip: [{track.id}] -> {msg}")
+            self._log.e(f"from_zip: [{track.id}] -> {msg}")
             return None, 0.0
 
         changelog = self._get_changelog_common(track.id, Path(track.changelog))
@@ -240,7 +240,7 @@ class Pull:
         return online_module, last_modified
 
     def from_track(self, track):
-        self._log.i(f"from_track: [{track.id}] -> type: {track.type.name}")
+        self._log.d(f"from_track: [{track.id}] -> type: {track.type.name}")
 
         if track.type == TrackType.ONLINE_JSON:
             return self.from_json(track, local=False)

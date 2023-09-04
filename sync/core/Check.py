@@ -109,7 +109,7 @@ class Check:
             update_json = UpdateJson.load(update_json_file)
 
             if not self._check_update_json(track, update_json, False):
-                self._log.i(f"[{track.id}] -> {UpdateJson.filename()} has been updated")
+                self._log.i(f"url: [{track.id}] -> {UpdateJson.filename()} has been updated")
                 update_json.write(update_json_file)
 
     def ids(self, module_ids=None, new=False):
@@ -132,7 +132,7 @@ class Check:
                 continue
 
             if not self._check_folder(track, online_module.id):
-                self._log.i(f"[{old_id}] -> track has been migrated to {track.id}")
+                self._log.i(f"ids: [{old_id}] -> track has been migrated to {track.id}")
                 module_folder = self._modules_folder.joinpath(track.id)
                 track_json_file = module_folder.joinpath(TrackJson.filename())
                 track.write(track_json_file)
@@ -143,7 +143,7 @@ class Check:
 
             update_json = UpdateJson.load(update_json_file)
             if not self._check_update_json(track, update_json, True):
-                self._log.i(f"[{track.id}] -> {UpdateJson.filename()} has been updated")
+                self._log.i(f"ids: [{track.id}] -> {UpdateJson.filename()} has been updated")
                 update_json.write(update_json_file)
 
     def empty(self, module_ids=None, new=False):
@@ -178,13 +178,13 @@ class Check:
                     if not (path.exists() and path.is_file()):
                         continue
 
-                    self._log.d(f"[{track.id}] -> remove {path.name}")
+                    self._log.d(f"old: [{track.id}] -> remove {path.name}")
                     path.unlink()
 
-            self._log.i(f"[{track.id}] -> {UpdateJson.filename()} has been updated")
+            self._log.i(f"old: [{track.id}] -> {UpdateJson.filename()} has been updated")
             update_json.write(update_json_file)
 
-            self._log.i(f"[{track.id}] -> {TrackJson.filename()} has been updated")
+            self._log.i(f"old: [{track.id}] -> {TrackJson.filename()} has been updated")
             track_json_file = module_folder.joinpath(TrackJson.filename())
             track.versions = len(update_json.versions)
             track.write(track_json_file)

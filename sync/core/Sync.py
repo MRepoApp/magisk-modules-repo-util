@@ -32,7 +32,7 @@ class Sync:
 
         tag_disable = module_folder.joinpath(LocalTracks.TAG_DISABLE)
         if tag_disable.exists():
-            self._log.d(f"_update_jsons: [{track.id}] -> update check has been disabled")
+            self._log.i(f"_update_jsons: [{track.id}] -> update check has been disabled")
             return None
 
         online_module, timestamp = self._pull.from_track(track)
