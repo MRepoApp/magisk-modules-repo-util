@@ -6,6 +6,8 @@ from argparse import Namespace
 from datetime import datetime
 from pathlib import Path
 
+from dateutil.parser import parse
+
 from .Parameters import Parameters
 from .TypeDict import ConfigDict, TrackDict
 from ..core import (
@@ -219,7 +221,8 @@ class Main:
         tracks = GithubTracks(
             modules_folder=modules_folder,
             config=config,
-            api_token=cls._args.api_token
+            api_token=cls._args.api_token,
+            after_date=parse(cls._args.after_date).date()
         )
 
         if cls._args.update:
@@ -249,6 +252,9 @@ class Main:
                 cover=cls._args.cover,
                 use_ssh=cls._args.ssh
             )
+
+        if cls._args.clear:
+            tracks.clear_tracks()
 
         return cls.CODE_SUCCESS
 

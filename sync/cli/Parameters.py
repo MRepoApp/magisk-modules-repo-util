@@ -247,6 +247,15 @@ class Parameters:
             help="Version of the index file ({0}), default: {1}.".format(ModulesJson.filename(), "%(default)s")
         )
         p.add_argument(
+            "-d",
+            "--date",
+            dest="after_date",
+            metavar="DATE",
+            type=str,
+            default="2016-09-08",
+            help="Filter latest push date (before it), default: {0}.".format("%(default)s")
+        )
+        p.add_argument(
             "-S",
             "--ssh",
             action="store_true",
@@ -262,6 +271,11 @@ class Parameters:
             "--update",
             action="store_true",
             help="Update modules to the latest version."
+        )
+        p.add_argument(
+            "--clear",
+            action="store_true",
+            help="Remove tracks, exclude those in the current session."
         )
 
         cls.add_parser_git(p)
@@ -415,7 +429,7 @@ class Parameters:
                 metavar="MAX_SIZE",
                 type=float,
                 default=50.0,
-                help="Limit size of file, default: {0} MB.".format("%(default)s")
+                help="Filter size of file (less than it), default: {0} MB.".format("%(default)s")
             )
 
         return git

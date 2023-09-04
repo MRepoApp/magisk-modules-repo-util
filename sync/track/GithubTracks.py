@@ -1,7 +1,8 @@
 import concurrent.futures
+import shutil
 from concurrent.futures import ThreadPoolExecutor
+from datetime import date
 
-import requests
 from github import Github, Auth, UnknownObjectException
 from github.Repository import Repository
 
@@ -9,16 +10,21 @@ from .BaseTracks import BaseTracks
 from .LocalTracks import LocalTracks
 from ..error import MagiskModuleError, Result
 from ..model import TrackJson
-from ..utils import Log, StrUtils
+from ..utils import Log, GitHubGraphQLAPI
 
 
 class GithubTracks(BaseTracks):
-    def __init__(self, modules_folder, config, *, api_token):
+    def __init__(self, modules_folder, config, *, api_token, after_date=None):
         self._log = Log("GithubTracks", enable_log=config.enable_log, log_dir=config.log_dir)
         self._modules_folder = modules_folder
 
+        if after_date is None:
+            after_date = date(2016, 9, 8)
+
         self._api_token = api_token
+        self._after_date = after_date
         self._github = Github(auth=Auth.Token(api_token))
+        self._graphql_api = GitHubGraphQLAPI(api_token=api_token)
         self._tracks = list()
 
     @Result.catching()
@@ -41,18 +47,28 @@ class GithubTracks(BaseTracks):
         else:
             issues = ""
 
-        donate_urls = self.get_sponsor_url(self._api_token, repo)
+        donate_urls = self._graphql_api.get_sponsor_url(
+            owner=repo.owner.login,
+            name=repo.name
+        )
         if len(donate_urls) == 0:
             donate = ""
         else:
             donate = donate_urls[0]
+
+        homepage = self._graphql_api.get_homepage_url(
+            owner=repo.owner.login,
+            name=repo.name
+        )
+        if homepage is None:
+            homepage = repo.html_url
 
         return TrackJson(
             id=repo.name,
             update_to=update_to,
             license=self.get_license(repo),
             changelog=changelog,
-            homepage=self.get_homepage_url(self._api_token, repo),
+            homepage=homepage,
             source=repo.clone_url,
             support=issues,
             donate=donate
@@ -60,6 +76,18 @@ class GithubTracks(BaseTracks):
 
     def _get_from_repo(self, repo, cover, use_ssh):
         self._log.d(f"_get_from_repo: repo_name = {repo.name}")
+
+        pushed_at = self._graphql_api.get_pushed_at(
+            owner=repo.owner.login,
+            name=repo.name
+        )
+        if pushed_at is None:
+            return None
+
+        if pushed_at.date() < self._after_date:
+            msg = f"pushed at {pushed_at.date()}, too old"
+            self._log.w(f"_get_from_repo: [{repo.name}] -> {msg}")
+            return None
 
         result = self._get_from_repo_common(repo, use_ssh)
         if result.is_failure:
@@ -111,6 +139,13 @@ class GithubTracks(BaseTracks):
         self._log.i(f"get_tracks: size = {self.size}")
         return self._tracks
 
+    def clear_tracks(self):
+        names = [track.id for track in self._tracks]
+        for module_folder in self._modules_folder.glob("*/"):
+            if module_folder.name not in names:
+                self._log.i(f"clear_tracks: [{module_folder.name}] -> removed")
+                shutil.rmtree(module_folder, ignore_errors=True)
+
     @property
     def size(self):
         return self._tracks.__len__()
@@ -148,59 +183,3 @@ class GithubTracks(BaseTracks):
             return True
         except UnknownObjectException:
             return False
-
-    @classmethod
-    def _graphql_query(cls, api_token, query):
-        query = {"query": query}
-
-        response = requests.post(
-            url="https://api.github.com/graphql",
-            headers={
-                "Authorization": f"bearer {api_token}",
-                "Content-Type": "application/json",
-            },
-            json=query
-        )
-
-        if response.ok:
-            return response.json()
-        else:
-            return None
-
-    @classmethod
-    def get_sponsor_url(cls, api_token, repo):
-        params = "owner: \"{}\", name: \"{}\"".format(repo.owner.login, repo.name)
-        query = "query { repository(%s) { fundingLinks { platform url } } }" % params
-        result = cls._graphql_query(api_token, query)
-        if result is None:
-            return list()
-
-        links = list()
-        data = result["data"]
-        repository = data["repository"]
-        funding_links = repository["fundingLinks"]
-
-        for item in funding_links:
-            if item["platform"] == "GITHUB":
-                name = item["url"].split("/")[-1]
-                links.append(f"https://github.com/sponsors/{name}")
-            else:
-                links.append(item["url"])
-
-        return links
-
-    @classmethod
-    def get_homepage_url(cls, api_token, repo):
-        params = "owner: \"{}\", name: \"{}\"".format(repo.owner.login, repo.name)
-        query = "query { repository(%s) { homepageUrl } }" % params
-        result = cls._graphql_query(api_token, query)
-        if result is None:
-            return repo.html_url
-
-        data = result["data"]
-        repository = data["repository"]
-        homepage_url = repository["homepageUrl"]
-        if StrUtils.is_not_none(homepage_url):
-            return homepage_url
-        else:
-            return repo.html_url

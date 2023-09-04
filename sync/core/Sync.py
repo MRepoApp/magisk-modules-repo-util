@@ -97,11 +97,12 @@ class Sync:
 
         return isinstance(obj, cls)
 
-    def create_github_tracks(self, api_token):
+    def create_github_tracks(self, api_token, after_date=None):
         self._tracks = GithubTracks(
             modules_folder=self._modules_folder,
             config=self._config,
-            api_token=api_token
+            api_token=api_token,
+            after_date=after_date
         )
         return self._tracks
 
@@ -111,13 +112,6 @@ class Sync:
             config=self._config
         )
         return self._tracks
-
-    def create_tracks(self, **kwargs):
-        api_token = kwargs.get("api_token")
-        if api_token is not None:
-            return self.create_github_tracks(api_token)
-        else:
-            return self.create_local_tracks()
 
     def update(self, module_ids=None, force=False, **kwargs):
         user_name = kwargs.get("user_name")
