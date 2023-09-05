@@ -7,6 +7,7 @@ from datetime import datetime
 from pathlib import Path
 
 from dateutil.parser import parse
+from tabulate import tabulate
 
 from .Parameters import Parameters
 from .TypeDict import ConfigDict, TrackDict
@@ -317,29 +318,24 @@ def print_json(obj: dict, __stdout: bool = False):
         print(string)
 
 
-def format_text(text: str, _len: int, left: bool = True):
-    if len(text) < _len:
-        if left:
-            return text.ljust(_len)
-        else:
-            return text.rjust(_len)
-    else:
-        return text[:_len - 3] + "..."
-
-
 def print_modules_list(modules_folder: Path, tracks: list):
     print("# tracks in repository at {}:".format(modules_folder))
     print("#")
-    print("# {:<28} {:<15} {:<15} {}".format(
-        "ID", "Add Date", "Last Update", "Versions"
-    ))
+
+    table = []
+    headers = ["id", "add time", "last update", "versions"]
 
     for track in tracks:
         if track.versions is None:
             track.last_update = 0
             track.versions = 0
 
-        print("{:<30}".format(format_text(track.id, 30, left=True)), end=" ")
-        print("{:<15}".format(str(datetime.fromtimestamp(track.added).date())), end=" ")
-        print("{:<15}".format(str(datetime.fromtimestamp(track.last_update).date())), end=" ")
-        print("{:^10}".format(track.versions))
+        table.append([
+            track.id,
+            datetime.fromtimestamp(track.added).date(),
+            datetime.fromtimestamp(track.last_update).date(),
+            track.versions
+        ])
+
+    markdown_text = tabulate(table, headers, tablefmt="github")
+    print(markdown_text)
