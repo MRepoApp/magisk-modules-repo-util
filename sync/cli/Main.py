@@ -103,9 +103,9 @@ class Main:
             config_dict = json.load(fp=sys.stdin)
             ConfigJson.write(config_dict, json_file)
 
-        elif cls._args.stdout and json_file.exists():
+        elif cls._args.json and json_file.exists():
             config_dict = JsonIO.load(json_file)
-            print_json(config_dict, True)
+            print_json(config_dict)
 
         elif cls._args.keys:
             keys = ConfigDict.keys_dict()
@@ -127,10 +127,7 @@ class Main:
 
             tracks = LocalTracks(modules_folder=modules_folder, config=config)
 
-            print_modules_list(
-                modules_folder=modules_folder,
-                tracks=tracks.get_tracks()
-            )
+            print_modules_list(tracks=tracks.get_tracks())
 
         elif cls._args.track_json is not None:
             if not TrackDict.has_error():
@@ -198,9 +195,9 @@ class Main:
                 if not tag_disable.exists():
                     tag_disable.touch()
 
-            elif cls._args.stdout and json_file.exists():
+            elif cls._args.json and json_file.exists():
                 track = TrackJson.load(json_file)
-                print_json(track, True)
+                print_json(track)
 
             else:
                 return cls.CODE_FAILURE
@@ -269,10 +266,10 @@ class Main:
         config = Config(root_folder)
 
         index = Index(root_folder=root_folder, config=config)
-        index(version=cls._args.index_version, to_file=not cls._args.stdout)
+        index(version=cls._args.index_version, to_file=not cls._args.json)
 
-        if cls._args.stdout:
-            print_json(index.modules_json, True)
+        if cls._args.json:
+            print_json(index.modules_json)
 
         elif cls._args.push:
             index.push_by_git(cls._args.git_branch)
@@ -310,18 +307,12 @@ def print_error(msg):
     print(f"Error: {msg}")
 
 
-def print_json(obj: dict, __stdout: bool = False):
-    if __stdout:
-        json.dump(obj, fp=sys.stdout, indent=2)
-    else:
-        string = json.dumps(obj, indent=2)
-        print(string)
+def print_json(obj: dict):
+    string = json.dumps(obj, indent=2)
+    print(string)
 
 
-def print_modules_list(modules_folder: Path, tracks: list):
-    print("# tracks in repository at {}:".format(modules_folder))
-    print("#")
-
+def print_modules_list(tracks: list):
     table = []
     headers = ["id", "add time", "last update", "versions"]
 

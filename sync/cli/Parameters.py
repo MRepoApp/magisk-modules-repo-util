@@ -114,9 +114,9 @@ class Parameters:
             help="Write config piped through stdin."
         )
         p.add_argument(
-            "--stdout",
+            "--json",
             action="store_true",
-            help="Show config piped through stdout."
+            help="Show config of repository (JSON format)."
         )
         p.add_argument(
             "--keys",
@@ -206,9 +206,9 @@ class Parameters:
             help="Disable update check for the track."
         )
         modify.add_argument(
-            "--stdout",
+            "--json",
             action="store_true",
-            help="Show the track piped through stdout."
+            help="Show the track of module (JSON format)."
         )
 
         cls.add_parser_env(p)
@@ -322,9 +322,9 @@ class Parameters:
             help="Version of the index file ({0}), default: {1}.".format(ModulesJson.filename(), "%(default)s")
         )
         p.add_argument(
-            "--stdout",
+            "--json",
             action="store_true",
-            help="Show modules.json piped through stdout."
+            help="Show modules.json (JSON format)."
         )
 
         cls.add_parser_git(p, add_set_size=False)
