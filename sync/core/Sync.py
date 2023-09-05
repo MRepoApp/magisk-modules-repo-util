@@ -3,6 +3,8 @@ import subprocess
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 
+from tabulate import tabulate
+
 from .Config import Config
 from .Pull import Pull
 from ..model import (
@@ -28,6 +30,8 @@ class Sync:
             self._tracks = BaseTracks()
         else:
             self._tracks = tracks
+
+        self._updated_diff = list()
 
     def _update_jsons(self, track, force):
         module_folder = self._modules_folder.joinpath(track.id)
@@ -87,6 +91,15 @@ class Sync:
 
         update_json.write(update_json_file)
         track.write(track_json_file)
+
+        if len(update_json.versions) >= 2:
+            self._updated_diff.append(
+                (update_json.versions[-2], online_module)
+            )
+        else:
+            self._updated_diff.append(
+                (None, online_module)
+            )
 
         return online_module
 
@@ -153,3 +166,22 @@ class Sync:
         subprocess.run(["git", "add", "."], cwd=self._root_folder.as_posix())
         subprocess.run(["git", "commit", "-m", msg], cwd=self._root_folder.as_posix())
         subprocess.run(["git", "push", "-u", "origin", branch], cwd=self._root_folder.as_posix())
+
+    def get_versions_diff(self):
+        headers = ["id", "name", "version"]
+        table = []
+
+        if len(self._updated_diff) == 0:
+            return None
+
+        for last, new in self._updated_diff:
+            version = new.version_display
+            if last is not None:
+                version = f"{last.version_display} -> {version}"
+
+            table.append(
+                [new.id, new.name, version]
+            )
+
+        markdown_text = tabulate(table, headers, tablefmt="github")
+        return markdown_text

@@ -253,6 +253,16 @@ class Main:
         index = Index(root_folder=root_folder, config=config)
         index(version=cls._args.index_version, to_file=True)
 
+        if cls._args.diff_file:
+            markdown_text = sync.get_versions_diff()
+            if markdown_text is not None:
+                if isinstance(cls._args.diff_file, str):
+                    diff_file = Path(cls._args.diff_file)
+                    diff_file.write_text(markdown_text)
+
+                else:
+                    print(markdown_text)
+
         if cls._args.push:
             sync.push_by_git(cls._args.git_branch)
 

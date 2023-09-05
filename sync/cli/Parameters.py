@@ -2,6 +2,7 @@
 from argparse import (
     ArgumentParser as ArgumentParserBase,
     RawDescriptionHelpFormatter,
+    Action,
     _HelpAction
 )
 from pathlib import Path
@@ -31,6 +32,14 @@ class ArgumentParser(ArgumentParserBase):
 
         if add_custom_help:
             Parameters.add_parser_help(self)
+
+
+class BoolOrStrAction(Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        if values is None or values == "" or values.isspace():
+            values = True
+
+        setattr(namespace, self.dest, values)
 
 
 class Parameters:
@@ -292,6 +301,14 @@ class Parameters:
             type=int,
             default=Index.latest_version,
             help="Version of the index file ({0}), default: {1}.".format(ModulesJson.filename(), "%(default)s")
+        )
+        p.add_argument(
+            "--diff",
+            dest="diff_file",
+            metavar="FILE",
+            action=BoolOrStrAction,
+            nargs="?",
+            help="Save versions diff of modules (GitHub flavored Markdown)."
         )
         p.add_argument(
             "--force",
