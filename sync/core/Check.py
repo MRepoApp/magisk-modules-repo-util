@@ -1,3 +1,5 @@
+import shutil
+
 from .Config import Config
 from .Index import Index
 from .Pull import Pull
@@ -36,7 +38,9 @@ class Check:
 
         if new_module_folder.exists():
             msg = f"{target_id} already exists, remove the old directly"
-            self._log.d(f"_check_folder: [{track.id}] -> {msg}")
+            self._log.w(f"_check_folder: [{track.id}] -> {msg}")
+            shutil.rmtree(old_module_folder)
+
             return True
 
         old_module_folder.rename(new_module_folder)
