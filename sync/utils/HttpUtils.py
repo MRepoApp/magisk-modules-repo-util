@@ -35,7 +35,7 @@ class HttpUtils:
         out.parent.mkdir(parents=True, exist_ok=True)
 
         response = requests.get(url, stream=True)
-        if response.ok:
+        if response.status_code == 200:
             block_size = 1024
             with open(out, 'wb') as file:
                 for data in response.iter_content(block_size):
