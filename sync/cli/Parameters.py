@@ -363,24 +363,28 @@ class Parameters:
         p.add_argument(
             "-I",
             "--id",
+            dest="check_id",
             action="store_true",
             help="Check id of the module in all json."
         )
         p.add_argument(
             "-U",
             "--url",
+            dest="check_url",
             action="store_true",
             help=f"Check urls of files in {UpdateJson.filename()}."
         )
         p.add_argument(
             "-E",
             "--empty",
+            dest="remove_empty",
             action="store_true",
             help=f"Remove empty values in {TrackJson.filename()}."
         )
         p.add_argument(
             "-O",
             "--old",
+            dest="remove_old",
             action="store_true",
             help=f"Remove old versions based on max_num."
         )
