@@ -324,14 +324,17 @@ def print_modules_list(tracks: list):
 
     for track in tracks:
         if track.versions is None:
-            track.last_update = 0
-            track.versions = 0
+            last_update = "-"
+            versions = 0
+        else:
+            last_update = datetime.fromtimestamp(track.last_update).date()
+            versions = track.versions
 
         table.append([
             track.id,
             datetime.fromtimestamp(track.added).date(),
-            datetime.fromtimestamp(track.last_update).date(),
-            track.versions
+            last_update,
+            versions
         ])
 
     markdown_text = tabulate(table, headers, tablefmt="github")
