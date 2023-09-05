@@ -128,29 +128,33 @@ class Index:
         func = getattr(Sync, "push_by_git")
         return func(self, branch)
 
-    def get_version_table(self, module_list=None):
-        headers = ["id", "name", "version"]
-        modules = []
+    def get_version_table(self):
+        headers = ["id", "name", "latest version"]
+        table = []
 
-        if module_list is None:
-            for track in self._tracks.get_tracks():
-                module_folder = self._modules_folder.joinpath(track.id)
-                update_json_file = module_folder.joinpath(UpdateJson.filename())
+        for track in self._tracks.get_tracks():
+            module_folder = self._modules_folder.joinpath(track.id)
+            update_json_file = module_folder.joinpath(UpdateJson.filename())
 
-                if not update_json_file.exists():
-                    continue
+            if not update_json_file.exists():
+                table.append(
+                    [track.id, "-", "-"]
+                )
+                continue
 
-                update_json = UpdateJson.load(update_json_file)
-                if len(update_json.versions) == 0:
-                    continue
+            update_json = UpdateJson.load(update_json_file)
+            latest = update_json.versions[-1]
+            zip_file = module_folder.joinpath(latest.zipfile_name)
+            online_module = self.get_online_module(track.id, zip_file)
 
-                latest = update_json.versions[-1]
-                zipfile = module_folder.joinpath(latest.zipfile_name)
-                online_module = LocalModule.load(zipfile).to(OnlineModule)
-                modules.append(online_module)
-        else:
-            modules = module_list
+            if online_module is not None:
+                table.append(
+                    [online_module.id, online_module.name, online_module.version_display]
+                )
+            else:
+                table.append(
+                    [track.id, "-", "-"]
+                )
 
-        table = [[module.id, module.name, module.version_display] for module in modules]
         markdown_text = tabulate(table, headers, tablefmt="github")
         return markdown_text
