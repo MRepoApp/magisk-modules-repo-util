@@ -2,6 +2,8 @@ import shutil
 from datetime import datetime
 from typing import List
 
+from tabulate import tabulate
+
 from .BaseTracks import BaseTracks
 from ..error import Result
 from ..model import TrackJson
@@ -48,6 +50,31 @@ class LocalTracks(BaseTracks):
 
         self._log.i(f"get_tracks: size = {self.size}")
         return self._tracks
+
+    def get_tracks_table(self):
+        if self.size == 0:
+            self.get_tracks()
+
+        headers = ["id", "add time", "last update", "versions"]
+        table = []
+
+        for track in self.tracks:
+            if track.versions is None:
+                last_update = "-"
+                versions = 0
+            else:
+                last_update = datetime.fromtimestamp(track.last_update).date()
+                versions = track.versions
+
+            table.append([
+                track.id,
+                datetime.fromtimestamp(track.added).date(),
+                last_update,
+                versions
+            ])
+
+        markdown_text = tabulate(table, headers, tablefmt="github")
+        return markdown_text
 
     @property
     def size(self):

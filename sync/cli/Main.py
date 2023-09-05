@@ -3,11 +3,9 @@ import logging
 import os
 import sys
 from argparse import Namespace
-from datetime import datetime
 from pathlib import Path
 
 from dateutil.parser import parse
-from tabulate import tabulate
 
 from .Parameters import Parameters
 from .TypeDict import ConfigDict, TrackDict
@@ -124,10 +122,9 @@ class Main:
 
         if cls._args.list:
             config = Config(root_folder)
-
             tracks = LocalTracks(modules_folder=modules_folder, config=config)
-
-            print_modules_list(tracks=tracks.get_tracks())
+            markdown_text = tracks.get_tracks_table()
+            print(markdown_text)
 
         elif cls._args.track_json is not None:
             if not TrackDict.has_error():
@@ -326,26 +323,3 @@ def print_error(msg):
 def print_json(obj: dict):
     string = json.dumps(obj, indent=2)
     print(string)
-
-
-def print_modules_list(tracks: list):
-    table = []
-    headers = ["id", "add time", "last update", "versions"]
-
-    for track in tracks:
-        if track.versions is None:
-            last_update = "-"
-            versions = 0
-        else:
-            last_update = datetime.fromtimestamp(track.last_update).date()
-            versions = track.versions
-
-        table.append([
-            track.id,
-            datetime.fromtimestamp(track.added).date(),
-            last_update,
-            versions
-        ])
-
-    markdown_text = tabulate(table, headers, tablefmt="github")
-    print(markdown_text)
