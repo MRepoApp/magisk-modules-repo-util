@@ -326,6 +326,11 @@ class Parameters:
             action="store_true",
             help="Show modules.json (JSON format)."
         )
+        p.add_argument(
+            "--table",
+            action="store_true",
+            help="Show versions table of modules (GitHub flavored Markdown)."
+        )
 
         cls.add_parser_git(p, add_set_size=False)
         cls.add_parser_env(p)

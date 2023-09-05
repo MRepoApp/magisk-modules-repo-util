@@ -1,5 +1,7 @@
 from datetime import datetime
 
+from tabulate import tabulate
+
 from .Config import Config
 from .Sync import Sync
 from ..error import Result
@@ -125,3 +127,30 @@ class Index:
     def push_by_git(self, branch):
         func = getattr(Sync, "push_by_git")
         return func(self, branch)
+
+    def get_version_table(self, module_list=None):
+        headers = ["id", "name", "version"]
+        modules = []
+
+        if module_list is None:
+            for track in self._tracks.get_tracks():
+                module_folder = self._modules_folder.joinpath(track.id)
+                update_json_file = module_folder.joinpath(UpdateJson.filename())
+
+                if not update_json_file.exists():
+                    continue
+
+                update_json = UpdateJson.load(update_json_file)
+                if len(update_json.versions) == 0:
+                    continue
+
+                latest = update_json.versions[-1]
+                zipfile = module_folder.joinpath(latest.zipfile_name)
+                online_module = LocalModule.load(zipfile).to(OnlineModule)
+                modules.append(online_module)
+        else:
+            modules = module_list
+
+        table = [[module.id, module.name, module.version_display] for module in modules]
+        markdown_text = tabulate(table, headers, tablefmt="github")
+        return markdown_text

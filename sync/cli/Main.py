@@ -266,13 +266,19 @@ class Main:
         config = Config(root_folder)
 
         index = Index(root_folder=root_folder, config=config)
-        index(version=cls._args.index_version, to_file=not cls._args.json)
 
-        if cls._args.json:
-            print_json(index.modules_json)
+        if cls._args.table:
+            markdown_text = index.get_version_table()
+            print(markdown_text)
 
-        elif cls._args.push:
-            index.push_by_git(cls._args.git_branch)
+        else:
+            index(version=cls._args.index_version, to_file=not cls._args.json)
+
+            if cls._args.json:
+                print_json(index.modules_json)
+
+            elif cls._args.push:
+                index.push_by_git(cls._args.git_branch)
 
         return cls.CODE_SUCCESS
 
