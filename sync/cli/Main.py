@@ -225,33 +225,12 @@ class Main:
             after_date=parse(cls._args.after_date).date()
         )
 
-        if cls._args.update:
-            sync = Sync(
-                root_folder=root_folder,
-                config=config,
-                tracks=tracks
-            )
-            sync.update(
-                module_ids=cls._args.repo_names,
-                force=False,
-                user_name=cls._args.user_name,
-                cover=cls._args.cover,
-                use_ssh=cls._args.ssh
-            )
-
-            index = Index(root_folder=root_folder, config=config)
-            index(version=cls._args.index_version, to_file=True)
-
-            if cls._args.push:
-                sync.push_by_git(cls._args.git_branch)
-
-        else:
-            tracks.get_tracks(
-                user_name=cls._args.user_name,
-                repo_names=cls._args.repo_names,
-                cover=cls._args.cover,
-                use_ssh=cls._args.ssh
-            )
+        tracks.get_tracks(
+            user_name=cls._args.user_name,
+            repo_names=cls._args.repo_names,
+            cover=cls._args.cover,
+            use_ssh=cls._args.ssh
+        )
 
         if cls._args.clear:
             tracks.clear_tracks()

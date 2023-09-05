@@ -238,15 +238,6 @@ class Parameters:
             help="Names of repository, default is all."
         )
         p.add_argument(
-            "-v",
-            "--version",
-            dest="index_version",
-            metavar="VERSION",
-            type=int,
-            default=Index.latest_version,
-            help="Version of the index file ({0}), default: {1}.".format(ModulesJson.filename(), "%(default)s")
-        )
-        p.add_argument(
             "-d",
             "--date",
             dest="after_date",
@@ -268,17 +259,11 @@ class Parameters:
             help="Overwrite fields of tracks (exclude 'added')."
         )
         p.add_argument(
-            "--update",
-            action="store_true",
-            help="Update modules to the latest version."
-        )
-        p.add_argument(
             "--clear",
             action="store_true",
             help="Remove tracks, exclude those in the current session."
         )
 
-        cls.add_parser_git(p)
         env = cls.add_parser_env(p, add_quiet=True)
         env.add_argument(
             "--api-token",
