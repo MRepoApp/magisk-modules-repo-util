@@ -128,7 +128,7 @@ class Index:
         func = getattr(Sync, "push_by_git")
         return func(self, branch)
 
-    def get_version_table(self):
+    def get_versions_table(self):
         headers = ["id", "name", "latest version"]
         table = []
 
@@ -148,8 +148,9 @@ class Index:
             online_module = self.get_online_module(track.id, zip_file)
 
             if online_module is not None:
+                name = online_module.name.replace("|", "-")
                 table.append(
-                    [online_module.id, online_module.name, online_module.version_display]
+                    [online_module.id, name, online_module.version_display]
                 )
             else:
                 table.append(

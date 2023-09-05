@@ -179,8 +179,9 @@ class Sync:
             if last is not None:
                 version = f"{last.version_display} -> {version}"
 
+            name = new.name.replace("|", "-")
             table.append(
-                [new.id, new.name, version]
+                [new.id, name, version]
             )
 
         markdown_text = tabulate(table, headers, tablefmt="github")
