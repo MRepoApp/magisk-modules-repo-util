@@ -170,7 +170,6 @@ class Parameters:
         modify = p.add_argument_group("modify")
         modify.add_argument(
             "-i",
-            "--id",
             dest="modify_module_id",
             metavar="MODULE_ID",
             type=str,
@@ -196,12 +195,12 @@ class Parameters:
             help="Remove keys (and all its values) in the track."
         )
         modify.add_argument(
-            "--enable-update",
+            "--enable",
             action="store_true",
             help="Enable update check for the track."
         )
         modify.add_argument(
-            "--disable-update",
+            "--disable",
             action="store_true",
             help="Disable update check for the track."
         )
@@ -221,7 +220,6 @@ class Parameters:
         )
         p.add_argument(
             "-u",
-            "--user-name",
             dest="user_name",
             metavar="USERNAME",
             type=str,
@@ -230,7 +228,6 @@ class Parameters:
         )
         p.add_argument(
             "-r",
-            "--repo-name",
             dest="repo_names",
             metavar="REPO_NAME",
             nargs="+",
@@ -282,7 +279,6 @@ class Parameters:
         )
         p.add_argument(
             "-i",
-            "--id",
             dest="module_ids",
             metavar="MODULE_ID",
             nargs="+",
@@ -291,7 +287,6 @@ class Parameters:
         )
         p.add_argument(
             "-v",
-            "--version",
             dest="index_version",
             metavar="VERSION",
             type=int,
@@ -301,7 +296,7 @@ class Parameters:
         p.add_argument(
             "--force",
             action="store_true",
-            help="Remove all old versions."
+            help="Remove all old versions of modules."
         )
         cls.add_parser_git(p)
         cls.add_parser_env(p, add_quiet=True)
@@ -314,7 +309,6 @@ class Parameters:
         )
         p.add_argument(
             "-v",
-            "--version",
             dest="index_version",
             metavar="VERSION",
             type=int,
@@ -343,7 +337,6 @@ class Parameters:
         )
         p.add_argument(
             "-i",
-            "--id",
             dest="module_ids",
             metavar="MODULE_ID",
             nargs="+",
@@ -352,25 +345,25 @@ class Parameters:
         )
         p.add_argument(
             "-I",
-            "--check-id",
+            "--id",
             action="store_true",
             help="Check id of the module in all json."
         )
         p.add_argument(
             "-U",
-            "--check-url",
+            "--url",
             action="store_true",
             help=f"Check urls of files in {UpdateJson.filename()}."
         )
         p.add_argument(
             "-E",
-            "--remove-empty",
+            "--empty",
             action="store_true",
             help=f"Remove empty values in {TrackJson.filename()}."
         )
         p.add_argument(
             "-O",
-            "--remove-old",
+            "--old",
             action="store_true",
             help=f"Remove old versions based on max_num."
         )
@@ -414,7 +407,7 @@ class Parameters:
 
         if add_set_size:
             git.add_argument(
-                "--max-size",
+                "--size",
                 dest="max_size",
                 metavar="MAX_SIZE",
                 type=float,
