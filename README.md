@@ -56,7 +56,7 @@ $ cli.py sync
 ```
 
 ## How to update by GitHub Actions?
-- You can refer to [demo](https://github.com/ya0211/magisk-modules-repo).
+- You can refer to [demo](https://github.com/ya0211/magisk-modules-repo) or [ya0211/magisk-modules-alt-repo](https://github.com/ya0211/magisk-modules-alt-repo).
 
 
 ## cli.py
