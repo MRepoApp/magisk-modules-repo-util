@@ -36,8 +36,7 @@ class Sync:
     def _update_jsons(self, track, force):
         module_folder = self._modules_folder.joinpath(track.id)
 
-        tag_disable = module_folder.joinpath(LocalTracks.TAG_DISABLE)
-        if tag_disable.exists():
+        if not track.enable:
             self._log.i(f"_update_jsons: [{track.id}] -> update check has been disabled")
             return None
 

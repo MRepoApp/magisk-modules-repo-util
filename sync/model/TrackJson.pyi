@@ -16,6 +16,7 @@ class TrackJson(AttrDict, JsonIO):
     support: str
     donate: str
     max_num: int
+    enable: bool
 
     # without manually
     added: float

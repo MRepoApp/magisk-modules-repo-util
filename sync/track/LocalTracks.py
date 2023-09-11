@@ -11,8 +11,6 @@ from ..utils import Log
 
 
 class LocalTracks(BaseTracks):
-    TAG_DISABLE = ".disable"
-
     def __init__(self, modules_folder, config):
         self._log = Log("LocalTracks", enable_log=config.enable_log, log_dir=config.log_dir)
         self._modules_folder = modules_folder
@@ -91,11 +89,12 @@ class LocalTracks(BaseTracks):
 
         if not json_file.exists():
             track.added = datetime.now().timestamp()
+            track.enable = True
             track.write(json_file)
         elif cover:
             old = TrackJson.load(json_file)
-            if old.added is None:
-                old.added = datetime.fromtimestamp(json_file.stat().st_ctime)
+            old.added = old.added or datetime.fromtimestamp(json_file.stat().st_ctime)
+            old.enable = old.enable or True
 
             old.update(track)
             old.write(json_file)

@@ -168,7 +168,6 @@ class Main:
         elif cls._args.modify_module_id is not None:
             module_folder = modules_folder.joinpath(cls._args.modify_module_id)
             json_file = module_folder.joinpath(TrackJson.filename())
-            tag_disable = module_folder.joinpath(LocalTracks.TAG_DISABLE)
 
             if not json_file.exists():
                 print_error(f"There is no track for this id ({cls._args.modify_module_id})")
@@ -193,14 +192,6 @@ class Main:
                 for key in cls._args.remove_key_list:
                     track.pop(key, None)
                 track.write(json_file)
-
-            elif cls._args.enable_update and module_folder.exists():
-                if tag_disable.exists():
-                    tag_disable.unlink()
-
-            elif cls._args.disable_update and module_folder.exists():
-                if not tag_disable.exists():
-                    tag_disable.touch()
 
             elif cls._args.json and json_file.exists():
                 track = TrackJson.load(json_file)

@@ -14,6 +14,7 @@ class TrackJson(AttrDict, JsonIO):
     support: str
     donate: str
     max_num: int
+    enable: bool
 
     # noinspection PyAttributeOutsideInit
     @property
@@ -63,7 +64,10 @@ class TrackJson(AttrDict, JsonIO):
         keys.extend(["added", "last_update", "versions"])
 
         for key in keys:
-            value = self.get(key, "") or ""
+            value = self.get(key, "")
+            if value is None:
+                continue
+
             if isinstance(value, str):
                 if value == "" or value.isspace():
                     continue

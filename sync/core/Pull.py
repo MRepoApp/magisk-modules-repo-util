@@ -11,7 +11,6 @@ from ..model import (
     TrackType,
     UpdateJson
 )
-from ..track import LocalTracks
 from ..utils import Log, HttpUtils, GitUtils
 
 
@@ -120,12 +119,11 @@ class Pull:
 
         zip_file_size = zip_file.stat().st_size / (1024 ** 2)
         if zip_file_size > self._max_size:
-            module_folder.joinpath(LocalTracks.TAG_DISABLE).touch()
-            if delete_tmp:
-                zip_file.unlink()
-
-            msg = f"file size too large ({self._max_size} MB), update check will be disabled"
+            new_module_folder = self._local_folder.joinpath(module_id)
+            msg = f"zip file is oversize ({self._max_size} MB), move this module to {new_module_folder}"
             self._log.w(f"_from_zip_common: [{module_id}] -> {msg}")
+            shutil.move(module_folder, new_module_folder)
+
             return None
 
         @Result.catching()

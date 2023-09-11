@@ -208,16 +208,6 @@ class Parameters:
             help="Remove keys (and all its values) in the track."
         )
         modify.add_argument(
-            "--enable",
-            action="store_true",
-            help="Enable update check for the track."
-        )
-        modify.add_argument(
-            "--disable",
-            action="store_true",
-            help="Disable update check for the track."
-        )
-        modify.add_argument(
             "--json",
             action="store_true",
             help="Show the track of module."
