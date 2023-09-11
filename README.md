@@ -44,9 +44,9 @@ or
 ```shell
 $ cli.py track --add id="zygisk_lsposed" update_to="https://lsposed.github.io/LSPosed/release/zygisk.json" license="GPL-3.0"
 ```
-If you want to generate track.json from repository on github
+If you want to generate `track.json`s from repositories on github
 ```shell
-$ cli.py github --user-name <github-user-name> --api-token=<github-api-token>
+$ cli.py github --api-token <github-token> -u <user-name> -r <repo-name ...> 
 ```
 > **_TIP_**: [click here to create a new api token](https://github.com/settings/personal-access-tokens/new).
 
@@ -247,8 +247,7 @@ your-repo
 ```
 
 ## modules.json
-### v1
-> For MRepo v2.0.0-beta01 and Higher
+### version 1
 ```json
 {
   "name": "{NAME}",
@@ -286,8 +285,8 @@ your-repo
   ]
 }
 ```
-### v0
-> For MRepo v1.5.0-alpha02 and Lower
+
+### version 0
 ```json
 {
   "name": "{NAME}",
