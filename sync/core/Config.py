@@ -21,8 +21,8 @@ class Config(ConfigJson):
         self._check_values()
 
         self._log = Log("Config", enable_log=self.enable_log, log_dir=self.log_dir)
-        for key in self.expected_fields().keys():
-            self._log.d(f"{key} = {self._config[key]}")
+        for key in ConfigJson.expected_fields().keys():
+            self._log.d(f"{key} = {self.get(key)}")
 
     def _check_values(self):
         default = self.default()
@@ -31,16 +31,16 @@ class Config(ConfigJson):
         if name == default.name:
             self._log.w("_check_values: 'name' is undefined")
 
-        base_url = self._config.get("base_url", default.base_url)
+        base_url = self.get("base_url", default.base_url)
         if base_url == default.base_url:
             raise ConfigError("'base_url' is undefined")
         elif not StrUtils.is_with(base_url, "https", "/"):
             raise ConfigError("'base_url' must start with 'https' and end with '/'")
 
-        max_num = self._config.get("max_num", default.max_num)
-        enable_log = self._config.get("enable_log", default.enable_log)
+        max_num = self.get("max_num", default.max_num)
+        enable_log = self.get("enable_log", default.enable_log)
 
-        log_dir = self._config.get("log_dir", default.log_dir)
+        log_dir = self.get("log_dir", default.log_dir)
         if log_dir != default.log_dir:
             log_dir = Path(log_dir)
 
