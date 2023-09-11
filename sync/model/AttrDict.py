@@ -6,10 +6,7 @@ class AttrDict(dict):
         return self.get(item)
 
     def __hash__(self):
-        return hash(frozenset(self.items()))
-
-    def items(self):
-        return self.__dict__.items()
+        return hash(frozenset(self.__dict__.items()))
 
     def copy(self, **kwargs):
         new = super().copy()
