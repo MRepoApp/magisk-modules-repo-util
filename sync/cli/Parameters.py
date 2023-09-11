@@ -131,6 +131,11 @@ class Parameters:
             action="store_true",
             help="Show fields available in config."
         )
+        p.add_argument(
+            "--migrate",
+            action="store_true",
+            help=f"Migrate config structure and content."
+        )
 
         cls.add_parser_env(p)
 
@@ -350,12 +355,6 @@ class Parameters:
         p = sub_parsers.add_parser(
             cls.CHECK,
             help="Content check and migrate."
-        )
-        p.add_argument(
-            "-m",
-            "--migrate",
-            action="store_true",
-            help=f"Check repository structure and content (and migrate)."
         )
         p.add_argument(
             "-i",

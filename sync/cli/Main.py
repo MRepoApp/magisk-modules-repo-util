@@ -84,6 +84,11 @@ class Main:
         json_folder = Config.get_json_folder(root_folder)
         json_file = json_folder.joinpath(Config.filename())
 
+        if cls._args.migrate:
+            migrate = Migrate(root_folder)
+            migrate.config()
+            return cls.CODE_SUCCESS
+
         if cls._args.config_values is not None:
             _dict, _error = json_parse(cls._args.config_values, ConfigJson)
             if len(_error) != 0:
@@ -298,11 +303,6 @@ class Main:
     def check(cls) -> int:
         root_folder = Path(cls._args.root_folder).resolve()
         Log.set_log_level(logging.INFO)
-
-        if cls._args.migrate:
-            migrate = Migrate(root_folder)
-            migrate()
-            return cls.CODE_SUCCESS
 
         config = Config(root_folder)
         check = Check(root_folder=root_folder, config=config)
