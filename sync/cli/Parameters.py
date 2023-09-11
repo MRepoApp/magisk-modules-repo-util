@@ -8,7 +8,7 @@ from argparse import (
 from pathlib import Path
 from typing import Optional
 
-from .TypeDict import ConfigDict, TrackDict
+from .TypeDictAction import ConfigDict, TrackDict
 from ..__version__ import get_version, get_version_code
 from ..core import Index
 from ..model import (

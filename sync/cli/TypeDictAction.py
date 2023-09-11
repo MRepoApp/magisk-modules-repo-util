@@ -63,9 +63,9 @@ class TypeDictAction(Action):
         return cls.__error__
 
 
-class ConfigDict(ConfigJson, TypeDictAction):
+class ConfigDict(TypeDictAction, ConfigJson):
     pass
 
 
-class TrackDict(TrackJson, TypeDictAction):
+class TrackDict(TypeDictAction, TrackJson):
     pass
