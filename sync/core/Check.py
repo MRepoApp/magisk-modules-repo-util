@@ -152,15 +152,6 @@ class Check:
                 self._log.i(f"ids: [{track.id}] -> {UpdateJson.filename()} has been updated")
                 update_json.write(update_json_file)
 
-    def empty(self, module_ids=None, new=False):
-        for track in self._get_tracks(module_ids, new):
-            module_folder = self._modules_folder.joinpath(track.id)
-            if not module_folder.exists():
-                continue
-
-            track_json_file = module_folder.joinpath(TrackJson.filename())
-            track.write(track_json_file)
-
     def old(self, module_ids=None, new=False):
         for track in self._get_tracks(module_ids, new):
             module_folder = self._modules_folder.joinpath(track.id)

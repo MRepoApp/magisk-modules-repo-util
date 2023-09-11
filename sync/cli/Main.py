@@ -303,7 +303,6 @@ class Main:
         if not (
             cls._args.check_id
             or cls._args.check_url
-            or cls._args.remove_empty
             or cls._args.remove_old
         ):
             return cls.CODE_FAILURE
@@ -316,9 +315,6 @@ class Main:
 
         if cls._args.check_url:
             check.url(module_ids=cls._args.module_ids)
-
-        if cls._args.remove_empty:
-            check.empty(module_ids=cls._args.module_ids)
 
         if cls._args.remove_old:
             check.old(module_ids=cls._args.module_ids)

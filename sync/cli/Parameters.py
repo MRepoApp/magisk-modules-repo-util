@@ -10,11 +10,7 @@ from typing import Optional
 
 from ..__version__ import get_version, get_version_code
 from ..core import Index
-from ..model import (
-    TrackJson,
-    UpdateJson,
-    ModulesJson
-)
+from ..model import UpdateJson, ModulesJson
 from ..utils import GitUtils
 
 
@@ -372,13 +368,6 @@ class Parameters:
             dest="check_url",
             action="store_true",
             help=f"Check urls of files in {UpdateJson.filename()}."
-        )
-        p.add_argument(
-            "-E",
-            "--empty",
-            dest="remove_empty",
-            action="store_true",
-            help=f"Remove empty values in {TrackJson.filename()}."
         )
         p.add_argument(
             "-O",
