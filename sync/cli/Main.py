@@ -4,11 +4,11 @@ import os
 import sys
 from argparse import Namespace
 from pathlib import Path
+from typing import Sequence, Type, Tuple
 
 from dateutil.parser import parse
 
 from .Parameters import Parameters
-from .TypeDictAction import ConfigDict, TrackDict
 from ..core import (
     Check,
     Config,
@@ -16,7 +16,7 @@ from ..core import (
     Pull,
     Sync
 )
-from ..model import TrackJson, JsonIO, ConfigJson
+from ..model import TrackJson, JsonIO, ConfigJson, AttrDict
 from ..track import LocalTracks, GithubTracks
 from ..utils import Log
 
@@ -83,19 +83,20 @@ class Main:
         json_folder = Config.get_json_folder(root_folder)
         json_file = json_folder.joinpath(Config.filename())
 
-        if cls._args.config_json is not None:
-            if not ConfigDict.has_error():
-                if json_file.exists():
-                    config_dict = JsonIO.load(json_file)
-                else:
-                    config_dict = dict()
-
-                config_dict.update(cls._args.config_json)
-                ConfigJson.write(config_dict, json_file)
+        if cls._args.config_values is not None:
+            _dict, _error = json_parse(cls._args.config_values, ConfigJson)
+            if len(_error) != 0:
+                error = json.dumps(obj=_error, indent=2)
+                print_error(error)
 
             else:
-                error = json.dumps(obj=ConfigDict.get_error(True), indent=2)
-                print_error(error)
+                if json_file.exists():
+                    config = ConfigJson.load(json_file)
+                else:
+                    config = ConfigJson()
+
+                config.update(_dict)
+                config.write(json_file)
 
         elif cls._args.stdin:
             config_dict = json.load(fp=sys.stdin)
@@ -126,17 +127,19 @@ class Main:
             markdown_text = tracks.get_tracks_table()
             print(markdown_text)
 
-        elif cls._args.track_json is not None:
-            if not TrackDict.has_error():
-                track = TrackJson(cls._args.track_json)
+        elif cls._args.track_values is not None:
+            _dict, _error = json_parse(cls._args.track_values, TrackJson)
+            if len(_error) != 0:
+                error = json.dumps(obj=_error, indent=2)
+                print_error(error)
+
+            else:
+                track = TrackJson(_dict)
                 LocalTracks.add_track(
                     track=track,
                     modules_folder=modules_folder,
                     cover=True
                 )
-            else:
-                error = json.dumps(obj=TrackDict.get_error(True), indent=2)
-                print_error(error)
 
         elif cls._args.remove_module_ids is not None:
             for module_id in cls._args.remove_module_ids:
@@ -165,18 +168,19 @@ class Main:
                 print_error(f"There is no track for this id ({cls._args.modify_module_id})")
                 return cls.CODE_SUCCESS
 
-            if cls._args.update_track_json is not None:
-                if not TrackDict.has_error():
-                    track = TrackJson(cls._args.update_track_json)
-                    track.update(id=cls._args.modify_module_id)
+            if cls._args.update_track_values is not None:
+                _dict, _error = json_parse(cls._args.update_track_values, TrackJson)
+                if len(_error) != 0:
+                    error = json.dumps(obj=_error, indent=2)
+                    print_error(error)
 
+                else:
+                    track = TrackJson(_dict)
+                    track.update(id=cls._args.modify_module_id)
                     LocalTracks.update_track(
                         track=track,
                         modules_folder=modules_folder
                     )
-                else:
-                    error = json.dumps(obj=TrackDict.get_error(True), indent=2)
-                    print_error(error)
 
             elif cls._args.remove_key_list is not None and json_file.exists():
                 track = TrackJson.load(json_file)
@@ -323,3 +327,34 @@ def print_error(msg):
 def print_json(obj: dict):
     string = json.dumps(obj, indent=2)
     print(string)
+
+
+def json_parse(texts: Sequence[str], __cls: Type) -> Tuple[AttrDict, AttrDict]:
+    _error = AttrDict()
+    _dict = AttrDict()
+
+    _member = AttrDict()
+    for p in __cls.__mro__:
+        if hasattr(p, "__annotations__"):
+            _member.update(p.__annotations__)
+
+    for text in texts:
+        values = text.split("=", maxsplit=1)
+        if len(values) != 2:
+            continue
+
+        key, value = values[0], values[1]
+
+        _type = _member.get(key)
+        if _type is None:
+            continue
+
+        try:
+            if _type is bool:
+                _dict[key] = value.lower() == "true"
+            else:
+                _dict[key] = _type(value)
+        except BaseException as err:
+            _error[key] = str(err)
+
+    return _dict, _error

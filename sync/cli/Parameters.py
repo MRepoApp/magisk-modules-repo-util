@@ -8,7 +8,6 @@ from argparse import (
 from pathlib import Path
 from typing import Optional
 
-from .TypeDictAction import ConfigDict, TrackDict
 from ..__version__ import get_version, get_version_code
 from ..core import Index
 from ..model import (
@@ -111,10 +110,10 @@ class Parameters:
         p.add_argument(
             "-w",
             "--write",
-            dest="config_json",
+            dest="config_values",
             metavar="KEY=VALUE",
-            action=ConfigDict,
             nargs="+",
+            default=None,
             help="Write values to config."
         )
         p.add_argument(
@@ -150,10 +149,10 @@ class Parameters:
         p.add_argument(
             "-a",
             "--add",
-            dest="track_json",
+            dest="track_values",
             metavar="KEY=VALUE",
-            action=TrackDict,
             nargs="+",
+            default=None,
             help="Add a track to repository."
         )
         p.add_argument(
@@ -188,10 +187,10 @@ class Parameters:
         modify.add_argument(
             "-u",
             "--update",
-            dest="update_track_json",
+            dest="update_track_values",
             metavar="KEY=VALUE",
-            action=TrackDict,
             nargs="+",
+            default=None,
             help="Update values to the track."
         )
         modify.add_argument(
