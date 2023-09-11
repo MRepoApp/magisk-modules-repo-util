@@ -352,6 +352,12 @@ class Parameters:
             help="Content check and migrate."
         )
         p.add_argument(
+            "-m",
+            "--migrate",
+            action="store_true",
+            help=f"Check repository structure and content (and migrate)."
+        )
+        p.add_argument(
             "-i",
             dest="module_ids",
             metavar="MODULE_ID",

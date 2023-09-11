@@ -13,6 +13,7 @@ from ..core import (
     Check,
     Config,
     Index,
+    Migrate,
     Pull,
     Sync
 )
@@ -297,6 +298,11 @@ class Main:
     def check(cls) -> int:
         root_folder = Path(cls._args.root_folder).resolve()
         Log.set_log_level(logging.INFO)
+
+        if cls._args.migrate:
+            migrate = Migrate(root_folder)
+            migrate()
+            return cls.CODE_SUCCESS
 
         config = Config(root_folder)
         check = Check(root_folder=root_folder, config=config)
