@@ -21,7 +21,7 @@ class Pull:
     def __init__(self, root_folder, config):
         self._log = Log("Pull", enable_log=config.enable_log, log_dir=config.log_dir)
 
-        self._local_folder = root_folder.joinpath("local")
+        self._local_folder = Config.get_local_folder(root_folder)
         self._modules_folder = Config.get_modules_folder(root_folder)
         self._config = config
 

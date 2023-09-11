@@ -87,3 +87,7 @@ class Config(ConfigJson):
     @classmethod
     def get_modules_folder(cls, root_folder):
         return root_folder.joinpath("modules")
+
+    @classmethod
+    def get_local_folder(cls, root_folder):
+        return root_folder.joinpath("local")
