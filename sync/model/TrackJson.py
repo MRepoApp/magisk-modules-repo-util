@@ -65,11 +65,6 @@ class TrackJson(AttrDict, JsonIO):
         JsonIO.write(new, file)
 
     @classmethod
-    def load(cls, file):
-        obj = JsonIO.load(file)
-        return TrackJson(obj)
-
-    @classmethod
     def filename(cls):
         return "track.json"
 
