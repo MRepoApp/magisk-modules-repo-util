@@ -8,6 +8,7 @@ from .JsonIO import JsonIO
 
 class TrackJson(AttrDict, JsonIO):
     id: str
+    enable: bool
     update_to: str
     changelog: str
     license: str
@@ -16,7 +17,6 @@ class TrackJson(AttrDict, JsonIO):
     support: str
     donate: str
     max_num: int
-    enable: bool
 
     # without manually
     added: float
