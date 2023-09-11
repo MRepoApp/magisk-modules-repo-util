@@ -1,12 +1,12 @@
 from pathlib import Path
 from typing import (
-    List,
     Dict,
     Any,
     Optional,
     overload,
     Self,
-    Union
+    Union,
+    Type
 )
 
 from .JsonIO import JsonIO
@@ -54,4 +54,4 @@ class ConfigJson(JsonIO):
     @classmethod
     def filename(cls) -> str: ...
     @classmethod
-    def expected_fields(cls) -> List[str]: ...
+    def expected_fields(cls, __type: bool = ...) -> Dict[str, Union[str, Union[str, Type]]]: ...

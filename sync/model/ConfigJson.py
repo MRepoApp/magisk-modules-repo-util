@@ -2,6 +2,12 @@ from .JsonIO import JsonIO
 
 
 class ConfigJson(JsonIO):
+    NAME: str
+    BASE_URL: str
+    MAX_NUM: int
+    ENABLE_LOG: bool
+    LOG_DIR: str
+
     CONFIG_VERSION = 1
     TRACK_VERSION = 1
 
@@ -23,7 +29,7 @@ class ConfigJson(JsonIO):
         )
 
     def _set_properties(self):
-        for key in self.expected_fields():
+        for key in self.expected_fields().keys():
             self._set_property(key)
 
     @property
@@ -74,11 +80,8 @@ class ConfigJson(JsonIO):
         return "config.json"
 
     @classmethod
-    def expected_fields(cls):
-        return [
-            "NAME",
-            "BASE_URL",
-            "MAX_NUM",
-            "ENABLE_LOG",
-            "LOG_DIR"
-        ]
+    def expected_fields(cls, __type=True):
+        if __type:
+            return cls.__annotations__
+
+        return {k: v.__name__ for k, v in cls.__annotations__.items()}

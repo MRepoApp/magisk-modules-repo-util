@@ -16,7 +16,7 @@ class Config(ConfigJson):
         super().__init__(self._config)
 
         self._log = Log("Config", enable_log=self.enable_log, log_dir=self.log_dir)
-        for key in self.expected_fields():
+        for key in self.expected_fields().keys():
             self._log.d(f"{key} = {self._config[key]}")
 
     def _check_values(self):

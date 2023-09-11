@@ -5,6 +5,16 @@ from .JsonIO import JsonIO
 
 
 class TrackJson(AttrDict, JsonIO):
+    id: str
+    update_to: str
+    changelog: str
+    license: str
+    homepage: str
+    source: str
+    support: str
+    donate: str
+    max_num: int
+
     # noinspection PyAttributeOutsideInit
     @property
     def type(self):
@@ -47,7 +57,7 @@ class TrackJson(AttrDict, JsonIO):
 
     def write(self, file):
         new = AttrDict()
-        for key in self.expected_fields():
+        for key in self.expected_fields().keys():
             value = self.get(key, "")
             if value != "":
                 new[key] = value
@@ -64,21 +74,11 @@ class TrackJson(AttrDict, JsonIO):
         return "track.json"
 
     @classmethod
-    def expected_fields(cls):
-        return [
-            "id",
-            "update_to",
-            "changelog",
-            "license",
-            "homepage",
-            "source",
-            "support",
-            "donate",
-            "added",
-            "last_update",
-            "versions",
-            "max_num"
-        ]
+    def expected_fields(cls, __type=True):
+        if __type:
+            return cls.__annotations__
+
+        return {k: v.__name__ for k, v in cls.__annotations__.items()}
 
 
 class TrackType(Enum):
