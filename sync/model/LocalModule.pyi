@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List
+from typing import Dict, Type
 
 from .AttrDict import AttrDict
 
@@ -16,4 +16,4 @@ class LocalModule(AttrDict):
     @classmethod
     def load(cls, file: Path) -> LocalModule: ...
     @classmethod
-    def expected_fields(cls) -> List[str]: ...
+    def expected_fields(cls, __type: bool = ...) -> Dict[str, Type]: ...

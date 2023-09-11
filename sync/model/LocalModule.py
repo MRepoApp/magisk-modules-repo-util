@@ -5,6 +5,12 @@ from ..error import MagiskModuleError
 
 
 class LocalModule(AttrDict):
+    id: str
+    name: str
+    version: str
+    versionCode: int
+    author: str
+    description: str
 
     def to(self, cls):
         if not issubclass(cls, AttrDict):
@@ -22,7 +28,6 @@ class LocalModule(AttrDict):
             zipfile.read("META-INF/com/google/android/updater-script")
             props = zipfile.read("module.prop")
         except KeyError:
-            file.unlink()
             raise MagiskModuleError(f"{file.name} is not a magisk module")
 
         obj = AttrDict()
@@ -35,29 +40,14 @@ class LocalModule(AttrDict):
             if key == "" or key.startswith("#") or key not in fields:
                 continue
 
-            obj[key] = value
+            _type = fields[key]
+            obj[key] = _type(value)
 
-        try:
-            obj.versionCode = int(obj.versionCode)
-        except ValueError:
-            msg = f"wrong type of versionCode, expected int but got {type(obj.versionCode).__name__}"
-            raise MagiskModuleError(msg)
-        except TypeError:
-            raise MagiskModuleError("versionCode does not exist in module.prop")
-
-        local_module = LocalModule()
-        for key in fields:
-            local_module[key] = obj.get(key)
-
-        return local_module
+        return LocalModule(obj)
 
     @classmethod
-    def expected_fields(cls):
-        return [
-            "id",
-            "name",
-            "version",
-            "versionCode",
-            "author",
-            "description"
-        ]
+    def expected_fields(cls, __type=True):
+        if __type:
+            return cls.__annotations__
+
+        return {k: v.__name__ for k, v in cls.__annotations__.items()}
