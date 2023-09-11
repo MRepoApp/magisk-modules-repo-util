@@ -1,14 +1,12 @@
 import shutil
 
-from ..model import JsonIO, ConfigJson
+from .Config import Config
+from ..model import JsonIO, ConfigJson, TrackJson
 
 
 class Migrate:
     def __init__(self, root_folder):
         self._root_folder = root_folder
-
-    def __call__(self):
-        self.config()
 
     @staticmethod
     def _config_0_1(old_config):
@@ -66,3 +64,24 @@ class Migrate:
         # write to file
         if config.version != -1:
             config.write(config_json_new)
+
+    def track(self):
+        modules_folder = Config.get_modules_folder(self._root_folder)
+
+        for module_folder in modules_folder.glob("*/"):
+            json_file = module_folder.joinpath(TrackJson.filename())
+            if not json_file.exists():
+                continue
+
+            track = TrackJson.load(json_file)
+
+            # remove .disable
+            tag_disable = module_folder.joinpath(".disable")
+            if tag_disable.exists():
+                track.enable = False
+                tag_disable.unlink()
+            elif track.enable is None:
+                track.enable = True
+
+            # write to file (remove null values)
+            track.write(json_file)

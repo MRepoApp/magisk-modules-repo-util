@@ -179,6 +179,11 @@ class Parameters:
             action="store_true",
             help="Show fields available in track."
         )
+        p.add_argument(
+            "--migrate",
+            action="store_true",
+            help=f"Migrate tracks structure and content."
+        )
 
         modify = p.add_argument_group("modify")
         modify.add_argument(

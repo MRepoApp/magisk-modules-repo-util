@@ -127,6 +127,11 @@ class Main:
         modules_folder = Config.get_modules_folder(root_folder)
         Log.set_enable_stdout(False)
 
+        if cls._args.migrate:
+            migrate = Migrate(root_folder)
+            migrate.track()
+            return cls.CODE_SUCCESS
+
         if cls._args.list:
             config = Config(root_folder)
             tracks = LocalTracks(modules_folder=modules_folder, config=config)
