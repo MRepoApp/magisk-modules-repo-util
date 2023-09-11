@@ -1,5 +1,4 @@
 import shutil
-from pathlib import Path
 
 from .Config import Config
 from ..error import Result
@@ -67,17 +66,12 @@ class Pull:
             return url
 
     def _get_changelog_common(self, module_id, changelog):
-        is_file = False
-
         if changelog is None:
             return None
         elif isinstance(changelog, str) and changelog == "":
             return None
-        elif isinstance(changelog, Path):
-            changelog = changelog.name
-            is_file = True
 
-        if changelog.startswith("http"):
+        if HttpUtils.is_url(changelog):
             if HttpUtils.is_blob_url(changelog):
                 msg = f"'{changelog}' is not unsupported type, please use 'https://raw.githubusercontent.com'"
                 self._log.w(f"_get_changelog_common: [{module_id}] -> {msg}")
@@ -90,16 +84,9 @@ class Pull:
                 self._log.e(f"_get_changelog_common: [{module_id}] -> {msg}")
                 changelog_file = None
 
-        elif is_file:
-            changelog_file = self._local_folder.joinpath(changelog)
-            if not changelog_file.exists():
-                msg = f"{changelog} is not in {self._local_folder}"
-                self._log.e(f"_get_changelog_common: [{module_id}] -> {msg}")
-                changelog_file = None
-
         else:
-            self._log.w(f"_get_changelog_common: [{module_id}] -> '{changelog}' unsupported type")
-            changelog_file = None
+            changelog_file = self._modules_folder.joinpath(module_id, f"{module_id}.md")
+            changelog_file.write_text(changelog)
 
         if changelog_file is not None:
             if not self._check_changelog(module_id, changelog_file):
@@ -192,12 +179,7 @@ class Pull:
         else:
             last_modified = result.value
 
-        if HttpUtils.is_url(update_json.changelog):
-            changelog = self._get_changelog_common(track.id, update_json.changelog)
-        else:
-            changelog = self._modules_folder.joinpath(track.id, f"{track.id}.md")
-            changelog.write_text(update_json.changelog)
-
+        changelog = self._get_changelog_common(track.id, update_json.changelog)
         online_module = self._from_zip_common(track.id, zip_file, changelog, delete_tmp=True)
         return online_module, last_modified
 
@@ -237,14 +219,17 @@ class Pull:
 
     def from_zip(self, track):
         zip_file = self._local_folder.joinpath(track.update_to)
+        changelog = self._local_folder.joinpath(track.changelog)
         last_modified = zip_file.stat().st_mtime
 
         if not zip_file.exists():
             msg = f"{track.update_to} is not in {self._local_folder}"
-            self._log.e(f"from_zip: [{track.id}] -> {msg}")
+            self._log.i(f"from_zip: [{track.id}] -> {msg}")
             return None, 0.0
 
-        changelog = self._get_changelog_common(track.id, Path(track.changelog))
+        if not changelog.exists():
+            changelog = None
+
         online_module = self._from_zip_common(track.id, zip_file, changelog, delete_tmp=False)
         return online_module, last_modified
 
