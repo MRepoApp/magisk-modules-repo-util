@@ -78,7 +78,7 @@ class Pull:
             is_file = True
 
         if changelog.startswith("http"):
-            if HttpUtils.is_blob(changelog):
+            if HttpUtils.is_blob_url(changelog):
                 msg = f"'{changelog}' is not unsupported type, please use 'https://raw.githubusercontent.com'"
                 self._log.w(f"_get_changelog_common: [{module_id}] -> {msg}")
                 return None
@@ -192,7 +192,12 @@ class Pull:
         else:
             last_modified = result.value
 
-        changelog = self._get_changelog_common(track.id, update_json.changelog)
+        if HttpUtils.is_url(update_json.changelog):
+            changelog = self._get_changelog_common(track.id, update_json.changelog)
+        else:
+            changelog = self._modules_folder.joinpath(track.id, f"{track.id}.md")
+            changelog.write_text(update_json.changelog)
+
         online_module = self._from_zip_common(track.id, zip_file, changelog, delete_tmp=True)
         return online_module, last_modified
 

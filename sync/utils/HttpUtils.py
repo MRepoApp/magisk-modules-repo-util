@@ -3,6 +3,7 @@ import re
 from datetime import datetime
 from pathlib import Path
 from typing import Union
+from urllib.parse import urlparse
 
 import requests
 from dateutil.parser import parse
@@ -56,10 +57,15 @@ class HttpUtils:
             raise HTTPError(msg)
 
     @classmethod
-    def is_blob(cls, url):
+    def is_blob_url(cls, url: str) -> bool:
         pattern = r"https://github\.com/[^/]+/[^/]+/blob/.+"
         match = re.match(pattern, url)
         if match:
             return True
         else:
             return False
+
+    @classmethod
+    def is_url(cls, text: str) -> bool:
+        parse_result = urlparse(text)
+        return bool(parse_result.scheme)
