@@ -57,7 +57,7 @@ class HttpUtils:
 
     @classmethod
     def is_blob(cls, url):
-        pattern = r"https://github\.com/.+/blob/.+"
+        pattern = r"https://github\.com/[^/]+/[^/]+/blob/.+"
         match = re.match(pattern, url)
         if match:
             return True
