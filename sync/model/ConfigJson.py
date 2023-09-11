@@ -1,69 +1,22 @@
+from .AttrDict import AttrDict
 from .JsonIO import JsonIO
 
 
-class ConfigJson(JsonIO):
-    NAME: str
-    BASE_URL: str
-    MAX_NUM: int
-    ENABLE_LOG: bool
-    LOG_DIR: str
-
-    CONFIG_VERSION = 1
-    TRACK_VERSION = 1
-
-    def __init__(self, *args, **kwargs):
-        if len(args) == 0:
-            config = {k.upper(): v for k, v in kwargs.items()}
-        else:
-            config = args[0]
-
-        self._config = config
-        self._set_properties()
-
-    # noinspection PyProtectedMember
-    def _set_property(self, key):
-        setattr(
-            self.__class__,
-            key.lower(),
-            property(fget=lambda obj: obj._config[key])
-        )
-
-    def _set_properties(self):
-        for key in self.expected_fields().keys():
-            self._set_property(key)
-
-    @property
-    def config_version(self):
-        env = self._config.get("ENV")
-        if env is None:
-            return self.CONFIG_VERSION
-
-        return env["CONFIG_VERSION"]
-
-    @property
-    def track_version(self):
-        env = self._config.get("ENV")
-        if env is None:
-            return self.TRACK_VERSION
-
-        return env["TRACK_VERSION"]
+class ConfigJson(AttrDict, JsonIO):
+    name: str
+    base_url: str
+    max_num: int
+    enable_log: bool
+    log_dir: str
 
     def write(self, file):
-        env = {
-            "CONFIG_VERSION": ConfigJson.CONFIG_VERSION,
-            "TRACK_VERSION": ConfigJson.TRACK_VERSION
-        }
+        new = AttrDict()
+        for key in self.expected_fields().keys():
+            value = self.get(key)
+            if value is not None:
+                new[key] = value
 
-        if isinstance(self, dict):
-            self.update(ENV=env)
-            _dict = self
-        elif isinstance(self, ConfigJson):
-            self._config.update(ENV=env)
-            _dict = self._config
-        else:
-            raise TypeError(f"unsupported type: {type(self).__name__}")
-
-        JsonIO.write(_dict, file)
+        JsonIO.write(new, file)
 
     @classmethod
     def default(cls):

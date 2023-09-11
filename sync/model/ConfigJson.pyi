@@ -3,51 +3,23 @@ from typing import (
     Dict,
     Any,
     Optional,
-    overload,
     Self,
     Union,
     Type
 )
 
+from .AttrDict import AttrDict
 from .JsonIO import JsonIO
 
 T = Dict[str, Any]
 
-class ConfigJson(JsonIO):
-    _config: T
+class ConfigJson(AttrDict, JsonIO):
+    name: str
+    base_url: str
+    max_num: int
+    enable_log: bool
+    log_dir: Optional[Path]
 
-    CONFIG_VERSION: int
-    TRACK_VERSION: int
-
-    @overload
-    def __init__(
-        self,
-        *,
-        name: str,
-        base_url: str,
-        max_num: int,
-        enable_log: bool,
-        log_dir: Optional[Path]): ...
-    @overload
-    def __init__(self, config: T): ...
-    @overload
-    def __init__(self, *args, **kwargs): ...
-    @property
-    def name(self) -> str: ...
-    @property
-    def base_url(self) -> str: ...
-    @property
-    def max_num(self) -> int: ...
-    @property
-    def enable_log(self) -> bool: ...
-    @property
-    def log_dir(self) -> Optional[Path]: ...
-    @property
-    def config_version(self) -> int: ...
-    @property
-    def track_version(self) -> int: ...
-    def _set_property(self, key: str): ...
-    def _set_properties(self): ...
     def write(self: Union[Self, Dict], file: Path): ...
     @classmethod
     def default(cls) -> ConfigJson: ...
