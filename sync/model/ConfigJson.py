@@ -19,6 +19,11 @@ class ConfigJson(AttrDict, JsonIO):
         JsonIO.write(new, file)
 
     @classmethod
+    def load(cls, file):
+        obj = JsonIO.load(file)
+        return ConfigJson(obj)
+
+    @classmethod
     def default(cls):
         return ConfigJson(
             name="Unknown",
