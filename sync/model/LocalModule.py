@@ -30,7 +30,7 @@ class LocalModule(AttrDict):
         except KeyError:
             raise MagiskModuleError(f"{file.name} is not a magisk module")
 
-        obj = AttrDict()
+        local_module = LocalModule()
         for item in props.decode("utf-8").splitlines():
             prop = item.split("=", maxsplit=1)
             if len(prop) != 2:
@@ -41,9 +41,9 @@ class LocalModule(AttrDict):
                 continue
 
             _type = fields[key]
-            obj[key] = _type(value)
+            local_module[key] = _type(value)
 
-        return LocalModule(obj)
+        return local_module
 
     @classmethod
     def expected_fields(cls, __type=True):
