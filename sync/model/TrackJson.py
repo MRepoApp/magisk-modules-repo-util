@@ -63,9 +63,12 @@ class TrackJson(AttrDict, JsonIO):
         keys.extend(["added", "last_update", "versions"])
 
         for key in keys:
-            value = self.get(key)
-            if value is not None:
-                new[key] = value
+            value = self.get(key, "") or ""
+            if isinstance(value, str):
+                if value == "" or value.isspace():
+                    continue
+
+            new[key] = value
 
         JsonIO.write(new, file)
 
