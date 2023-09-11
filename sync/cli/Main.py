@@ -304,6 +304,14 @@ class Main:
         root_folder = Path(cls._args.root_folder).resolve()
         Log.set_log_level(logging.INFO)
 
+        if not (
+            cls._args.check_id
+            or cls._args.check_url
+            or cls._args.remove_empty
+            or cls._args.remove_old
+        ):
+            return cls.CODE_FAILURE
+
         config = Config(root_folder)
         check = Check(root_folder=root_folder, config=config)
 
@@ -319,11 +327,7 @@ class Main:
         if cls._args.remove_old:
             check.old(module_ids=cls._args.module_ids)
 
-        _tracks: LocalTracks = getattr(check, "_tracks")
-        if _tracks.size == 0:
-            return cls.CODE_FAILURE
-        else:
-            return cls.CODE_SUCCESS
+        return cls.CODE_SUCCESS
 
 
 def print_error(msg):
