@@ -8,7 +8,7 @@ from pathlib import Path
 from dateutil.parser import parse
 
 from .Parameters import Parameters
-from .TypeDict import ConfigDict, TrackDict
+from .TypeDictAction import ConfigDict, TrackDict
 from ..core import (
     Check,
     Config,
@@ -106,8 +106,8 @@ class Main:
             print_json(config_dict)
 
         elif cls._args.keys:
-            keys = ConfigDict.keys_dict()
-            print_json(keys)
+            fields = ConfigJson.expected_fields(False)
+            print_json(fields)
 
         else:
             return cls.CODE_FAILURE
@@ -153,7 +153,7 @@ class Main:
             track.write(json_file)
 
         elif cls._args.keys:
-            keys = TrackDict.keys_dict()
+            keys = TrackJson.expected_fields(False)
             print_json(keys)
 
         elif cls._args.modify_module_id is not None:

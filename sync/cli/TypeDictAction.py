@@ -6,12 +6,20 @@ from typing import (
     Sequence
 )
 
+from ..model import ConfigJson, TrackJson
+
 
 class TypeDictAction(Action):
     __error__: Dict[str, Tuple[str, BaseException]] = {}
 
     def __init__(self, **kwargs):
-        self.__member__ = self.__annotations__
+        self.__member__ = {}
+        for parent_cls in self.__class__.__mro__:
+            if hasattr(parent_cls, "__annotations__"):
+                self.__member__.update(
+                    parent_cls.__annotations__
+                )
+
         super().__init__(**kwargs)
 
     def __call__(self, parser, namespace, values, option_string=None):
@@ -53,3 +61,11 @@ class TypeDictAction(Action):
             return {k: str(v) for k, v in cls.__error__.items()}
 
         return cls.__error__
+
+
+class ConfigDict(ConfigJson, TypeDictAction):
+    pass
+
+
+class TrackDict(TrackJson, TypeDictAction):
+    pass
