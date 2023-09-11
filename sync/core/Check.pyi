@@ -15,6 +15,7 @@ from ..utils import Log
 class Check:
     _log: Log
 
+    _local_folder: Path
     _modules_folder: Path
     _config: ConfigJson
     _tracks: LocalTracks

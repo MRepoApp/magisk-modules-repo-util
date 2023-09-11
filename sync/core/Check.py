@@ -12,6 +12,7 @@ class Check:
     def __init__(self, root_folder, config):
         self._log = Log("Check", enable_log=config.enable_log, log_dir=config.log_dir)
 
+        self._local_folder = Config.get_local_folder(root_folder)
         self._modules_folder = Config.get_modules_folder(root_folder)
         self._tracks = LocalTracks(self._modules_folder, config)
         self._config = config
@@ -37,9 +38,10 @@ class Check:
         new_module_folder = self._modules_folder.joinpath(target_id)
 
         if new_module_folder.exists():
-            msg = f"{target_id} already exists, remove the old directly"
+            new_module_folder = self._local_folder.joinpath(track.id)
+            msg = f"{target_id} already exists, move the old to {new_module_folder.as_posix()}"
             self._log.w(f"_check_folder: [{track.id}] -> {msg}")
-            shutil.rmtree(old_module_folder)
+            shutil.move(old_module_folder, new_module_folder)
 
             return True
 
