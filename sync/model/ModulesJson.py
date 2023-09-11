@@ -1,5 +1,3 @@
-import re
-
 from .AttrDict import AttrDict
 from .JsonIO import JsonIO
 from .UpdateJson import VersionItem
@@ -28,6 +26,18 @@ class OnlineModule(AttrDict):
             changelog=self.latest.changelog
         )
 
+    @classmethod
+    def from_dict(cls, obj):
+        versions = obj.get("versions")
+        if versions is not None:
+            obj["versions"] = [VersionItem(_obj) for _obj in versions]
+
+        track = obj.get("track")
+        if track is not None:
+            obj["track"] = AttrDict(track)
+
+        return OnlineModule(obj)
+
 
 class ModulesJson(AttrDict, JsonIO):
     @property
@@ -47,7 +57,7 @@ class ModulesJson(AttrDict, JsonIO):
     @classmethod
     def load(cls, file):
         obj = JsonIO.load(file)
-        obj["modules"] = [OnlineModule(_obj) for _obj in obj["modules"]]
+        obj["modules"] = [OnlineModule.from_dict(_obj) for _obj in obj["modules"]]
         return ModulesJson(obj)
 
     @classmethod

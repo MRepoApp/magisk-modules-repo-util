@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List
+from typing import List, Dict, Any
 
 from .AttrDict import AttrDict
 from .JsonIO import JsonIO
@@ -14,6 +14,8 @@ class OnlineModule(AttrDict):
     name: str
     author: str
     description: str
+
+    # for ModulesJson
     track: AttrDict
     versions: List[VersionItem]
 
@@ -24,6 +26,8 @@ class OnlineModule(AttrDict):
     @property
     def zipfile_name(self) -> str: ...
     def to_VersionItem(self, timestamp: float) -> VersionItem: ...
+    @classmethod
+    def from_dict(cls, obj: Dict[str, Any]) -> OnlineModule: ...
 
 
 class ModulesJson(AttrDict, JsonIO):
