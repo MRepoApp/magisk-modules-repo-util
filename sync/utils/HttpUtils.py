@@ -3,11 +3,12 @@ import re
 from datetime import datetime
 from pathlib import Path
 from typing import Union
-from urllib.parse import urlparse
 
 import requests
 from dateutil.parser import parse
 from requests import HTTPError
+
+from .StrUtils import StrUtils
 
 
 class HttpUtils:
@@ -25,11 +26,6 @@ class HttpUtils:
         obj = json.loads(text)
 
         return obj
-
-    @classmethod
-    def is_html(cls, text):
-        pattern = r'<html\s*>|<head\s*>|<body\s*>|<!doctype\s*html\s*>'
-        return re.search(pattern, text, re.IGNORECASE) is not None
 
     @classmethod
     def download(cls, url: str, out: Path) -> float:
@@ -50,22 +46,8 @@ class HttpUtils:
         else:
             out.unlink(missing_ok=True)
 
-            if cls.is_html(response.text):
+            if StrUtils.is_html(response.text):
                 msg = "404 not found"
             else:
                 msg = response.text
             raise HTTPError(msg)
-
-    @classmethod
-    def is_blob_url(cls, url: str) -> bool:
-        pattern = r"https://github\.com/[^/]+/[^/]+/blob/.+"
-        match = re.match(pattern, url)
-        if match:
-            return True
-        else:
-            return False
-
-    @classmethod
-    def is_url(cls, text: str) -> bool:
-        parse_result = urlparse(text)
-        return bool(parse_result.scheme)

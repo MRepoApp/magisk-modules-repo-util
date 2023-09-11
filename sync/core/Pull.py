@@ -10,7 +10,12 @@ from ..model import (
     TrackType,
     UpdateJson
 )
-from ..utils import Log, HttpUtils, GitUtils
+from ..utils import (
+    Log,
+    HttpUtils,
+    GitUtils,
+    StrUtils
+)
 
 
 class Pull:
@@ -36,7 +41,7 @@ class Pull:
 
     def _check_changelog(self, module_id, file):
         text = file.read_text()
-        if HttpUtils.is_html(text):
+        if StrUtils.is_html(text):
             self._log.w(f"_check_changelog: [{module_id}] -> unsupported type (html text)")
             return False
         else:
@@ -71,8 +76,8 @@ class Pull:
         elif isinstance(changelog, str) and changelog == "":
             return None
 
-        if HttpUtils.is_url(changelog):
-            if HttpUtils.is_blob_url(changelog):
+        if StrUtils.is_url(changelog):
+            if StrUtils.is_blob_url(changelog):
                 msg = f"'{changelog}' is not unsupported type, please use 'https://raw.githubusercontent.com'"
                 self._log.w(f"_get_changelog_common: [{module_id}] -> {msg}")
                 return None
