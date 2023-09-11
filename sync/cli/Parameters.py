@@ -125,7 +125,7 @@ class Parameters:
         p.add_argument(
             "--json",
             action="store_true",
-            help="Show config of repository (JSON format)."
+            help="Show config of repository."
         )
         p.add_argument(
             "--keys",
@@ -168,7 +168,7 @@ class Parameters:
         p.add_argument(
             "--stdin",
             action="store_true",
-            help="Add a track piped through stdin."
+            help="Add track piped through stdin."
         )
         p.add_argument(
             "--keys",
@@ -216,7 +216,7 @@ class Parameters:
         modify.add_argument(
             "--json",
             action="store_true",
-            help="Show the track of module (JSON format)."
+            help="Show the track of module."
         )
 
         cls.add_parser_env(p)
@@ -250,7 +250,7 @@ class Parameters:
             metavar="DATE",
             type=str,
             default="2016-09-08",
-            help="Filter latest push date (before it), default: {0}.".format("%(default)s")
+            help="Filter out outdated repositories by latest push date, default: {0}.".format("%(default)s")
         )
         p.add_argument(
             "-S",
@@ -308,7 +308,7 @@ class Parameters:
             metavar="FILE",
             action=BoolOrStrAction,
             nargs="?",
-            help="Save versions diff of modules (GitHub flavored Markdown)."
+            help="List versions diff of modules."
         )
         p.add_argument(
             "--force",
@@ -335,12 +335,12 @@ class Parameters:
         p.add_argument(
             "--json",
             action="store_true",
-            help="Show modules.json (JSON format)."
+            help="Show modules.json."
         )
         p.add_argument(
-            "--table",
+            "--list",
             action="store_true",
-            help="Show versions table of modules (GitHub flavored Markdown)."
+            help="List versions of modules."
         )
 
         cls.add_parser_git(p, add_set_size=False)
@@ -386,7 +386,7 @@ class Parameters:
             "--old",
             dest="remove_old",
             action="store_true",
-            help=f"Remove old versions based on max_num."
+            help=f"Remove old versions by max_num."
         )
 
         cls.add_parser_env(p)
@@ -433,7 +433,7 @@ class Parameters:
                 metavar="MAX_SIZE",
                 type=float,
                 default=50.0,
-                help="Filter size of file (less than it), default: {0} MB.".format("%(default)s")
+                help="Filter out oversize zip files, default: {0} MB.".format("%(default)s")
             )
 
         return git

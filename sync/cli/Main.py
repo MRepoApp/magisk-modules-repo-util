@@ -274,7 +274,7 @@ class Main:
 
         index = Index(root_folder=root_folder, config=config)
 
-        if cls._args.table:
+        if cls._args.list:
             markdown_text = index.get_versions_table()
             print(markdown_text)
 
