@@ -17,6 +17,7 @@ class TrackJson(AttrDict, JsonIO):
     donate: str
     max_num: int
 
+    # without manually
     added: float
     last_update: float
     versions: int
@@ -25,6 +26,8 @@ class TrackJson(AttrDict, JsonIO):
     def type(self) -> TrackType: ...
     def json(self) -> AttrDict: ...
     def write(self, file: Path): ...
+    @classmethod
+    def load(cls, file: Path) -> TrackJson: ...
     @classmethod
     def filename(cls) -> str: ...
     @classmethod

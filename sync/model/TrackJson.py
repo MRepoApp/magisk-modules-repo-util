@@ -57,12 +57,22 @@ class TrackJson(AttrDict, JsonIO):
 
     def write(self, file):
         new = AttrDict()
-        for key in self.expected_fields().keys():
+        keys = list(self.expected_fields().keys())
+
+        # fields without manually
+        keys.extend(["added", "last_update", "versions"])
+
+        for key in keys:
             value = self.get(key)
             if value is not None:
                 new[key] = value
 
         JsonIO.write(new, file)
+
+    @classmethod
+    def load(cls, file):
+        obj = JsonIO.load(file)
+        return TrackJson(obj)
 
     @classmethod
     def filename(cls):
