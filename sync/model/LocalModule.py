@@ -12,12 +12,6 @@ class LocalModule(AttrDict):
     author: str
     description: str
 
-    def to(self, cls):
-        if not issubclass(cls, AttrDict):
-            raise TypeError(f"unsupported type: {cls.__name__}")
-
-        return cls(self)
-
     @classmethod
     def load(cls, file):
         zipfile = ZipFile(file, "r")

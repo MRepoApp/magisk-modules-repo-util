@@ -12,7 +12,6 @@ class LocalModule(AttrDict):
     author: str
     description: str
 
-    def to(self, cls: type) -> AttrDict: ...
     @classmethod
     def load(cls, file: Path) -> LocalModule: ...
     @classmethod
