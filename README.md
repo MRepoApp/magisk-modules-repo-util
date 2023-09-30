@@ -1,5 +1,5 @@
 # Magisk Modules Repo Util
-[![python](https://img.shields.io/badge/3.8+-blue.svg?label=python)](https://github.com/ya0211/magisk-modules-repo-util) [![release](https://img.shields.io/github/v/release/ya0211/magisk-modules-repo-util?label=release&color=green)](https://github.com/ya0211/magisk-modules-repo-util/releases/latest) [![license](https://img.shields.io/github/license/ya0211/magisk-modules-repo-util)](LICENSE)
+[![python](https://img.shields.io/badge/3.10+-blue.svg?label=python)](https://github.com/ya0211/magisk-modules-repo-util) [![release](https://img.shields.io/github/v/release/ya0211/magisk-modules-repo-util?label=release&color=green)](https://github.com/ya0211/magisk-modules-repo-util/releases/latest) [![license](https://img.shields.io/github/license/ya0211/magisk-modules-repo-util)](LICENSE)
 
 - This util is to build module repository for [MRepo](https://github.com/ya0211/MRepo)
 - `sync` is a python package
@@ -16,17 +16,17 @@ You can write it to `your-repo/json/config.json` by yourself, or
 ```shell
 $ cli.py config --stdin << EOF
 {
-  "NAME": "Your Magisk Repo",
-  "BASE_URL": "https://you.github.io/magisk-modules-repo/",
-  "MAX_NUM": 3,
-  "ENABLE_LOG": true,
-  "LOG_DIR": "log"
+  "name": "Your Magisk Repo",
+  "base_url": "https://you.github.io/magisk-modules-repo/",
+  "max_num": 3,
+  "enable_log": true,
+  "log_dir": "log"
 }
 EOF
 ```
 or 
 ```shell
-$ cli.py config --write NAME="Your Magisk Repo" BASE_URL="https://you.github.io/magisk-modules-repo/" MAX_NUM=3 ENABLE_LOG=true LOG_DIR="log"
+$ cli.py config --write name="Your Magisk Repo" base_url="https://you.github.io/magisk-modules-repo/" max_num=3 enable_log=true log_dir="log"
 ```
 
 ### New track.json
@@ -84,25 +84,26 @@ options:
 ## config.json
 ```json
 {
-  "NAME": "str",
-  "BASE_URL": "str",
-  "MAX_NUM": "int",
-  "ENABLE_LOG": "bool",
-  "LOG_DIR": "str"
+  "name": "str",
+  "base_url": "str",
+  "max_num": "int",
+  "enable_log": "bool",
+  "log_dir": "str"
 }
 ```
 | Key | Attribute | Description |
 |:-:|:-:|:-:|
-| NAME | required | Name of your module repository |
-| BASE_URL | required | Need to end with `/` |
-| MAX_NUM | optional | Max num of versions for modules, default is `3` |
-| ENABLE_LOG | optional | default is `true` |
-| LOG_DIR | optional | default is `null` |
+| name | required | Name of your module repository |
+| base_url | required | Need to end with `/` |
+| max_num | optional | Max num of versions for modules, default is `3` |
+| enable_log | optional | default is `true` |
+| log_dir | optional | default is `null` |
 
 ## track.json
 ```json
 {
   "id": "str",
+  "enable": "bool",
   "update_to": "str",
   "changelog": "str",
   "license": "str",
@@ -116,6 +117,7 @@ options:
 | Key | Attribute | Description |
 |:-:|:-:|:-:|
 | id | required | Id of Module (_in `module.prop`_) |
+| enable | required | Whether to enable |
 | update_to | required | Follow examples below |
 | changelog | optional | Markdown or Simple Text (**_no HTML_**) |
 | license | optional | SPDX ID |
@@ -163,9 +165,7 @@ options:
 ```json
 {
   "id": "busybox-ndk",
-  "update_to": "https://github.com/Magisk-Modules-Repo/busybox-ndk.git",
-  "license": "",
-  "changelog": ""
+  "update_to": "https://github.com/Magisk-Modules-Repo/busybox-ndk.git"
 }
 ```
 
@@ -224,8 +224,8 @@ your-repo
       "timestamp": 1673882223.0,
       "version": "v1.8.6 (6712)",
       "versionCode": 6712,
-      "zipUrl": "{BASE_URL}modules/zygisk_lsposed/v1.8.6_(6712)_6712.zip",
-      "changelog": "{BASE_URL}modules/zygisk_lsposed/v1.8.6_(6712)_6712.md"
+      "zipUrl": "{base_url}modules/zygisk_lsposed/v1.8.6_(6712)_6712.zip",
+      "changelog": "{base_url}modules/zygisk_lsposed/v1.8.6_(6712)_6712.md"
     }
   ]
 }
@@ -250,7 +250,7 @@ your-repo
 ### version 1
 ```json
 {
-  "name": "{NAME}",
+  "name": "{name}",
   "metadata": {
     "version": 1,
     "timestamp": 1692439764.10608
@@ -277,8 +277,8 @@ your-repo
           "timestamp": 1673882223.0,
           "version": "v1.8.6 (6712)",
           "versionCode": 6712,
-          "zipUrl": "{BASE_URL}modules/zygisk_lsposed/v1.8.6_(6712)_6712.zip",
-          "changelog": "{BASE_URL}modules/zygisk_lsposed/v1.8.6_(6712)_6712.md"
+          "zipUrl": "{base_url}modules/zygisk_lsposed/v1.8.6_(6712)_6712.zip",
+          "changelog": "{base_url}modules/zygisk_lsposed/v1.8.6_(6712)_6712.md"
         }
       ]
     }
@@ -289,7 +289,7 @@ your-repo
 ### version 0
 ```json
 {
-  "name": "{NAME}",
+  "name": "{name}",
   "timestamp": 1692439602.46997,
   "modules": [
     {
@@ -301,8 +301,8 @@ your-repo
       "description": "Another enhanced implementation of Xposed Framework. Supports Android 8.1 ~ 13. Requires Magisk 24.0+ and Zygisk enabled.",
       "license": "GPL-3.0",
       "states": {
-        "zipUrl": "{BASE_URL}modules/zygisk_lsposed/v1.8.6_(6712)_6712.zip",
-        "changelog": "{BASE_URL}modules/zygisk_lsposed/v1.8.6_(6712)_6712.md"
+        "zipUrl": "{base_url}modules/zygisk_lsposed/v1.8.6_(6712)_6712.zip",
+        "changelog": "{base_url}modules/zygisk_lsposed/v1.8.6_(6712)_6712.md"
       }
     }
   ]
