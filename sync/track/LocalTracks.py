@@ -39,7 +39,7 @@ class LocalTracks(BaseTracks):
         self._log.i(f"get_tracks: modules_folder = {self._modules_folder}")
 
         if module_ids is None:
-            module_ids = [_dir.name for _dir in sorted(self._modules_folder.glob("*/"))]
+            module_ids = [_dir.name for _dir in sorted(self._modules_folder.glob("[!.]*/"))]
 
         for module_id in module_ids:
             track_json = self.get_track(module_id)
