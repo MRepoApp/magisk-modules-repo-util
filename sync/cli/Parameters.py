@@ -281,8 +281,7 @@ class Parameters:
             metavar="GITHUB_TOKEN",
             type=str,
             default=cls._github_token,
-            help="GitHub REST API Token for PyGitHub. "
-                 "This can be defined in env as 'GITHUB_TOKEN', default: {0}.".format("%(default)s")
+            help="GitHub REST API Token for PyGitHub, same as 'export GITHUB_TOKEN=...'."
         )
 
     @classmethod
@@ -412,7 +411,7 @@ class Parameters:
                 "-q",
                 "--quiet",
                 action="store_true",
-                help="Disable all logging piped through stdout."
+                help="Show only error logs (piped through stderr)."
             )
 
         env.add_argument(
@@ -436,7 +435,7 @@ class Parameters:
             dest="git_branch",
             metavar="GIT_BRANCH",
             type=str,
-            default=get_current_branch(cls._root_folder),
+            default=GitUtils.current_branch(cls._root_folder),
             help="Define branch to push, current: {0}.".format("%(default)s")
         )
 
@@ -451,26 +450,3 @@ class Parameters:
             )
 
         return git
-
-    @classmethod
-    def add_parser_quiet(cls, p):
-        p.add_argument(
-            "-q",
-            "--quiet",
-            action="store_true",
-            help="Show only error logs (piped through stderr)."
-        )
-
-    @classmethod
-    def add_parser_help(cls, p):
-        p.add_argument(
-            "-h",
-            "--help",
-            action=_HelpAction,
-            help="Show this help message and exit.",
-        )
-
-
-def get_current_branch(root_folder: Path):
-    GitUtils.set_cwd_folder(root_folder)
-    return GitUtils.current_branch()

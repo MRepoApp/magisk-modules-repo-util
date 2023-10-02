@@ -1,8 +1,8 @@
 import concurrent.futures
-import subprocess
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 
+from git import Repo
 from tabulate import tabulate
 
 from .Config import Config
@@ -13,7 +13,7 @@ from ..model import (
     TrackJson
 )
 from ..track import BaseTracks, LocalTracks, GithubTracks
-from ..utils import Log, GitUtils
+from ..utils import Log
 
 
 class Sync:
@@ -156,16 +156,13 @@ class Sync:
 
     def push_by_git(self, branch):
         json_file = self._json_folder.joinpath(ModulesJson.filename())
-        if not GitUtils.is_enable():
-            self._log.e("push_by_git: git command not found")
-            return
-
         timestamp = ModulesJson.load(json_file).get_timestamp()
         msg = f"Update by CLI ({datetime.fromtimestamp(timestamp)})"
 
-        subprocess.run(["git", "add", "."], cwd=self._root_folder.as_posix())
-        subprocess.run(["git", "commit", "-m", msg], cwd=self._root_folder.as_posix())
-        subprocess.run(["git", "push", "-u", "origin", branch], cwd=self._root_folder.as_posix())
+        repo = Repo(self._root_folder)
+        repo.git.add(all=True)
+        repo.index.commit(msg)
+        repo.remote().push(branch)
 
     def get_versions_diff(self):
         headers = ["id", "name", "version"]
