@@ -44,6 +44,7 @@ class GithubTracks(BaseTracks):
         user_name: str,
         repo_names: Optional[List[str]] = ...,
         *,
+        single: bool = ...,
         cover: bool = ...,
         use_ssh: bool = ...
     ) -> List[TrackJson]: ...

@@ -61,7 +61,7 @@ class GithubTracks(BaseTracks):
             name=repo.name
         )
         if homepage is None:
-            homepage = repo.html_url
+            homepage = ""
 
         return TrackJson(
             id=repo.name,
@@ -106,7 +106,7 @@ class GithubTracks(BaseTracks):
 
         return self._get_from_repo(repo, cover, use_ssh)
 
-    def get_tracks(self, user_name, repo_names=None, *, cover=False, use_ssh=True):
+    def get_tracks(self, user_name, repo_names=None, *, single=False, cover=False, use_ssh=True):
         self._tracks.clear()
         self._log.i(f"get_tracks: user_name = {user_name}")
 
@@ -124,7 +124,7 @@ class GithubTracks(BaseTracks):
         else:
             repos = user.get_repos()
 
-        with ThreadPoolExecutor() as executor:
+        with ThreadPoolExecutor(max_workers=1 if single else None) as executor:
             futures = []
             for repo in repos:
                 futures.append(

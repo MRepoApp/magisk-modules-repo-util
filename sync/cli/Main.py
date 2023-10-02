@@ -232,6 +232,7 @@ class Main:
         tracks.get_tracks(
             user_name=cls._args.user_name,
             repo_names=cls._args.repo_names,
+            single=cls._args.single,
             cover=cls._args.cover,
             use_ssh=cls._args.ssh
         )
@@ -253,7 +254,8 @@ class Main:
         sync.create_local_tracks()
         sync.update(
             module_ids=cls._args.module_ids,
-            force=cls._args.force
+            force=cls._args.force,
+            single=cls._args.single
         )
 
         index = Index(root_folder=root_folder, config=config)

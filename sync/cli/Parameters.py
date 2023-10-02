@@ -26,7 +26,12 @@ class ArgumentParser(ArgumentParserBase):
         super().__init__(*args, **kwargs)
 
         if add_custom_help:
-            Parameters.add_parser_help(self)
+            self.add_argument(
+                "-h",
+                "--help",
+                action=_HelpAction,
+                help="Show this help message and exit.",
+            )
 
 
 class BoolOrStrAction(Action):
@@ -267,7 +272,12 @@ class Parameters:
 
         env = cls.add_parser_env(p, add_quiet=True)
         env.add_argument(
-            "--api-token",
+            "--single",
+            action="store_true",
+            help="Run in single-threaded mode."
+        )
+        env.add_argument(
+            "--token",
             metavar="GITHUB_TOKEN",
             type=str,
             default=cls._github_token,
@@ -311,7 +321,12 @@ class Parameters:
             help="Remove all old versions of modules."
         )
         cls.add_parser_git(p)
-        cls.add_parser_env(p, add_quiet=True)
+        env = cls.add_parser_env(p, add_quiet=True)
+        env.add_argument(
+            "--single",
+            action="store_true",
+            help="Run in single-threaded mode."
+        )
 
     @classmethod
     def configure_parser_index(cls, sub_parsers):
@@ -393,7 +408,12 @@ class Parameters:
         )
 
         if add_quiet:
-            cls.add_parser_quiet(env)
+            env.add_argument(
+                "-q",
+                "--quiet",
+                action="store_true",
+                help="Disable all logging piped through stdout."
+            )
 
         env.add_argument(
             "--debug",
@@ -438,7 +458,7 @@ class Parameters:
             "-q",
             "--quiet",
             action="store_true",
-            help="Disable all logging piped through stdout."
+            help="Show only error logs (piped through stderr)."
         )
 
     @classmethod

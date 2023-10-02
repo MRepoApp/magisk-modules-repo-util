@@ -125,13 +125,14 @@ class Sync:
         )
         return self._tracks
 
-    def update(self, module_ids=None, force=False, **kwargs):
+    def update(self, module_ids=None, force=False, single=False, **kwargs):
         user_name = kwargs.get("user_name")
         if user_name is not None:
             if self._check_tracks(self._tracks, GithubTracks):
                 tracks = self._tracks.get_tracks(
                     user_name=user_name,
                     repo_names=module_ids,
+                    single=single,
                     cover=kwargs.get("cover", False),
                     use_ssh=kwargs.get("use_ssh", True)
                 )
@@ -141,7 +142,7 @@ class Sync:
         else:
             tracks = self._tracks.get_tracks(module_ids)
 
-        with ThreadPoolExecutor() as executor:
+        with ThreadPoolExecutor(max_workers=1 if single else None) as executor:
             futures = []
             for track in tracks:
                 futures.append(
