@@ -46,7 +46,7 @@ $ cli.py track --add id="zygisk_lsposed" update_to="https://lsposed.github.io/LS
 ```
 If you want to generate `track.json`s from repositories on github
 ```shell
-$ cli.py github --api-token <github-token> -u <user-name> -r <repo-name ...> 
+$ cli.py github --token <github-token> -u <user-name> -r <repo-name ...> 
 ```
 > **_TIP_**: [click here to create a new api token](https://github.com/settings/personal-access-tokens/new).
 
