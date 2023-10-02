@@ -52,6 +52,9 @@ class Main:
         parser = Parameters.generate_parser()
         cls._args = SafeArgs(parser.parse_args())
 
+        if cls._args.debug:
+            os.environ["REPO_UTIL_DEBUG"] = "1"
+
         code = cls._check_args()
         if code == cls.CODE_FAILURE:
             if cls._args.cmd is None:

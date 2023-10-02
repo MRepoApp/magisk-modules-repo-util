@@ -1,3 +1,4 @@
+import os
 from zipfile import ZipFile
 
 from .AttrDict import AttrDict
@@ -18,11 +19,27 @@ class LocalModule(AttrDict):
         fields = cls.expected_fields()
 
         try:
+            if (
+                zipfile.read("META-INF/com/google/android/updater-script")
+                .decode("utf-8")
+                .strip() != "#MAGISK"
+            ):
+                raise
+
             zipfile.read("META-INF/com/google/android/update-binary")
-            zipfile.read("META-INF/com/google/android/updater-script")
+        except BaseException:
+            if os.getenv("REPO_UTIL_DEBUG") == "1":
+                filenames = [f.filename for f in zipfile.filelist]
+                msg = "\n".join(filenames)
+            else:
+                msg = f"{file.name} is not a magisk module"
+
+            raise MagiskModuleError(msg)
+
+        try:
             props = zipfile.read("module.prop")
-        except KeyError:
-            raise MagiskModuleError(f"{file.name} is not a magisk module")
+        except BaseException as err:
+            raise MagiskModuleError(err.args)
 
         obj = AttrDict()
         for item in props.decode("utf-8").splitlines():

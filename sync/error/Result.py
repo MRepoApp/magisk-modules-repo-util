@@ -1,3 +1,5 @@
+import os
+import traceback
 from typing import Optional, Any, Callable
 
 
@@ -25,6 +27,9 @@ class Result:
                     value = func(*args, **kwargs)
                     return Result(value=value)
                 except BaseException as err:
+                    if os.getenv("REPO_UTIL_DEBUG") == "1":
+                        error_traceback = traceback.format_exc()
+                        err = RuntimeError(error_traceback)
                     return Result(error=err)
 
             return wrapper

@@ -395,6 +395,12 @@ class Parameters:
         if add_quiet:
             cls.add_parser_quiet(env)
 
+        env.add_argument(
+            "--debug",
+            action="store_true",
+            help="Show full error stack, same as 'export REPO_UTIL_DEBUG=1'."
+        )
+
         return env
 
     @classmethod
