@@ -20,9 +20,9 @@ class LocalModule(AttrDict):
 
         try:
             if (
-                zipfile.read("META-INF/com/google/android/updater-script")
+                "#MAGISK" not in zipfile
+                .read("META-INF/com/google/android/updater-script")
                 .decode("utf-8")
-                .strip() != "#MAGISK"
             ):
                 raise
 
