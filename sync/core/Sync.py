@@ -1,14 +1,11 @@
 import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime
 
-from git import Repo
 from tabulate import tabulate
 
 from .Config import Config
 from .Pull import Pull
 from ..model import (
-    ModulesJson,
     UpdateJson,
     TrackJson
 )
@@ -154,16 +151,6 @@ class Sync:
                 if online_module is not None:
                     self._log.i(f"update: [{online_module.id}] -> update to {online_module.version_display}")
 
-    def push_by_git(self, branch):
-        json_file = self._json_folder.joinpath(ModulesJson.filename())
-        timestamp = ModulesJson.load(json_file).get_timestamp()
-        msg = f"Update by CLI ({datetime.fromtimestamp(timestamp)})"
-
-        repo = Repo(self._root_folder)
-        repo.git.add(all=True)
-        repo.index.commit(msg)
-        repo.remote().push(branch)
-
     def get_versions_diff(self):
         headers = ["id", "name", "version"]
         table = []
@@ -176,7 +163,7 @@ class Sync:
             if last is not None:
                 version = f"{last.version_display} -> {version}"
 
-            name = new.name.replace("|", "-")
+            name = new.name.replace("|", "_")
             table.append(
                 [new.id, name, version]
             )

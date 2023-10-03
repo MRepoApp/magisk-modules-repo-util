@@ -1,9 +1,9 @@
 from datetime import datetime
 
+from git import Repo
 from tabulate import tabulate
 
 from .Config import Config
-from .Sync import Sync
 from ..error import Result
 from ..model import (
     AttrDict,
@@ -126,8 +126,14 @@ class Index:
         return self.modules_json
 
     def push_by_git(self, branch):
-        func = getattr(Sync, "push_by_git")
-        return func(self, branch)
+        json_file = self._json_folder.joinpath(ModulesJson.filename())
+        timestamp = ModulesJson.load(json_file).get_timestamp()
+        msg = f"Update by CLI ({datetime.fromtimestamp(timestamp)})"
+
+        repo = Repo(self._root_folder)
+        repo.git.add(all=True)
+        repo.index.commit(msg)
+        repo.remote().push(branch)
 
     def get_versions_table(self):
         headers = ["id", "name", "latest version"]
