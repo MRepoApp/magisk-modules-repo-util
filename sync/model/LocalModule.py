@@ -1,4 +1,3 @@
-import os
 from zipfile import ZipFile
 
 from .AttrDict import AttrDict
@@ -28,12 +27,7 @@ class LocalModule(AttrDict):
 
             zipfile.read("META-INF/com/google/android/update-binary")
         except BaseException:
-            if os.getenv("REPO_UTIL_DEBUG") == "1":
-                filenames = [f.filename for f in zipfile.filelist]
-                msg = "\n".join(filenames)
-            else:
-                msg = f"{file.name} is not a magisk module"
-
+            msg = f"{file.name} is not a magisk module"
             raise MagiskModuleError(msg)
 
         try:

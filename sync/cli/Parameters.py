@@ -414,12 +414,6 @@ class Parameters:
                 help="Show only error logs (piped through stderr)."
             )
 
-        env.add_argument(
-            "--debug",
-            action="store_true",
-            help="Show full error stack, same as 'export REPO_UTIL_DEBUG=1'."
-        )
-
         return env
 
     @classmethod
