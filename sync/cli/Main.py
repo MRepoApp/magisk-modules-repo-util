@@ -222,7 +222,7 @@ class Main:
         tracks = GithubTracks(
             modules_folder=modules_folder,
             config=config,
-            api_token=cls._args.api_token,
+            api_token=cls._args.token,
             after_date=parse(cls._args.after_date).date()
         )
 
