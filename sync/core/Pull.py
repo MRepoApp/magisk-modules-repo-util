@@ -114,6 +114,7 @@ class Pull:
             new_module_folder = self._local_folder.joinpath(module_id)
             msg = f"zip file is oversize ({self._max_size} MB), move this module to {new_module_folder}"
             self._log.w(f"_from_zip_common: [{module_id}] -> {msg}")
+            shutil.rmtree(new_module_folder, ignore_errors=True)
             shutil.move(module_folder, new_module_folder)
 
             return None
