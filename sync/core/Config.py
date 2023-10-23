@@ -10,8 +10,7 @@ class Config(ConfigJson):
         self._log = Log("Config", enable_log=True)
         self._root_folder = root_folder
 
-        json_folder = self.get_json_folder(self._root_folder)
-        json_file = json_folder.joinpath(ConfigJson.filename())
+        json_file = self.json_folder.joinpath(ConfigJson.filename())
         if not json_file.exists():
             raise FileNotFoundError(json_file.as_posix())
 
@@ -54,6 +53,18 @@ class Config(ConfigJson):
             enable_log=enable_log,
             log_dir=log_dir
         )
+
+    @property
+    def json_folder(self):
+        return self.get_json_folder(self._root_folder)
+
+    @property
+    def modules_folder(self):
+        return self.get_modules_folder(self._root_folder)
+
+    @property
+    def local_folder(self):
+        return self.get_local_folder(self._root_folder)
 
     @classmethod
     def get_json_folder(cls, root_folder):
