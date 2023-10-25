@@ -20,7 +20,11 @@ class HttpUtils:
     def load_json(cls, url: str) -> Union[list, dict]:
         response = requests.get(url, stream=True)
         if not response.ok:
-            raise HTTPError(response.text)
+            if StrUtils.is_html(response.text):
+                msg = "404 not found"
+            else:
+                msg = response.text
+            raise HTTPError(msg)
 
         text = cls._filter_json(response.text)
         obj = json.loads(text)
