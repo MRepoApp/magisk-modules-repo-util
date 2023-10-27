@@ -8,13 +8,13 @@
 ## Getting Started
 ### Install dependencies
 ```shell
-$ python3 -m pip install -r util/requirements.txt
+pip3 install -r util/requirements.txt
 ```
 
 ### New config.json
 You can write it to `your-repo/json/config.json` by yourself, or
 ```shell
-$ cli.py config --stdin << EOF
+cli.py config --stdin << EOF
 {
   "name": "Your Magisk Repo",
   "base_url": "https://you.github.io/magisk-modules-repo/",
@@ -26,13 +26,13 @@ EOF
 ```
 or 
 ```shell
-$ cli.py config --write name="Your Magisk Repo" base_url="https://you.github.io/magisk-modules-repo/" max_num=3 enable_log=true log_dir="log"
+cli.py config --write name="Your Magisk Repo" base_url="https://you.github.io/magisk-modules-repo/" max_num=3 enable_log=true log_dir="log"
 ```
 
 ### New track.json
 You can write it to `your-repo/modules/{id}/track.json` by yourself, or
 ```shell
-$ cli.py track --stdin << EOF
+cli.py track --stdin << EOF
 {
   "id": "zygisk_lsposed",
   "update_to": "https://lsposed.github.io/LSPosed/release/zygisk.json",
@@ -42,17 +42,17 @@ EOF
 ```
 or
 ```shell
-$ cli.py track --add id="zygisk_lsposed" update_to="https://lsposed.github.io/LSPosed/release/zygisk.json" license="GPL-3.0"
+cli.py track --add id="zygisk_lsposed" update_to="https://lsposed.github.io/LSPosed/release/zygisk.json" license="GPL-3.0"
 ```
 If you want to generate `track.json`s from repositories on github
 ```shell
-$ cli.py github --token <github-token> -u <user-name> -r <repo-name ...> 
+cli.py github --token <github-token> -u <user-name> -r <repo-name ...> 
 ```
 > **_TIP_**: [click here to create a new api token](https://github.com/settings/personal-access-tokens/new).
 
 ### Sync
 ```shell
-$ cli.py sync 
+cli.py sync 
 ```
 
 ## How to update by GitHub Actions?
@@ -61,7 +61,7 @@ $ cli.py sync
 
 ## cli.py
 ```
-$ cli.py --help
+cli.py --help
 usage: cli.py [-h] [-v] [-V] command ...
 
 Magisk Modules Repo Util
