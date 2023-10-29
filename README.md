@@ -1,7 +1,7 @@
 # Magisk Modules Repo Util
-[![python](https://img.shields.io/badge/3.10+-blue.svg?label=python)](https://github.com/ya0211/magisk-modules-repo-util) [![release](https://img.shields.io/github/v/release/ya0211/magisk-modules-repo-util?label=release&color=green)](https://github.com/ya0211/magisk-modules-repo-util/releases/latest) [![license](https://img.shields.io/github/license/ya0211/magisk-modules-repo-util)](LICENSE)
+[![python](https://img.shields.io/badge/3.10+-blue.svg?label=python)](https://github.com/MRepoApp/magisk-modules-repo-util) [![release](https://img.shields.io/github/v/release/MRepoApp/magisk-modules-repo-util?label=release&color=green)](https://github.com/MRepoApp/magisk-modules-repo-util/releases/latest) [![license](https://img.shields.io/github/license/MRepoApp/magisk-modules-repo-util)](LICENSE)
 
-- This util is to build module repository for [MRepo](https://github.com/ya0211/MRepo)
+- This util is to build module repository for [MRepo](https://github.com/MRepoApp/MRepo)
 - `sync` is a python package
 - `cli.py` is a cli tool
 
@@ -56,7 +56,7 @@ cli.py sync
 ```
 
 ## How to update by GitHub Actions?
-- You can refer to [demo](https://github.com/ya0211/magisk-modules-repo) or [ya0211/magisk-modules-alt-repo](https://github.com/ya0211/magisk-modules-alt-repo).
+- You can refer to [demo](https://github.com/MRepoApp/demo-modules-repo) or [MRepoApp/magisk-modules-alt-repo](https://github.com/MRepoApp/magisk-modules-alt-repo).
 
 
 ## cli.py
