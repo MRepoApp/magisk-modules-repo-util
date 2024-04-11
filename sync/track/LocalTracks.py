@@ -93,7 +93,7 @@ class LocalTracks(BaseTracks):
             track.write(json_file)
         elif cover:
             old = TrackJson.load(json_file)
-            old.added = old.added or datetime.fromtimestamp(json_file.stat().st_ctime)
+            old.added = old.added or json_file.stat().st_mtime
             old.enable = old.enable or True
 
             old.update(track)

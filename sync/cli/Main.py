@@ -161,10 +161,11 @@ class Main:
 
         elif cls._args.stdin:
             track = TrackJson(json.load(fp=sys.stdin))
-            module_folder = modules_folder.joinpath(track.id)
-
-            json_file = module_folder.joinpath(TrackJson.filename())
-            track.write(json_file)
+            LocalTracks.add_track(
+                track=track,
+                modules_folder=modules_folder,
+                cover=True
+            )
 
         elif cls._args.keys:
             keys = TrackJson.expected_fields(False)
