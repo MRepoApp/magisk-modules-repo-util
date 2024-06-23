@@ -1,63 +1,7 @@
 # Magisk Modules Repo Util
 [![python](https://img.shields.io/badge/3.10+-blue.svg?label=python)](https://github.com/MRepoApp/magisk-modules-repo-util) [![release](https://img.shields.io/github/v/release/MRepoApp/magisk-modules-repo-util?label=release&color=green)](https://github.com/MRepoApp/magisk-modules-repo-util/releases/latest) [![license](https://img.shields.io/github/license/MRepoApp/magisk-modules-repo-util)](LICENSE)
 
-- This util is to build module repository for [MRepo](https://github.com/MRepoApp/MRepo)
-- `sync` is a python package
-- `cli.py` is a cli tool
-
-## Getting Started
-### Install dependencies
-```shell
-pip3 install -r util/requirements.txt
-```
-
-### New config.json
-You can write it to `your-repo/json/config.json` by yourself, or
-```shell
-cli.py config --stdin << EOF
-{
-  "name": "Your Magisk Repo",
-  "base_url": "https://you.github.io/magisk-modules-repo/",
-  "max_num": 3,
-  "enable_log": true,
-  "log_dir": "log"
-}
-EOF
-```
-or 
-```shell
-cli.py config --write name="Your Magisk Repo" base_url="https://you.github.io/magisk-modules-repo/" max_num=3 enable_log=true log_dir="log"
-```
-
-### New track.json
-You can write it to `your-repo/modules/{id}/track.json` by yourself, or
-```shell
-cli.py track --stdin << EOF
-{
-  "id": "zygisk_lsposed",
-  "update_to": "https://lsposed.github.io/LSPosed/release/zygisk.json",
-  "license": "GPL-3.0"
-}
-EOF
-```
-or
-```shell
-cli.py track --add id="zygisk_lsposed" update_to="https://lsposed.github.io/LSPosed/release/zygisk.json" license="GPL-3.0"
-```
-If you want to generate `track.json`s from repositories on github
-```shell
-cli.py github --token <github-token> -u <user-name> -r <repo-name ...> 
-```
-> **_TIP_**: [click here to create a new api token](https://github.com/settings/personal-access-tokens/new).
-
-### Sync
-```shell
-cli.py sync 
-```
-
-## How to update by GitHub Actions?
-- You can refer to [demo](https://github.com/MRepoApp/demo-modules-repo) or [MRepoApp/magisk-modules-alt-repo](https://github.com/MRepoApp/magisk-modules-alt-repo).
-
+A util for building modules repository
 
 ## cli.py
 ```
@@ -117,8 +61,8 @@ options:
 | Key | Attribute | Description |
 |:-:|:-:|:-:|
 | id | required | Id of Module (_in `module.prop`_) |
-| enable | required | Whether to enable |
-| update_to | required | Follow examples below |
+| enable | required | - |
+| update_to | required | - |
 | changelog | optional | Markdown or Simple Text (**_no HTML_**) |
 | license | optional | SPDX ID |
 | homepage | optional | Url |
@@ -128,8 +72,7 @@ options:
 | max_num | optional | Overload `MAX_NUM` in config.json |
 
 ### Update from updateJson
-> For those modules that provide [updateJson](https://topjohnwu.github.io/Magisk/guides.html#moduleprop). 
-
+> For those modules that provide [updateJson](https://topjohnwu.github.io/Magisk/guides.html#moduleprop).
 ```json
 {
   "id": "zygisk_lsposed",
@@ -161,7 +104,6 @@ options:
 
 ### Update from git
 > For those we can get module by packaging all files in the repository, such as [Magisk-Modules-Repo](https://github.com/Magisk-Modules-Repo) and [Magisk-Modules-Alt-Repo](https://github.com/Magisk-Modules-Alt-Repo).
-
 ```json
 {
   "id": "busybox-ndk",
@@ -171,7 +113,6 @@ options:
 
 ### Update from local zip
 > *update_to* and *changelog* requires a relative directory of *local*.
-
 ```json
 {
   "id": "zygisk_lsposed",
@@ -181,73 +122,8 @@ options:
 }
 ```
 
-## For developer
-```
-your-repo
-├── json
-│   ├── config.json
-│   └── modules.json
-│
-├── local
-│   ├── ...
-│   └── ...
-│
-├── log
-│   ├── sync_2023-03-18.log
-│   ├── ...
-│   └── ...
-│
-├── modules
-│   ├── zygisk_lsposed
-│   │   ├── track.json
-│   │   ├── update.json
-│   │   ├── v1.8.6_6712.md
-│   │   ├── v1.8.6_6712.zip
-│   │   ├── ...
-│   │   └── ...
-│   │
-│   ├── another_module
-│   │   ├── ...
-│   │   └── ...
-│   └── .
-│
-└── util
-```
-
-### update.json
-```json
-{
-  "id": "zygisk_lsposed",
-  "timestamp": 1673882223.0,
-  "versions": [
-    {
-      "timestamp": 1673882223.0,
-      "version": "v1.8.6 (6712)",
-      "versionCode": 6712,
-      "zipUrl": "{base_url}modules/zygisk_lsposed/v1.8.6_(6712)_6712.zip",
-      "changelog": "{base_url}modules/zygisk_lsposed/v1.8.6_(6712)_6712.md"
-    }
-  ]
-}
-```
-
-### track.json
-```json
-{
-  "id": "zygisk_lsposed",
-  "update_to": "https://lsposed.github.io/LSPosed/release/zygisk.json",
-  "license": "GPL-3.0",
-  "homepage": "https://lsposed.org/",
-  "source": "https://github.com/LSPosed/LSPosed.git",
-  "support": "https://github.com/LSPosed/LSPosed/issues",
-  "added": 1679025505.129431,
-  "last_update": 1673882223.0,
-  "versions": 1
-}
-```
-
-## modules.json
-### version 1
+## Data structure
+### modules.json (v1)
 ```json
 {
   "name": "{name}",
@@ -286,7 +162,7 @@ your-repo
 }
 ```
 
-### version 0
+### modules.json (v0)
 ```json
 {
   "name": "{name}",
@@ -306,5 +182,37 @@ your-repo
       }
     }
   ]
+}
+```
+
+### update.json (internal)
+```json
+{
+  "id": "zygisk_lsposed",
+  "timestamp": 1673882223.0,
+  "versions": [
+    {
+      "timestamp": 1673882223.0,
+      "version": "v1.8.6 (6712)",
+      "versionCode": 6712,
+      "zipUrl": "{base_url}modules/zygisk_lsposed/v1.8.6_(6712)_6712.zip",
+      "changelog": "{base_url}modules/zygisk_lsposed/v1.8.6_(6712)_6712.md"
+    }
+  ]
+}
+```
+
+### track.json (internal)
+```json
+{
+  "id": "zygisk_lsposed",
+  "update_to": "https://lsposed.github.io/LSPosed/release/zygisk.json",
+  "license": "GPL-3.0",
+  "homepage": "https://lsposed.org/",
+  "source": "https://github.com/LSPosed/LSPosed.git",
+  "support": "https://github.com/LSPosed/LSPosed/issues",
+  "added": 1679025505.129431,
+  "last_update": 1673882223.0,
+  "versions": 1
 }
 ```
